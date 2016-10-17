@@ -1,0 +1,5 @@
+# The binaries.
+transcribe
+async_transcribe
+streaming_transcribe
+streaming_transcribe_singlethread
