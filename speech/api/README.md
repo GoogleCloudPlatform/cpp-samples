@@ -40,7 +40,8 @@ These samples demonstrate how to call the [Google Cloud Speech API](https://clou
     See the [Cloud Platform Auth Guide](https://cloud.google.com/docs/authentication#developer_workflow) for more information.
 
 4.  **Install gRPC.**
-    Visit [the gRPC github repo](https://github.com/grpc/grpc) and follow the instructions to install gRPC.
+    1.  Visit [the gRPC github repo](https://github.com/grpc/grpc) and follow the instructions to install gRPC.
+    2.  Then, follow the instructions in the **Pre-requisites** section to install **protoc**.
 
 5.  **Generate googleapis gRPC source code.**
     1.  Set the environment variable:
@@ -53,13 +54,13 @@ These samples demonstrate how to call the [Google Cloud Speech API](https://clou
         export GOOGLEAPIS_GENS_PATH = $HOME/gitrepos/googleapis/gens
         ```
 
-6.  Download or clone this repo with
+6.  **Download or clone this repo** with
 
     ```sh
     git clone https://github.com/GoogleCloudPlatform/cpp-docs-samples
     ```
 
-7.  Run the tests:
+7.  **Run the tests:**
     ```sh
     make run_tests
     ```
