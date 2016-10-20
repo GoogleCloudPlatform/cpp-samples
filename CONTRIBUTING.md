@@ -33,6 +33,5 @@ accept your pull requests.
 
 ## Style
 
-Samples in this repository follow the [framework coding
-style](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/coding-style.md).
-This is enforced using [CodeFormatter](https://github.com/dotnet/codeformatter).
+Samples in this repository follow the [Google C++ Style Guide](
+https://google.github.io/styleguide/cppguide.html).
