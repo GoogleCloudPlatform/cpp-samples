@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 GOOGLEAPIS_GENS_PATH ?= $(HOME)/gitrepos/googleapis/gens
-SPEECH_PROTO_PATH = google/cloud/speech/v1beta1
 GOOGLEAPIS_CCS = $(shell find $(GOOGLEAPIS_GENS_PATH) -name '*.pb.cc')
 HOST_SYSTEM = $(shell uname | cut -f 1 -d_)
 SYSTEM ?= $(HOST_SYSTEM)
