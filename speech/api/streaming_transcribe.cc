@@ -40,7 +40,7 @@ static void MicrophoneThreadMain(
                                       StreamingRecognizeResponse>* streamer,
     char* file_path) {
   StreamingRecognizeRequest request;
-  std::ifstream file_stream(file_path);
+  std::ifstream file_stream(file_path, std::ios::binary);
   const size_t chunk_size = 64 * 1024;
   std::vector<char> chunk(chunk_size);
   while (true) {
