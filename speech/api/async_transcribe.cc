@@ -33,7 +33,7 @@ static const char usage[] =
     "   async_transcribe [--bitrate N] gs://bucket/audio.(raw|ulaw|flac|amr|awb)\n";
 
 int main(int argc, char** argv) {
-  // [START speech_async_recognize]
+  // [START speech_async_recognize_gcs]
   // Create a Speech stub connected to the speech service.
   auto creds = grpc::GoogleDefaultCredentials();
   auto channel = grpc::CreateChannel("speech.googleapis.com", creds);
@@ -96,6 +96,6 @@ int main(int argc, char** argv) {
                 << alternative.transcript() << std::endl;
     }
   }
-  // [END speech_async_recognize]
+  // [END speech_async_recognize_gcs]
   return 0;
 }
