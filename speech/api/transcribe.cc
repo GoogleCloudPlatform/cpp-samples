@@ -31,6 +31,7 @@ static const char usage[] =
     "   transcribe [--bitrate N] audio.(raw|ulaw|flac|amr|awb)\n";
 
 int main(int argc, char** argv) {
+  // [START speech_sync_recognize]
   // Create a Speech Stub connected to the speech service.
   auto creds = grpc::GoogleDefaultCredentials();
   auto channel = grpc::CreateChannel("speech.googleapis.com", creds);
@@ -66,5 +67,6 @@ int main(int argc, char** argv) {
                 << alternative.transcript() << std::endl;
     }
   }
+  // [END speech_sync_recognize]
   return 0;
 }
