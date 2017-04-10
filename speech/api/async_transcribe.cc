@@ -33,6 +33,7 @@ static const char usage[] =
     "   async_transcribe [--bitrate N] gs://bucket/audio.(raw|ulaw|flac|amr|awb)\n";
 
 int main(int argc, char** argv) {
+  // [START speech_async_recognize]
   // Create a Speech stub connected to the speech service.
   auto creds = grpc::GoogleDefaultCredentials();
   auto channel = grpc::CreateChannel("speech.googleapis.com", creds);
@@ -49,7 +50,7 @@ int main(int argc, char** argv) {
     std::cerr << usage;
     return -1;
   }
-  // Load the audio file from disk into the request.
+  // Pass the Google Cloud Storage URI to the request.
   request.mutable_audio()->set_uri(file_path);
   // Call LongRunningRecognize().
   grpc::ClientContext context;
@@ -95,5 +96,6 @@ int main(int argc, char** argv) {
                 << alternative.transcript() << std::endl;
     }
   }
+  // [END speech_async_recognize]
   return 0;
 }

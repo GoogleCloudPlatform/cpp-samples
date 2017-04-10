@@ -28,6 +28,7 @@ using google::cloud::speech::v1::Speech;
 using google::cloud::speech::v1::StreamingRecognizeRequest;
 using google::cloud::speech::v1::StreamingRecognizeResponse;
 
+// [START speech_streaming_recognize]
 static const char usage[] =
     "Usage:\n"
     "   streaming_transcribe "
@@ -108,3 +109,4 @@ int main(int argc, char** argv) {
   }
   return 0;
 }
+// [END speech_streaming_recognize]
