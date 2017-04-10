@@ -61,6 +61,7 @@ run_tests: all
 	./streaming_transcribe_singlethread resources/audio.flac
 	./streaming_transcribe_singlethread resources/quit.raw
 	./async_transcribe gs://$(GOOGLE_STORAGE_BUCKET)/audio.raw
+	./transcribe gs://$(GOOGLE_STORAGE_BUCKET)/audio.raw
 
 clean:
 	rm -f *.o transcribe async_transcribe streaming_transcribe streaming_transcribe_singlethread googleapis.ar $(GOOGLEAPIS_CCS:.cc=.o)

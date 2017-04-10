@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include <grpc++/grpc++.h>
+#include <strings.h>
 
 #include <fstream>
 #include <iostream>
@@ -32,6 +33,7 @@ static const char usage[] =
 
 int main(int argc, char** argv) {
   // [START speech_sync_recognize]
+  // [START speech_sync_recognize_gcs]
   // Create a Speech Stub connected to the speech service.
   auto creds = grpc::GoogleDefaultCredentials();
   auto channel = grpc::CreateChannel("speech.googleapis.com", creds);
@@ -44,10 +46,23 @@ int main(int argc, char** argv) {
     std::cerr << usage;
     return -1;
   }
-  // Load the audio file from disk into the request.
-  request.mutable_audio()->mutable_content()->assign(
-      std::istreambuf_iterator<char>(std::ifstream(file_path).rdbuf()),
-      std::istreambuf_iterator<char>());
+  // [END speech_sync_recognize_gcs]
+  // [END speech_sync_recognize]
+  if (0 == strncasecmp("gs:/", file_path, 4)) {
+    // [START speech_sync_recognize_gcs]
+    // Pass the Google Cloud Storage URI to the request.
+    request.mutable_audio()->set_uri(file_path);
+    // [END speech_sync_recognize_gcs]
+  } else {
+    // [START speech_sync_recognize]
+    // Load the audio file from disk into the request.
+    request.mutable_audio()->mutable_content()->assign(
+        std::istreambuf_iterator<char>(std::ifstream(file_path).rdbuf()),
+        std::istreambuf_iterator<char>());
+    // [END speech_sync_recognize]
+  }
+  // [START speech_sync_recognize]
+  // [START speech_sync_recognize_gcs]
   // Send audio content using Recognize().
   grpc::ClientContext context;
   RecognizeResponse response;
@@ -67,6 +82,7 @@ int main(int argc, char** argv) {
                 << alternative.transcript() << std::endl;
     }
   }
+  // [END speech_sync_recognize_gcs]
   // [END speech_sync_recognize]
   return 0;
 }
