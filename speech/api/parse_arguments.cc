@@ -14,9 +14,9 @@
 
 #include <getopt.h>
 #include "parse_arguments.h"
-#include "google/cloud/speech/v1beta1/cloud_speech.pb.h"
+#include "google/cloud/speech/v1/cloud_speech.pb.h"
 
-using google::cloud::speech::v1beta1::RecognitionConfig;
+using google::cloud::speech::v1::RecognitionConfig;
 
 char* ParseArguments(int argc, char** argv, RecognitionConfig* config) {
   // Parse the bit rate from the --bitrate command line option.
@@ -24,15 +24,16 @@ char* ParseArguments(int argc, char** argv, RecognitionConfig* config) {
     {"bitrate", required_argument, 0,  'b' },
     {0,         0,                 0,  0 }
   };
-  config->set_sample_rate(16000);  // Default sample rate.
+  config->set_language_code("en");
+  config->set_sample_rate_hertz(16000);  // Default sample rate.
   int opt;
   int option_index = 0;
   while ((opt = getopt_long(argc, argv, "b:", long_options,
                             &option_index)) != -1) {
     switch (opt) {
       case 'b':
-        config->set_sample_rate(atoi(optarg));
-        if (0 == config->sample_rate())
+        config->set_sample_rate_hertz(atoi(optarg));
+        if (0 == config->sample_rate_hertz())
           return nullptr;
         break;
       default: /* '?' */
@@ -53,10 +54,10 @@ char* ParseArguments(int argc, char** argv, RecognitionConfig* config) {
     config->set_encoding(RecognitionConfig::FLAC);
   } else if (0 == strcasecmp(ext, ".amr")) {
     config->set_encoding(RecognitionConfig::AMR);
-    config->set_sample_rate(8000);
+    config->set_sample_rate_hertz(8000);
   } else if (0 == strcasecmp(ext, ".awb")) {
     config->set_encoding(RecognitionConfig::AMR_WB);
-    config->set_sample_rate(16000);
+    config->set_sample_rate_hertz(16000);
   } else {
     config->set_encoding(RecognitionConfig::LINEAR16);
   }

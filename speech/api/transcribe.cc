@@ -19,12 +19,12 @@
 #include <string>
 
 #include "parse_arguments.h"
-#include "google/cloud/speech/v1beta1/cloud_speech.grpc.pb.h"
+#include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
 
-using google::cloud::speech::v1beta1::RecognitionConfig;
-using google::cloud::speech::v1beta1::Speech;
-using google::cloud::speech::v1beta1::SyncRecognizeRequest;
-using google::cloud::speech::v1beta1::SyncRecognizeResponse;
+using google::cloud::speech::v1::RecognitionConfig;
+using google::cloud::speech::v1::Speech;
+using google::cloud::speech::v1::RecognizeRequest;
+using google::cloud::speech::v1::RecognizeResponse;
 
 static const char usage[] =
     "Usage:\n"
@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
   auto channel = grpc::CreateChannel("speech.googleapis.com", creds);
   std::unique_ptr<Speech::Stub> speech(Speech::NewStub(channel));
   // Parse command line arguments.
-  SyncRecognizeRequest request;
+  RecognizeRequest request;
   char* file_path =
       ParseArguments(argc, argv, request.mutable_config());
   if (nullptr == file_path) {
@@ -48,11 +48,11 @@ int main(int argc, char** argv) {
   request.mutable_audio()->mutable_content()->assign(
       std::istreambuf_iterator<char>(std::ifstream(file_path).rdbuf()),
       std::istreambuf_iterator<char>());
-  // Send audio content using SyncRecognize().
+  // Send audio content using Recognize().
   grpc::ClientContext context;
-  SyncRecognizeResponse response;
+  RecognizeResponse response;
   grpc::Status rpc_status = speech->
-        SyncRecognize(&context, request, &response);
+        Recognize(&context, request, &response);
   if (!rpc_status.ok()) {
     // Report the RPC failure.
     std::cerr << rpc_status.error_message() << std::endl;

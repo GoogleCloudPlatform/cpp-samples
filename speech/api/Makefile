@@ -52,10 +52,6 @@ run_tests: all
 	./transcribe --bitrate 16000 resources/audio2.raw
 	./transcribe resources/audio.flac
 	./transcribe resources/quit.raw
-	./async_transcribe -b 16000 resources/audio.raw
-	./async_transcribe --bitrate 16000 resources/audio2.raw
-	./async_transcribe resources/audio.flac
-	./async_transcribe resources/quit.raw
 	./streaming_transcribe -b 16000 resources/audio.raw
 	./streaming_transcribe --bitrate 16000 resources/audio2.raw
 	./streaming_transcribe resources/audio.flac
@@ -64,6 +60,10 @@ run_tests: all
 	./streaming_transcribe_singlethread --bitrate 16000 resources/audio2.raw
 	./streaming_transcribe_singlethread resources/audio.flac
 	./streaming_transcribe_singlethread resources/quit.raw
+	./async_transcribe -b 16000 resources/audio.raw
+	./async_transcribe --bitrate 16000 resources/audio2.raw
+	./async_transcribe resources/audio.flac
+	./async_transcribe resources/quit.raw
 
 clean:
 	rm -f *.o transcribe async_transcribe streaming_transcribe streaming_transcribe_singlethread googleapis.ar $(GOOGLEAPIS_CCS:.cc=.o)

@@ -20,13 +20,13 @@
 #include <string>
 
 #include "parse_arguments.h"
-#include "google/cloud/speech/v1beta1/cloud_speech.grpc.pb.h"
+#include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
 #include "google/longrunning/operations.grpc.pb.h"
 
-using google::cloud::speech::v1beta1::RecognitionConfig;
-using google::cloud::speech::v1beta1::Speech;
-using google::cloud::speech::v1beta1::AsyncRecognizeRequest;
-using google::cloud::speech::v1beta1::AsyncRecognizeResponse;
+using google::cloud::speech::v1::RecognitionConfig;
+using google::cloud::speech::v1::Speech;
+using google::cloud::speech::v1::LongRunningRecognizeRequest;
+using google::cloud::speech::v1::LongRunningRecognizeResponse;
 
 static const char usage[] =
     "Usage:\n"
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
   std::unique_ptr<google::longrunning::Operations::Stub> long_operations(
       google::longrunning::Operations::NewStub(channel));
   // Parse command line arguments.
-  AsyncRecognizeRequest request;
+  LongRunningRecognizeRequest request;
   char* file_path =
       ParseArguments(argc, argv, request.mutable_config());
   if (nullptr == file_path) {
@@ -53,11 +53,11 @@ int main(int argc, char** argv) {
   request.mutable_audio()->mutable_content()->assign(
       std::istreambuf_iterator<char>(std::ifstream(file_path).rdbuf()),
       std::istreambuf_iterator<char>());
-  // Call AsyncRecognize().
+  // Call LongRunningRecognize().
   grpc::ClientContext context;
   google::longrunning::Operation op;
   grpc::Status rpc_status = speech->
-        AsyncRecognize(&context, request, &op);
+        LongRunningRecognize(&context, request, &op);
   if (!rpc_status.ok()) {
     // Report the RPC failure.
     std::cerr << rpc_status.error_message() << std::endl;
@@ -81,12 +81,12 @@ int main(int argc, char** argv) {
   }
   std::cout << std::endl;
   // Unpack the response.
-  if (!op.response().Is<AsyncRecognizeResponse>()) {
+  if (!op.response().Is<LongRunningRecognizeResponse>()) {
     std::cerr << "The operation completed, but did not contain a "
-              << "AsyncRecognizeResponse.";
+              << "LongRunningRecognizeResponse.";
     return -1;
   }
-  AsyncRecognizeResponse response;
+  LongRunningRecognizeResponse response;
   op.response().UnpackTo(&response);
   // Dump the transcript of all the results.
   for (int r = 0; r < response.results_size(); ++r) {

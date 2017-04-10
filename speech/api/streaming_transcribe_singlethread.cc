@@ -20,12 +20,12 @@
 #include <vector>
 
 #include "parse_arguments.h"
-#include "google/cloud/speech/v1beta1/cloud_speech.grpc.pb.h"
+#include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
 
-using google::cloud::speech::v1beta1::RecognitionConfig;
-using google::cloud::speech::v1beta1::Speech;
-using google::cloud::speech::v1beta1::StreamingRecognizeRequest;
-using google::cloud::speech::v1beta1::StreamingRecognizeResponse;
+using google::cloud::speech::v1::RecognitionConfig;
+using google::cloud::speech::v1::Speech;
+using google::cloud::speech::v1::StreamingRecognizeRequest;
+using google::cloud::speech::v1::StreamingRecognizeResponse;
 
 static const char usage[] =
     "Usage:\n"
