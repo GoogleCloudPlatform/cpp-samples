@@ -30,7 +30,7 @@ using google::cloud::speech::v1::LongRunningRecognizeResponse;
 
 static const char usage[] =
     "Usage:\n"
-    "   async_transcribe [--bitrate N] audio.(raw|ulaw|flac|amr|awb)\n";
+    "   async_transcribe [--bitrate N] gs://bucket/audio.(raw|ulaw|flac|amr|awb)\n";
 
 int main(int argc, char** argv) {
   // Create a Speech stub connected to the speech service.
@@ -50,9 +50,7 @@ int main(int argc, char** argv) {
     return -1;
   }
   // Load the audio file from disk into the request.
-  request.mutable_audio()->mutable_content()->assign(
-      std::istreambuf_iterator<char>(std::ifstream(file_path).rdbuf()),
-      std::istreambuf_iterator<char>());
+  request.mutable_audio()->set_uri(file_path);
   // Call LongRunningRecognize().
   grpc::ClientContext context;
   google::longrunning::Operation op;
