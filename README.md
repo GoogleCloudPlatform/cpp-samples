@@ -6,7 +6,7 @@ Google Cloud services from C++.
 The samples in this repo cover only a _small fraction_ of the total APIs that you can call from C++.
 See the [googleapis repo](https://github.com/googleapis/googleapis) to see the full list of APIs callable from C++.
 
-These samples will only build and run on Unix.
+These samples will only build and run on **Linux**.
 
 ## Contributing changes
 
