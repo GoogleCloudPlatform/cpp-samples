@@ -2,6 +2,8 @@
 
 These samples demonstrate how to call the [Google Cloud Speech API](https://cloud.google.com/speech/) using C++.
 
+These samples will only build and run on **Linux**.
+
 ## Build and Run
 
 1.  **Create a project in the Google Cloud Platform Console**.
@@ -49,11 +51,13 @@ These samples demonstrate how to call the [Google Cloud Speech API](https://clou
     1.  Then, follow the instructions in the **Pre-requisites** section to install **protoc**.
 
 1.  **Generate googleapis gRPC source code.**
-    1.  Set the environment variable:
+    1.  Visit [the googleapis github repo](https://github.com/googleapis/googleapis) and follow the instructions to **Generate gRPC Source Code**.
         ```
         export LANGUAGE=cpp
+        git clone https://github.com/googleapis/googleapis.git
+        cd googleapis
+        make all
         ```
-    1.  Visit [the googleapis github repo](https://github.com/googleapis/googleapis) and follow the instructions to generate gRPC source code.
     1.  Set the environment variable `GOOGLEAPIS_GENS_PATH` to the path where you generated the gRPC source code.  For example:
         ```
         export GOOGLEAPIS_GENS_PATH = $HOME/gitrepos/googleapis/gens
@@ -67,5 +71,6 @@ These samples demonstrate how to call the [Google Cloud Speech API](https://clou
 
 1.  **Run the tests:**
     ```sh
+    cd cpp-docs-sample/speech/api
     make run_tests
     ```
