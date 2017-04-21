@@ -12,7 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 GOOGLEAPIS_GENS_PATH ?= $(HOME)/gitrepos/googleapis/gens
-GOOGLEAPIS_CCS = $(shell find $(GOOGLEAPIS_GENS_PATH) -name '*.pb.cc')
+GOOGLEAPIS_API_CCS = $(shell find $(GOOGLEAPIS_GENS_PATH)/google/api \
+	-name '*.pb.cc')
+GOOGLEAPIS_RPC_CCS = $(shell find $(GOOGLEAPIS_GENS_PATH)/google/rpc \
+	-name '*.pb.cc')
+GOOGLEAPIS_SPEECH_CCS = $(shell find \
+	$(GOOGLEAPIS_GENS_PATH)/google/cloud/speech -name '*.pb.cc')
+GOOGLEAPIS_LONGRUNNING_CCS = $(shell find \
+	$(GOOGLEAPIS_GENS_PATH)/google/longrunning -name '*.pb.cc')
+GOOGLEAPIS_CCS = $(GOOGLEAPIS_API_CCS) $(GOOGLEAPIS_RPC_CCS) \
+	$(GOOGLEAPIS_LONGRUNNING_CCS) $(GOOGLEAPIS_SPEECH_CCS)
+
 HOST_SYSTEM = $(shell uname | cut -f 1 -d_)
 SYSTEM ?= $(HOST_SYSTEM)
 CXX = g++
@@ -29,7 +39,8 @@ LDFLAGS += -L/usr/local/lib `pkg-config --libs grpc++ grpc`       \
 endif
 
 .PHONY: all
-all: transcribe async_transcribe streaming_transcribe streaming_transcribe_singlethread
+all: transcribe async_transcribe streaming_transcribe \
+	streaming_transcribe_singlethread
 
 googleapis.ar: $(GOOGLEAPIS_CCS:.cc=.o)
 	ar r $@ $?
@@ -57,12 +68,15 @@ run_tests: all
 	./streaming_transcribe resources/audio.flac
 	./streaming_transcribe resources/quit.raw
 	./streaming_transcribe_singlethread -b 16000 resources/audio.raw
-	./streaming_transcribe_singlethread --bitrate 16000 resources/audio2.raw
+	./streaming_transcribe_singlethread --bitrate 16000 \
+		resources/audio2.raw
 	./streaming_transcribe_singlethread resources/audio.flac
 	./streaming_transcribe_singlethread resources/quit.raw
 	./async_transcribe gs://$(GOOGLE_STORAGE_BUCKET)/audio.raw
 	./transcribe gs://$(GOOGLE_STORAGE_BUCKET)/audio.raw
 
 clean:
-	rm -f *.o transcribe async_transcribe streaming_transcribe streaming_transcribe_singlethread googleapis.ar $(GOOGLEAPIS_CCS:.cc=.o)
+	rm -f *.o transcribe async_transcribe streaming_transcribe \
+		streaming_transcribe_singlethread googleapis.ar \
+		$(GOOGLEAPIS_CCS:.cc=.o)
 
