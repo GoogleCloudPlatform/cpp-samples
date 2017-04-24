@@ -72,8 +72,8 @@ run_tests: all
 		resources/audio2.raw
 	./streaming_transcribe_singlethread resources/audio.flac
 	./streaming_transcribe_singlethread resources/quit.raw
-	./async_transcribe gs://$(GOOGLE_STORAGE_BUCKET)/audio.raw
-	./transcribe gs://$(GOOGLE_STORAGE_BUCKET)/audio.raw
+	./transcribe gs://cloud-samples-tests/speech/brooklyn.flac
+	./async_transcribe gs://cloud-samples-tests/speech/vr.flac
 
 clean:
 	rm -f *.o transcribe async_transcribe streaming_transcribe \
