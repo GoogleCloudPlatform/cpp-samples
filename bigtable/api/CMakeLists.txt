@@ -22,7 +22,7 @@ set(PACKAGE_VERSION   "0.1")
 set(PACKAGE_STRING    "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_TARNAME   "${PACKAGE_NAME}-${PACKAGE_VERSION}")
 set(PACKAGE_BUGREPORT "https://github.com/GoogleCloudPlatform/cpp-docs-samples/issues")
-project(${PACKAGE_NAME} CXX)
+project(${PACKAGE_NAME} CXX C)
 
 # ... configure the Compiler options, we will be using C++14 features,
 # so enable that ...
