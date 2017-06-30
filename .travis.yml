@@ -7,25 +7,25 @@ matrix:
   include:
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=no CXX_COMPILER=/usr/bin/clang++
+      env: DOCKER_BUILD=no CXX_COMPILER=/usr/bin/clang++ DISTRO="" DISTRO_VERSION=""
     - os: linux
       compiler: gcc
-      env: DOCKER_BUILD=no CXX_COMPILER=/usr/bin/g++
+      env: DOCKER_BUILD=no CXX_COMPILER=/usr/bin/g++ DISTRO="" DISTRO_VERSION=""
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=not-yet DISTRO=ubuntu DISTRO_VERSION=14.04
+      env: DOCKER_BUILD=not-yet DISTRO=ubuntu DISTRO_VERSION=14.04 CXX_COMPILER=/usr/bin/clang++
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=16.04
+      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=16.04 CXX_COMPILER=/usr/bin/clang++
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=not-yet DISTRO=ubuntu DISTRO_VERSION=17.04
+      env: DOCKER_BUILD=not-yet DISTRO=ubuntu DISTRO_VERSION=17.04 CXX_COMPILER=/usr/bin/clang++
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=not-yet DISTRO=fedora DISTRO_VERSION=24
+      env: DOCKER_BUILD=not-yet DISTRO=fedora DISTRO_VERSION=24 CXX_COMPILER=/usr/bin/clang++
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=not-yet DISTRO=fedora DISTRO_VERSION=25
+      env: DOCKER_BUILD=not-yet DISTRO=fedora DISTRO_VERSION=25 CXX_COMPILER=/usr/bin/clang++
 
 script:
   - if [ "${DOCKER_BUILD?}" = "no" ]; then
@@ -38,6 +38,7 @@ script:
           -t cached-${DISTRO?}-${DISTRO_VERSION?}:tip
           --cache-from cached-${DISTRO?}-${DISTRO_VERSION}:latest
           --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
+          --build-arg CXX_COMPILER=${CXX_COMPILER?}
           --build-arg TRAVIS_REPO_SLUG=${TRAVIS_REPO_SLUG}
           --build-arg TRAVIS_EVENT_TYPE=${TRAVIS_EVENT_TYPE}
           --build-arg TRAVIS_COMMIT=${TRAVIS_COMMIT}
@@ -93,7 +94,7 @@ install:
       sudo docker load <docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
     fi
   # Some debugging ...
-  - ls /usr/local/lib/pkgconfig || :
+  - ls /usr/local/lib/pkgconfig || echo "no /usr/local/lib/pkgconfig"
   - ls -l
   - sudo docker image ls
 
