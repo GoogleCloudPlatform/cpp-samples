@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) try {
   std::unique_ptr<BigtableInstanceAdmin::Stub> instance_admin(
       BigtableInstanceAdmin::NewStub(channel));
   admin::ListInstancesRequest req;
-  req.set_parent(std::move(std::string("projects/") + project_id));
+  req.set_parent(std::string("projects/") + project_id);
 
   // ... the API may return the list in "pages", it is rare that a
   // project has so many instances that it requires multiple pages,
