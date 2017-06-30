@@ -31,9 +31,12 @@ script:
   - if [ "${DOCKER_BUILD?}" = "no" ]; then
       (cd bigtable/api && make -C googleapis OUTPUT=$PWD/googleapis-gens &&
        cmake -DCMAKE_CXX_COMPILER=${CXX_COMPILER} . && make);
-  - if [ "${DOCKER_BUILD?}" = "yes"]; then
+    fi
+  - if [ "${DOCKER_BUILD?}" = "yes" ]; then
       (cd bigtable/api && docker build -t test-${DISTRO?}-${DISTRO_VERSION?} \
           --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
+	  --build-arg TRAVIS_EVENT_TYPE=${TRAVIS_EVENT_TYPE}
+	  --build-arg TRAVIS_COMMIT=${TRAVIS_COMMIT}
           -f docker/Dockerfile.${DISTRO?} docker/);
     fi
 
