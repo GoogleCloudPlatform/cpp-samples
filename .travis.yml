@@ -33,10 +33,13 @@ script:
        cmake -DCMAKE_CXX_COMPILER=${CXX_COMPILER} . && make);
     fi
   - if [ "${DOCKER_BUILD?}" = "yes" ]; then
-      (cd bigtable/api &&
+      cacheargs=""
+      if [ docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz ]; then
+        cacheargs="--cache-from cached-${DISTRO?}-${DISTRO_VERSION}:latest";
+      fi;
+      (cd bigtable/api
        sudo docker build
-          -t cached-${DISTRO?}-${DISTRO_VERSION?}:tip
-          --cache-from cached-${DISTRO?}-${DISTRO_VERSION}:latest
+          -t cached-${DISTRO?}-${DISTRO_VERSION?}:tip ${cacheargs?}
           --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
           --build-arg CXX_COMPILER=${CXX_COMPILER?}
           --build-arg TRAVIS_REPO_SLUG=${TRAVIS_REPO_SLUG}
