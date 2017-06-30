@@ -38,12 +38,15 @@ matrix:
 
 script:
   - if [ "${DOCKER_BUILD?}" = "yes" ]; then
-      IMAGE="cached-${DISTRO?}-${DISTRO_VERSION?}"
+      IMAGE="cached-${DISTRO?}-${DISTRO_VERSION?}";
       latest_id=$(sudo docker inspect -f '{{ .Id }}' ${IMAGE?}:latest)
       cacheargs="";
       if [ "x${latest_id}" != "x" ]; then
         cacheargs="--cache-from ${IMAGE?}:latest";
       fi;
+      echo $cacheargs;
+      echo $latest_id;
+      echo $IMAGE;
       (cd bigtable/api &&
        sudo docker build -t ${IMAGE?}:tip ${cacheargs?}
           --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
