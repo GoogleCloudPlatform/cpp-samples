@@ -37,7 +37,7 @@ script:
       if [ docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz ]; then
         cacheargs="--cache-from cached-${DISTRO?}-${DISTRO_VERSION}:latest";
       fi;
-      (cd bigtable/api
+      (cd bigtable/api &&
        sudo docker build
           -t cached-${DISTRO?}-${DISTRO_VERSION?}:tip ${cacheargs?}
           --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
