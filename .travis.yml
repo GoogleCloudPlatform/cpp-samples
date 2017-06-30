@@ -38,11 +38,10 @@ script:
           -t cached-${DISTRO?}-${DISTRO_VERSION?}:tip
           --cache-from cached-${DISTRO?}-${DISTRO_VERSION}:latest
           --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
-          --build-arg TRAVIS_REPO_SLUG=$go{TRAVIS_REPO_SLUG}
+          --build-arg TRAVIS_REPO_SLUG=${TRAVIS_REPO_SLUG}
           --build-arg TRAVIS_EVENT_TYPE=${TRAVIS_EVENT_TYPE}
           --build-arg TRAVIS_COMMIT=${TRAVIS_COMMIT}
-          -f docker/Dockerfile.${DISTRO?} docker/ &&
-          );
+          -f docker/Dockerfile.${DISTRO?} docker/ );
     fi
 
 addons:
