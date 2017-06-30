@@ -7,10 +7,21 @@ matrix:
   include:
     - os: linux
       compiler: clang
+      env: DOCKER_BUILD=no
+    - os: linux
+      compiler: clang
+      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=16.04
+    - os: linux
+      compiler: clang
+      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=17.04
 
 script:
-  - (cd bigtable/api && make -C googleapis OUTPUT=$PWD/googleapis-gens)
-  - (cd bigtable/api && cmake . && make)
+  - (test "${DOCKER_BUILD?}" = "no" && cd bigtable/api &&
+        make -C googleapis OUTPUT=$PWD/googleapis-gens)
+  - (test "${DOCKER_BUILD?}" = "no" && cd bigtable/api &&
+        cmake -DCMAKE_CXX_COMPILER=${CXX} . && make)
+  - (test "${DOCKER_BUILD?}" = "yes" && echo DISTRO=$DISTRO &&
+        echo DISTRO_VERSION=${DISTRO_VERSION} && echo CXX=${CXX})
 
 addons:
   apt:
