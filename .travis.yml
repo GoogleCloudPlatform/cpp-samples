@@ -45,9 +45,9 @@ install:
   # If needed clone the grpc directory
   - ls -l
   - ls -l grpc-build
-  - ls -l grpc-build/grpc
+  - ls -l grpc-build/grpc || echo "no grpc subdir"
   - /usr/bin/env
-  - test -d grpc-build/grpc/.git || git clone https://github.com/grpc/grpc.git
+  - test -d grpc-build/grpc/.git || git clone https://github.com/grpc/grpc.git grpc-build/grpc
   # needed or not, update the grpc directory ...
   - (cd build-grpc/grpc && git pull && git submodule update --init)
   # build and install in $HOME/local
