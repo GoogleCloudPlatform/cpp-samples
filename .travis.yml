@@ -30,8 +30,8 @@ addons:
 
 install:
   - cd $HOME && git clone https://github.com/grpc/grpc.git
-  - (cd $HOME/grpc && git submodule update --init && make && make install)
-  - (cd $HOME/grpc/third_party/protobuf && make install)
+  - (cd $HOME/grpc && git submodule update --init && make && sudo make install)
+  - (cd $HOME/grpc/third_party/protobuf && sudo make install)
 
 notifications:
   email: false
