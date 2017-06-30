@@ -49,10 +49,10 @@ install:
   - /usr/bin/env
   - test -d grpc-build/grpc/.git || git clone https://github.com/grpc/grpc.git grpc-build/grpc
   # needed or not, update the grpc directory ...
-  - (cd build-grpc/grpc && git pull && git submodule update --init)
+  - (cd grpc-build/grpc && git pull && git submodule update --init)
   # build and install in $HOME/local
-  - (cd build-grpc/grpc && make -j 2 && make prefix=$HOME/local install)
-  - (cd build-grpc/grpc/third_party/protobuf && make prefix=$HOME/local install)
+  - (cd grpc-build/grpc && make -j 2 && make prefix=$HOME/local install)
+  - (cd grpc-build/grpc/third_party/protobuf && make prefix=$HOME/local install)
   # Make clang++-3.9 available as clang++
   - sudo update-alternatives --install \
       /usr/bin/clang clang /usr/bin/clang-3.9 100
