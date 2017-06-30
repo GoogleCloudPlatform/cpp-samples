@@ -7,7 +7,7 @@ matrix:
   include:
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=no
+      env: DOCKER_BUILD=no CXX_COMPILER=/usr/bin/clang++
     - os: linux
       compiler: gcc
       env: DOCKER_BUILD=no
