@@ -1,7 +1,7 @@
 language: cpp
 
 dist: trusty
-sudo: true
+sudo: false
 
 matrix:
   include:
@@ -12,6 +12,11 @@ matrix:
 
 script:
   - (cd bigtable/api && cmake . && make)
+
+env:
+  PKG_CONFIG_PATH=$HOME/local/lib/pkgconfig
+  PATH=$HOME/local/bin:$PATH
+  LD_LIBRARY_PATH=$HOME/local/lib
 
 addons:
   apt:
@@ -31,12 +36,24 @@ addons:
       - cmake
       - clang++-3.9
 
+# Cache the grpc directory because building it takes so long ...
+cache:
+  directories:
+    - grpc
+
 install:
-  - sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-3.9 100
-  - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.9 100
-  - (cd $HOME && git clone https://github.com/grpc/grpc.git)
-  - (cd $HOME/grpc && git submodule update --init && make -j 2 && make install)
-  - (cd $HOME/grpc/third_party/protobuf && make install)
+  # If needed clone the grpc directory
+  - test -d grpc || git clone https://github.com/grpc/grpc.git
+  # needed or not, update the grpc directory ...
+  - (cd grpc && git pull && git submodule update --init)
+  # build and install in $HOME/local
+  - (cd grpc && make -j 2 && make prefix=$HOME/local install)
+  - (cd grpc/third_party/protobuf && make prefix=$HOME/local install)
+  # Make clang++-3.9 available as clang++
+  - sudo update-alternatives --install \
+      /usr/bin/clang clang /usr/bin/clang-3.9 100
+  - sudo update-alternatives --install \
+      /usr/bin/clang++ clang++ /usr/bin/clang++-3.9 100
 
 notifications:
   email: false
