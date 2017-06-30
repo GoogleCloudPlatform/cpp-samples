@@ -2,24 +2,24 @@
 # This Dockerfile requires docker 17 or higher, it uses an argument to set
 # the base image version, which was not supported in early versions of docker.
 ARG DISTRO_VERSION=24
-FROM ubuntu:$DISTRO_VERSION
+FROM fedora:$DISTRO_VERSION
 MAINTAINER "Carlos O'Ryan <coryan@google.com>"
 
 # Install the pre-requisites, the long command line is to create as few
 # layers as possible in the image ...
 RUN dnf makecache && \
-  dnf install -y
+  dnf install -y \
     autoconf \
     autoconf-archive \
     automake \
     clang \
     cmake \
     curl \
-    gcc-g++ \
+    gcc-c++ \
     git \
     libtool \
     make \
-    pkg-config \
+    pkgconfig \
     shtool \
     wget && \
   dnf clean all
@@ -27,14 +27,17 @@ RUN dnf makecache && \
 WORKDIR /var/tmp/build-grpc
 RUN (git clone https://github.com/grpc/grpc.git && \
     cd grpc && git pull && git submodule update --init && \
-    make -j 2 && make install && \
-    cd third_party/protobuf && make install)
+    make -j 2 LDXX="g++ -std=c++11" LD=gcc CXX="g++ -std=c++11" CC=gcc && \
+    make install && \
+    cd third_party/protobuf && make install && \
+    echo /usr/local/lib >/etc/ld.so.conf.d/local.conf && ldconfig)
 
 # ... configure what we build based on the Travis build ...
 ARG TRAVIS_EVENT_TYPE=cron
 ARG TRAVIS_REPO_SLUG=coryan/cpp-docs-samples
 ARG TRAVIS_COMMIT=
 ARG CXX_COMPILER=clang
+ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 
 # TODO() - we should deal with pull requests differently ...
 WORKDIR /var/tmp/build-samples
