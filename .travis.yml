@@ -87,19 +87,22 @@ install:
   # Restore the docker image from the cached directory.  That way we
   # can reuse the steps in the docker image that install
   # pre-requisites and build dependencies ...
-  - if [ "${DOCKER_BUILD?}" = "yes" ]; then
-      sudo docker load <${DISTRO}/${DISTRO_VERSION}/saved.tar.gz;
+  - if [ "${DOCKER_BUILD?}" = "yes" -a
+       -f docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz ]; then
+      sudo docker load <docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
     fi
-  - docker image ls
-  - ls /usr/local/lib/pkgconfig
+  # Some debugging ...
+  - ls /usr/local/lib/pkgconfig || :
+  - ls -l
+  - sudo docker image ls
 
 after_success:
   - if [ "${DOCKER_BUILD?}" = "yes" ]; then
       sudo docker image tag
           cached-${DISTRO?}-${DISTRO_VERSION?}:tip \
           cached-${DISTRO?}-${DISTRO_VERSION?}:latest;
-      sudo docker save cached-${DISTRO}-${DISTRO_VERSION}:latest |
-        gzip > docker-images/${DISTRO}/${DISTRO_VERSION}/saved.tar.gz;
+      sudo docker save cached-${DISTRO?}-${DISTRO_VERSION?}:latest |
+        gzip > docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
     fi
 
 notifications:
