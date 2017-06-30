@@ -24,9 +24,12 @@ set(PACKAGE_TARNAME   "${PACKAGE_NAME}-${PACKAGE_VERSION}")
 set(PACKAGE_BUGREPORT "https://github.com/GoogleCloudPlatform/cpp-docs-samples/issues")
 project(${PACKAGE_NAME} CXX C)
 
-# ... configure the Compiler options, we will be using C++14 features,
-# so enable that ...
-set(CXX_STANDARD_REQUIRED 14)
+# ... configure the Compiler options, we will be using C++11 features,
+# so enable that, both for newer cmake versions ...
+set(CXX_STANDARD_REQUIRED 11)
+# ... and for older ones ...
+set(CMAKE_CXX_STANDARD ${CXX_STANDARD_REQUIRED})
+
 # ... the author is paranoid.  Turn on all available warnings
 # and turn warnings into errors to stop the build if any warning is
 # emitted ...
