@@ -11,6 +11,7 @@ matrix:
       #compiler: clang
 
 script:
+  - (cd bigtable/api && make -C googleapis OUTPUT=$PWD/googleapis-gens)
   - (cd bigtable/api && cmake . && make)
 
 addons:
