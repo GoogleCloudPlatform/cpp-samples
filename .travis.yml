@@ -38,10 +38,8 @@ cache:
 
 install:
   # Make clang++-3.9 available as clang++
-  - sudo update-alternatives --install \
-      /usr/bin/clang clang /usr/bin/clang-3.9 100
-  - sudo update-alternatives --install \
-      /usr/bin/clang++ clang++ /usr/bin/clang++-3.9 100
+  - sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-3.9 100
+  - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.9 100
   # If needed clone the grpc directory
   - test -d grpc-build/grpc/.git || git clone https://github.com/grpc/grpc.git grpc-build/grpc
   # needed or not, update the grpc directory ...
