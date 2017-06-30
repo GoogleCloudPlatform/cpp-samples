@@ -1,7 +1,7 @@
 language: cpp
 
 dist: trusty
-sudo: false
+sudo: required
 
 matrix:
   include:
@@ -12,11 +12,6 @@ matrix:
 
 script:
   - (cd bigtable/api && cmake . && make)
-
-env:
-  PKG_CONFIG_PATH=$HOME/local/lib/pkgconfig
-  PATH=$HOME/local/bin:$PATH
-  LD_LIBRARY_PATH=$HOME/local/lib
 
 addons:
   apt:
@@ -42,22 +37,18 @@ cache:
     - grpc-build
 
 install:
-  # If needed clone the grpc directory
-  - ls -l
-  - ls -l grpc-build
-  - ls -l grpc-build/grpc || echo "no grpc subdir"
-  - /usr/bin/env
-  - test -d grpc-build/grpc/.git || git clone https://github.com/grpc/grpc.git grpc-build/grpc
-  # needed or not, update the grpc directory ...
-  - (cd grpc-build/grpc && git pull && git submodule update --init)
-  # build and install in $HOME/local
-  - (cd grpc-build/grpc && make -j 2 && make prefix=$HOME/local install)
-  - (cd grpc-build/grpc/third_party/protobuf && make prefix=$HOME/local install)
   # Make clang++-3.9 available as clang++
   - sudo update-alternatives --install \
       /usr/bin/clang clang /usr/bin/clang-3.9 100
   - sudo update-alternatives --install \
       /usr/bin/clang++ clang++ /usr/bin/clang++-3.9 100
+  # If needed clone the grpc directory
+  - test -d grpc-build/grpc/.git || git clone https://github.com/grpc/grpc.git grpc-build/grpc
+  # needed or not, update the grpc directory ...
+  - (cd grpc-build/grpc && git pull && git submodule update --init)
+  # build and install in $HOME/local
+  - (cd grpc-build/grpc && make -j 2 && sudo make install)
+  - (cd grpc-build/grpc/third_party/protobuf && sudo make install)
 
 notifications:
   email: false
