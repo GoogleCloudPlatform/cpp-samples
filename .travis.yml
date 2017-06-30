@@ -36,9 +36,9 @@ script:
       (cd bigtable/api && docker build
           -t cached-${DISTRO?}-${DISTRO_VERSION?}
           --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
-	  --build-arg TRAVIS_REPO_SLUG=$go{TRAVIS_REPO_SLUG}
-	  --build-arg TRAVIS_EVENT_TYPE=${TRAVIS_EVENT_TYPE}
-	  --build-arg TRAVIS_COMMIT=${TRAVIS_COMMIT}
+          --build-arg TRAVIS_REPO_SLUG=$go{TRAVIS_REPO_SLUG}
+          --build-arg TRAVIS_EVENT_TYPE=${TRAVIS_EVENT_TYPE}
+          --build-arg TRAVIS_COMMIT=${TRAVIS_COMMIT}
           -f docker/Dockerfile.${DISTRO?} docker/);
     fi
 
