@@ -33,13 +33,16 @@ script:
        cmake -DCMAKE_CXX_COMPILER=${CXX_COMPILER} . && make);
     fi
   - if [ "${DOCKER_BUILD?}" = "yes" ]; then
-      (cd bigtable/api && docker build
-          -t cached-${DISTRO?}-${DISTRO_VERSION?}
+      (cd bigtable/api && \
+       sudo docker build
+          -t cached-${DISTRO?}-${DISTRO_VERSION?}:tip
+          --cache-from cached-${DISTRO?}-${DISTRO_VERSION}:latest
           --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
           --build-arg TRAVIS_REPO_SLUG=$go{TRAVIS_REPO_SLUG}
           --build-arg TRAVIS_EVENT_TYPE=${TRAVIS_EVENT_TYPE}
           --build-arg TRAVIS_COMMIT=${TRAVIS_COMMIT}
-          -f docker/Dockerfile.${DISTRO?} docker/);
+          -f docker/Dockerfile.${DISTRO?} docker/ &&
+          );
     fi
 
 addons:
@@ -87,14 +90,17 @@ install:
   # can reuse the steps in the docker image that install
   # pre-requisites and build dependencies ...
   - if [ "${DOCKER_BUILD?}" = "yes" ]; then
-      sudo docker load <${DISTRO}/${DISTRO_VERSION}/saved.tar.gz
+      sudo docker load <${DISTRO}/${DISTRO_VERSION}/saved.tar.gz;
     fi
   - docker image ls
   - ls /usr/local/lib/pkgconfig
 
 after_success:
   - if [ "${DOCKER_BUILD?}" = "yes" ]; then
-      sudo docker save cached-${DISTRO}-${DISTRO_VERSION} |
+      sudo docker image tag
+          cached-${DISTRO?}-${DISTRO_VERSION?}:tip \
+          cached-${DISTRO?}-${DISTRO_VERSION?}:latest;
+      sudo docker save cached-${DISTRO}-${DISTRO_VERSION}:latest |
         gzip > docker-images/${DISTRO}/${DISTRO_VERSION}/saved.tar.gz;
     fi
 
