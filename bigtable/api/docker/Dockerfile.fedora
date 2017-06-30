@@ -22,11 +22,7 @@ RUN dnf makecache && \
     pkg-config \
     shtool \
     wget && \
-  apt-get clean && \
-  update-alternatives --install \
-      /usr/bin/clang clang /usr/bin/clang-3.9 100 && \
-  update-alternatives --install \
-      /usr/bin/clang++ clang++ /usr/bin/clang++-3.9 100
+  dnf clean all
 
 WORKDIR /var/tmp/build-grpc
 RUN (git clone https://github.com/grpc/grpc.git && \
@@ -34,11 +30,26 @@ RUN (git clone https://github.com/grpc/grpc.git && \
     make -j 2 && make install && \
     cd third_party/protobuf && make install)
 
+# ... configure what we build based on the Travis build ...
+ARG TRAVIS_EVENT_TYPE=cron
+ARG TRAVIS_REPO_SLUG=coryan/cpp-docs-samples
+ARG TRAVIS_COMMIT=
+ARG CXX_COMPILER=clang
+
+# TODO() - we should deal with pull requests differently ...
 WORKDIR /var/tmp/build-samples
-RUN (git clone https://github.com/GoogleCloudPlatform/cpp-docs-samples.git && \
-    cd cpp-docs-samples && git submodule update --init && \
-    cd bigtable/api && \
-    make -C googleapis OUTPUT=$PWD/googleapis-gens && \
-    cmake -DCMAKE_CXX_COMPILER=$CXX . && make)
+RUN echo COMMIT = ${TRAVIS_COMMIT} # bust the docker cache for each build
+RUN git clone https://github.com/${TRAVIS_REPO_SLUG}.git ${TRAVIS_REPO_SLUG}
+
+# ... in the travis builds, this checks out the same commit that
+# Travis is trying to build, when testing it just checksout the default
+# branch
+WORKDIR /var/tmp/build-samples/$TRAVIS_REPO_SLUG
+RUN if test "x${TRAVIS_COMMIT}" != "x"; then git checkout ${TRAVIS_COMMIT}; fi
+
+RUN (git submodule update --init && \
+     cd bigtable/api && \
+     make -C googleapis OUTPUT=$PWD/googleapis-gens && \
+     cmake -DCMAKE_CXX_COMPILER=clang++ . && make)
 
 WORKDIR /
