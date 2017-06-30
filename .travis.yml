@@ -33,7 +33,7 @@ script:
        cmake -DCMAKE_CXX_COMPILER=${CXX_COMPILER} . && make);
     fi
   - if [ "${DOCKER_BUILD?}" = "yes" ]; then
-      (cd bigtable/api && \
+      (cd bigtable/api &&
        sudo docker build
           -t cached-${DISTRO?}-${DISTRO_VERSION?}:tip
           --cache-from cached-${DISTRO?}-${DISTRO_VERSION}:latest
