@@ -44,10 +44,9 @@ cache:
 install:
   # If needed clone the grpc directory
   - ls -l
-  - echo $PWD
-  - echo $TRAVIS_BUILD_DIR
   - ls -l grpc-build
   - ls -l grpc-build/grpc
+  - /usr/bin/env
   - test -d grpc-build/grpc/.git || git clone https://github.com/grpc/grpc.git
   # needed or not, update the grpc directory ...
   - (cd build-grpc/grpc && git pull && git submodule update --init)
