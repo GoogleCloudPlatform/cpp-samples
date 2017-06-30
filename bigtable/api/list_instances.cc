@@ -17,20 +17,32 @@
 
 int main(int argc, char* argv[]) try {
   auto creds = grpc::GoogleDefaultCredentials();
+  // Notice that Bigtable has separate endpoints for different APIs,
+  // we are going to query the list of instances (aka clusters), which
+  // is one of the admin APIs, so connect to the bigtableadmin endpoint ..
   auto channel = grpc::CreateChannel("bigtableadmin.googleapis.com", creds);
 
+  // ... save ourselves some typing ...
   namespace admin = ::google::bigtable::admin::v2;
   using admin::BigtableInstanceAdmin;
 
-  std::unique_ptr<BigtableInstanceAdmin::Stub> instance_admin(
-      BigtableInstanceAdmin::NewStub(channel));
+  // ... a more interesting application would use getopt(3),
+  // getopt_long(3), or Boost.Options to parse the command-line, we
+  // want to keep things simple in the example ...
   if (argc != 2) {
     std::cerr << "Usage: list_instances <project_id>" << std::endl;
     return 1;
   }
   char const* project_id = argv[1];
+
+  std::unique_ptr<BigtableInstanceAdmin::Stub> instance_admin(
+      BigtableInstanceAdmin::NewStub(channel));
   admin::ListInstancesRequest req;
   req.set_parent(std::move(std::string("projects/") + project_id));
+
+  // ... the API may return the list in "pages", it is rare that a
+  // project has so many instances that it requires multiple pages,
+  // but for completeness sake we document how to do it ...
   int count = 0;
   do {
     grpc::ClientContext context;
@@ -40,7 +52,7 @@ int main(int argc, char* argv[]) try {
       std::cerr << "Error in first ListInstances() request: "
                 << status.error_message() << " [" << status.error_code() << "] "
                 << status.error_details() << std::endl;
-      break;
+      return 1;
     }
     for (auto const& instance : response.instances()) {
       std::cout << "Instance[" << count << "]: " << instance.name() << ", "
@@ -52,9 +64,11 @@ int main(int argc, char* argv[]) try {
     for (auto const& location : response.failed_locations()) {
       std::cout << "Failed location: " << location << "\n";
     }
+    // ... nothing more to display, break the loop ...
     if (response.next_page_token() == "") {
       break;
     }
+    // ... request the next page ...
     req.set_page_token(response.next_page_token());
   } while (true);
 
