@@ -1,0 +1,47 @@
+# Create a docker image with the C++ Google API examples built into it.
+# This Dockerfile requires docker 17 or higher, it uses an argument to set
+# the base image version, which was not supported in early versions of docker.
+ARG DISTRO_VERSION=16.04
+FROM ubuntu:$DISTRO_VERSION
+MAINTAINER "Carlos O'Ryan <coryan@google.com>"
+
+# Install the pre-requisites, the long command line is to create as few
+# layers as possible in the image ...
+RUN apt-get update && \
+  apt-get install --no-install-recommends --no-install-suggests -y \
+    autoconf \
+    autoconf-archive \
+    automake \
+    build-essential \
+    ca-certificates \
+    ca-cacert \
+    clang++-3.9 \
+    cmake \
+    curl \
+    g++ \
+    gcc \
+    git-core \
+    libtool \
+    make \
+    pkg-config && \
+  apt-get clean && \
+  update-alternatives --install \
+      /usr/bin/clang clang /usr/bin/clang-3.9 100 && \
+  update-alternatives --install \
+      /usr/bin/clang++ clang++ /usr/bin/clang++-3.9 100
+
+WORKDIR /var/tmp/build-grpc
+RUN (git clone https://github.com/grpc/grpc.git && \
+    cd grpc && git pull && git submodule update --init && \
+    make -j 2 && make install && \
+    cd third_party/protobuf && make install)
+
+WORKDIR /var/tmp/build-samples
+RUN (git clone https://github.com/coryan/cpp-docs-samples.git && \
+    cd cpp-docs-samples && git checkout develop && \
+    git submodule update --init && \
+    cd bigtable/api && \
+    make -C googleapis OUTPUT=$PWD/googleapis-gens && \
+    cmake -DCMAKE_CXX_COMPILER=clang++ . && make)
+
+WORKDIR /
