@@ -40,7 +40,7 @@ RUN (git clone https://github.com/grpc/grpc.git && \
 ARG TRAVIS_EVENT_TYPE=cron
 ARG TRAVIS_REPO_SLUG=coryan/cpp-docs-samples
 ARG TRAVIS_COMMIT=
-ARG CXX_COMPILER=clang
+ARG CXX_COMPILER=clang++
 
 # TODO() - we should deal with pull requests differently ...
 WORKDIR /var/tmp/build-samples
@@ -56,6 +56,6 @@ RUN if test "x${TRAVIS_COMMIT}" != "x"; then git checkout ${TRAVIS_COMMIT}; fi
 RUN (git submodule update --init && \
      cd bigtable/api && \
      make -C googleapis OUTPUT=$PWD/googleapis-gens && \
-     cmake -DCMAKE_CXX_COMPILER=clang++ . && make)
+     cmake -DCMAKE_CXX_COMPILER=${CXX_COMPILER} . && make)
 
 WORKDIR /
