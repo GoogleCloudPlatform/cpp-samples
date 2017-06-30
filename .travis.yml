@@ -1,0 +1,38 @@
+language: cpp
+
+dist: trusty
+sudo: false
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+    - os: linux
+      compiler: clang
+
+script:
+  - (cd bigtable/api && cmake . && make)
+
+addons:
+  apt:
+    packages:
+      - vim
+      - curl
+      - git-core
+      - make
+      - gcc
+      - g++
+      - build-essential
+      - autoconf
+      - libtool
+      - pkg-config
+      - cmake
+      - clang++
+
+install:
+  - cd $HOME && git clone https://github.com/grpc/grpc.git
+  - (cd $HOME/grpc && git submodule update --init && make && make install)
+  - (cd $HOME/grpc/third_party/protobuf && make install)
+
+notifications:
+  email: false
