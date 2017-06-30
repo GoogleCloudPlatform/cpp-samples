@@ -27,7 +27,6 @@ addons:
       - libtool
       - pkg-config
       - cmake
-      - clang++
 
 install:
   - cd $HOME && git clone https://github.com/grpc/grpc.git
