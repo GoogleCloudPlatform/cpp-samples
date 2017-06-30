@@ -1,13 +1,13 @@
 language: cpp
 
 dist: trusty
-sudo: false
+sudo: true
 
 matrix:
   include:
     - os: linux
       compiler: gcc
-      #    - os: linux
+      # - os: linux
       #compiler: clang
 
 script:
@@ -24,14 +24,19 @@ addons:
       - g++
       - build-essential
       - autoconf
+      - automake
+      - autoconf-archive
       - libtool
       - pkg-config
       - cmake
+      - clang++-3.9
 
 install:
-  - cd $HOME && git clone https://github.com/grpc/grpc.git
-  - (cd $HOME/grpc && git submodule update --init && make && sudo make install)
-  - (cd $HOME/grpc/third_party/protobuf && sudo make install)
+  - sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-3.9 100
+  - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.9 100
+  - (cd $HOME && git clone https://github.com/grpc/grpc.git)
+  - (cd $HOME/grpc && git submodule update --init && make -j 2 && make install)
+  - (cd $HOME/grpc/third_party/protobuf && make install)
 
 notifications:
   email: false
