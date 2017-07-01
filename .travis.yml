@@ -47,12 +47,11 @@ script:
       echo cache args = $cacheargs;
       echo IMAGE = $IMAGE;
       echo IMAGE LATEST ID = $latest_id;
-      (cd bigtable/api &&
-       sudo docker build -t ${IMAGE?}:tip ${cacheargs?}
+      sudo docker build -t ${IMAGE?}:tip ${cacheargs?}
           --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
           --build-arg CXX_COMPILER=${CXX_COMPILER?}
           --build-arg TRAVIS_JOB_NUMBER=${TRAVIS_JOB_NUMBER}
-          -f docker/Dockerfile.${DISTRO?} docker/ );
+          -f bigtable/api/docker/Dockerfile.${DISTRO?} bigtable/;
     fi
 
 addons:
