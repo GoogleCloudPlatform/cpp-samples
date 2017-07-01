@@ -14,20 +14,17 @@ RUN apt-get update && \
     automake \
     build-essential \
     ca-certificates \
-    clang++-3.9 \
+    clang \
     cmake \
     curl \
     g++ \
     gcc \
     git-core \
     libtool \
+    lsb-release \
     make \
     pkg-config && \
-  apt-get clean && \
-  update-alternatives --install \
-      /usr/bin/clang clang /usr/bin/clang-3.9 100 && \
-  update-alternatives --install \
-      /usr/bin/clang++ clang++ /usr/bin/clang++-3.9 100
+  apt-get clean
 
 WORKDIR /var/tmp/build-grpc
 RUN (git clone https://github.com/grpc/grpc.git && \
