@@ -32,20 +32,17 @@ RUN (git clone https://github.com/grpc/grpc.git && \
     cd third_party/protobuf && make install && \
     echo /usr/local/lib >/etc/ld.so.conf.d/local.conf && ldconfig)
 
-# ... capture all the Travis arguments, with suitable defaults for
-# command-line testing ...
-ARG TRAVIS_EVENT_TYPE=cron
-ARG TRAVIS_REPO_SLUG=coryan/cpp-docs-samples
-ARG TRAVIS_COMMIT=
-ARG TRAVIS_PULL_REQUEST=
-ARG TRAVIS_PULL_REQUEST_BRANCH=
-ARG TRAVIS_PULL_REQUEST_SHA=
-ARG TRAVIS_PULL_REQUEST_SLUG=
-ARG CXX_COMPILER=clang++
+# ... by default, Fedora does not look for packages in
+# /usr/local/lib/pkgconfig ...
 ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 
-RUN echo COMMIT DATA:  ${TRAVIS_REPO_SLUG} ${TRAVIS_COMMIT}
-RUN echo PULL REQUEST DATA: ${TRAVIS_PULL_REQUEST_SLUG} ${TRAVIS_PULL_REQUEST}
+# ... capture the arguments that control the build ...
+ARG CXX_COMPILER=clang++
+
+# ... capture the Travis job number, effectively this busts the cache
+# in each build, which we want anyway ...
+ARG TRAVIS_JOB_NUMBER=
+RUN echo Running build=${TRAVIS_JOB_NUMBER}
 
 # ... copy the contents of the source code directory to the container ...
 WORKDIR /var/tmp/build-samples

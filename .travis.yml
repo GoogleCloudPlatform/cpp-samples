@@ -51,9 +51,7 @@ script:
        sudo docker build -t ${IMAGE?}:tip ${cacheargs?}
           --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
           --build-arg CXX_COMPILER=${CXX_COMPILER?}
-          --build-arg TRAVIS_REPO_SLUG=${TRAVIS_REPO_SLUG}
-          --build-arg TRAVIS_EVENT_TYPE=${TRAVIS_EVENT_TYPE}
-          --build-arg TRAVIS_COMMIT=${TRAVIS_COMMIT}
+          --build-arg TRAVIS_JOB_NUMBER=${TRAVIS_JOB_NUMBER}
           -f docker/Dockerfile.${DISTRO?} docker/ );
     fi
 
