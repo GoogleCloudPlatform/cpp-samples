@@ -76,7 +76,7 @@ install:
   - sudo docker --version
   - TARBALL=docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
     if [ "${DOCKER_BUILD?}" = "yes" -a -f ${TARBALL?} ]; then
-      sudo docker load <${TARBALL?} ||
+      gunzip <${TARBALL?} | sudo docker load ||
         echo "Could not load saved image, continue without cache";
     fi
   # Some debugging ...
@@ -88,12 +88,11 @@ install:
   - sudo docker image ls
 
 before_cache:
-  - if [ "${DOCKER_BUILD?}" = "yes" ]; then
-      sudo docker image tag
-          cached-${DISTRO?}-${DISTRO_VERSION?}:tip
-          cached-${DISTRO?}-${DISTRO_VERSION?}:latest ;
-      sudo docker save cached-${DISTRO?}-${DISTRO_VERSION?}:latest |
-        gzip > docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
+  - IMAGE=cached-${DISTRO?}-${DISTRO_VERSION?};
+    TARBALL=docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
+    if [ "${DOCKER_BUILD?}" = "yes" ]; then
+      sudo docker image tag ${IMAGE?}:tip ${IMAGE?}:latest ;
+      sudo docker save ${IMAGE?}:latest | gzip - > ${TARBALL?};
     fi
 
 notifications:
