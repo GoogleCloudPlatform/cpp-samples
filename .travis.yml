@@ -44,9 +44,9 @@ script:
       if [ "x${latest_id}" != "x" ]; then
         cacheargs="--cache-from ${IMAGE?}:latest";
       fi;
-      echo $cacheargs;
-      echo $latest_id;
-      echo $IMAGE;
+      echo cache args = $cacheargs;
+      echo IMAGE = $IMAGE;
+      echo IMAGE LATEST ID = $latest_id;
       (cd bigtable/api &&
        sudo docker build -t ${IMAGE?}:tip ${cacheargs?}
           --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
@@ -61,7 +61,14 @@ addons:
   apt:
     packages:
 
-# Cache the grpc directory because building it takes so long ...
+# Cache the (saved) docker images.
+# With recent version of docker one can reuse a prior image as a
+# source cache, that can speed up the builds, as the dependencies and
+# images can be reused ...
+# TODO() - we need to add a cron job to rebuild without a cache every
+# so often, the dependencies do change and we want to validate that
+# the examples build with the newer versions.  That is easy to do with
+# a cron-based build in Travis that cleans up the cache every X days.
 cache:
   directories:
     - docker-images/ubuntu/14.04
@@ -74,10 +81,6 @@ install:
   # Restore the docker image from the cached directory.  That way we
   # can reuse the steps in the docker image that install
   # pre-requisites and build dependencies ...
-  - sudo docker --version
-  - sudo apt-get update
-  - sudo apt-get install -y docker-ce
-  - sudo docker --version
   - if [ "${DOCKER_BUILD?}" = "yes" -a
        -f docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz ]; then
       sudo docker load <docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
