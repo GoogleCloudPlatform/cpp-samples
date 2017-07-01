@@ -87,11 +87,11 @@ install:
   - ls -l
   - sudo docker image ls
 
-after_success:
+before_cache:
   - if [ "${DOCKER_BUILD?}" = "yes" ]; then
       sudo docker image tag
-          cached-${DISTRO?}-${DISTRO_VERSION?}:tip \
-          cached-${DISTRO?}-${DISTRO_VERSION?}:latest;
+          cached-${DISTRO?}-${DISTRO_VERSION?}:tip
+          cached-${DISTRO?}-${DISTRO_VERSION?}:latest ;
       sudo docker save cached-${DISTRO?}-${DISTRO_VERSION?}:latest |
         gzip > docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
     fi
