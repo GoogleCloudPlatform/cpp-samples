@@ -7,9 +7,6 @@ matrix:
   include:
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=14.04 CXX_COMPILER=/usr/bin/clang++
-    - os: linux
-      compiler: clang
       env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=16.04 CXX_COMPILER=/usr/bin/clang++
     - os: linux
       compiler: clang
@@ -20,9 +17,6 @@ matrix:
     - os: linux
       compiler: clang
       env: DOCKER_BUILD=not-yet DISTRO=fedora DISTRO_VERSION=25 CXX_COMPILER=/usr/bin/clang++
-    - os: linux
-      compiler: clang
-      env: DOCKER_BUILD=not-yet DISTRO=ubuntu DISTRO_VERSION=14.04 CXX_COMPILER=/usr/bin/g++
     - os: linux
       compiler: clang
       env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=16.04 CXX_COMPILER=/usr/bin/g++
@@ -68,7 +62,6 @@ addons:
 # a cron-based build in Travis that cleans up the cache every X days.
 cache:
   directories:
-    - docker-images/ubuntu/14.04
     - docker-images/ubuntu/16.04
     - docker-images/ubuntu/17.04
     - docker-images/fedora/24
@@ -81,13 +74,17 @@ install:
   - sudo apt-get update
   - sudo apt-get install -y docker-ce
   - sudo docker --version
-  - if [ "${DOCKER_BUILD?}" = "yes" -a
-       -f docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz ]; then
-      sudo docker load <docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
+  - TARBALL=docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
+    if [ "${DOCKER_BUILD?}" = "yes" -a -f ${TARBALL?} ]; then
+      sudo docker load <${TARBALL?} ||
+        echo "Could not load saved image, continue without cache";
     fi
   # Some debugging ...
   - ls /usr/local/lib/pkgconfig || echo "no /usr/local/lib/pkgconfig"
-  - ls -l
+  - ls -l || /bin/true
+  - ls -l docker-images || /bin/true
+  - ls -l docker-images/${DISTRO} || /bin/true
+  - ls -l docker-images/${DISTRO}/${DISTRO_VERSION} || /bin/true
   - sudo docker image ls
 
 before_cache:
