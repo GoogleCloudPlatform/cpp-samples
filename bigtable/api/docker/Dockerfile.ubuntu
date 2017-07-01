@@ -36,26 +36,28 @@ RUN (git clone https://github.com/grpc/grpc.git && \
     make -j 2 && make install && \
     cd third_party/protobuf && make install)
 
-# ... configure what we build based on the Travis build ...
+# ... capture all the Travis arguments, with suitable defaults for
+# command-line testing ...
 ARG TRAVIS_EVENT_TYPE=cron
 ARG TRAVIS_REPO_SLUG=coryan/cpp-docs-samples
 ARG TRAVIS_COMMIT=
+ARG TRAVIS_PULL_REQUEST=
+ARG TRAVIS_PULL_REQUEST_BRANCH=
+ARG TRAVIS_PULL_REQUEST_SHA=
+ARG TRAVIS_PULL_REQUEST_SLUG=
 ARG CXX_COMPILER=clang++
+ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 
-# TODO() - we should deal with pull requests differently ...
+RUN echo COMMIT DATA:  ${TRAVIS_REPO_SLUG} ${TRAVIS_COMMIT}
+RUN echo PULL REQUEST DATA: ${TRAVIS_PULL_REQUEST_SLUG} ${TRAVIS_PULL_REQUEST}
+
+# ... copy the contents of the source code directory to the container ...
 WORKDIR /var/tmp/build-samples
-RUN echo COMMIT = ${TRAVIS_COMMIT} # bust the docker cache for each build
-RUN git clone https://github.com/${TRAVIS_REPO_SLUG}.git ${TRAVIS_REPO_SLUG}
+COPY api /var/tmp/build-samples
 
 # ... in the travis builds, this checks out the same commit that
 # Travis is trying to build, when testing it just checksout the default
 # branch
-WORKDIR /var/tmp/build-samples/$TRAVIS_REPO_SLUG
-RUN if test "x${TRAVIS_COMMIT}" != "x"; then git checkout ${TRAVIS_COMMIT}; fi
 
-RUN (git submodule update --init && \
-     cd bigtable/api && \
-     make -C googleapis OUTPUT=$PWD/googleapis-gens && \
+RUN (make -C googleapis OUTPUT=$PWD/googleapis-gens && \
      cmake -DCMAKE_CXX_COMPILER=${CXX_COMPILER} . && make -j 2)
-
-WORKDIR /
