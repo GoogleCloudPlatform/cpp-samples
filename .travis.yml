@@ -7,13 +7,13 @@ matrix:
   include:
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=not-yet DISTRO=ubuntu DISTRO_VERSION=14.04 CXX_COMPILER=/usr/bin/clang++
+      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=14.04 CXX_COMPILER=/usr/bin/clang++
     - os: linux
       compiler: clang
       env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=16.04 CXX_COMPILER=/usr/bin/clang++
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=not-yet DISTRO=ubuntu DISTRO_VERSION=17.04 CXX_COMPILER=/usr/bin/clang++
+      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=17.04 CXX_COMPILER=/usr/bin/clang++
     - os: linux
       compiler: clang
       env: DOCKER_BUILD=not-yet DISTRO=fedora DISTRO_VERSION=24 CXX_COMPILER=/usr/bin/clang++
