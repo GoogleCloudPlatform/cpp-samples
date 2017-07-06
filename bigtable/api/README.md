@@ -4,11 +4,11 @@ These samples demonstrate how to call the [Google Cloud Bigtable API](https://cl
 
 ## Build and Run
 
-1.  **Create a project in the Google Cloud Platform Console**.
+1.  **Create a project in the Google Cloud Console**.
     If you haven't already created a project, create one now. Projects enable
     you to manage all Google Cloud Platform resources for your app, including
     deployment, access control, billing, and services.
-    1.  Open the [Cloud Platform Console](https://console.cloud.google.com/).
+    1.  Open the [Google Cloud Console](https://console.cloud.google.com/).
     1.  In the drop-down menu at the top, select Create a project.
     1.  Click Show advanced options. Under App Engine location, select a
         United States location.
@@ -19,13 +19,13 @@ These samples demonstrate how to call the [Google Cloud Bigtable API](https://cl
 1.  **Enable billing for your project**.
     If you haven't already enabled billing for your project, [enable billing now](https://console.cloud.google.com/project/_/settings).
     Enabling billing allows the application to consume billable resources such
-    as Speech API calls.  See [Cloud Platform Console Help](https://support.google.com/cloud/answer/6288653) for more information about billing settings.
+    as Speech API calls.  See [Google Cloud Console Help](https://support.google.com/cloud/answer/6288653) for more information about billing settings.
 
 1.  **Enable the Cloud Bigtable Admin APIs for your project**.
-    [Click here](https://console.cloud.google.com/flows/enableapi?apiid=bigtableadmin&showconfirmation=true) to visit Cloud Platform Console and enable the Bigtable Admin API.
+    [Click here](https://console.cloud.google.com/flows/enableapi?apiid=bigtableadmin&showconfirmation=true) to visit Google Cloud Console and enable the Bigtable Admin API.
 
 1.  **Enable the Cloud Bigtable APIs for your project**.
-    [Click here](https://console.cloud.google.com/flows/enableapi?apiid=bigtable&showconfirmation=true) to visit Cloud Platform Console and enable the Bigtable Admin API.
+    [Click here](https://console.cloud.google.com/flows/enableapi?apiid=bigtable&showconfirmation=true) to visit Google Cloud Console and enable the Bigtable Admin API.
 
 1.  **Download service account credentials**.
     These samples use service accounts for authentication.

@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #include <grpc++/grpc++.h>
 #include <iostream>
 #include "google/bigtable/admin/v2/bigtable_instance_admin.grpc.pb.h"
@@ -18,8 +19,8 @@
 int main(int argc, char* argv[]) try {
   auto creds = grpc::GoogleDefaultCredentials();
   // Notice that Bigtable has separate endpoints for different APIs,
-  // we are going to query the list of instances (aka clusters), which
-  // is one of the admin APIs, so connect to the bigtableadmin endpoint ..
+  // we are going to query the list of instances, which is one of the
+  // admin APIs, so connect to the bigtableadmin endpoint ...
   auto channel = grpc::CreateChannel("bigtableadmin.googleapis.com", creds);
 
   // ... save ourselves some typing ...
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]) try {
       std::cout << "Failed location: " << location << "\n";
     }
     // ... nothing more to display, break the loop ...
-    if (response.next_page_token() == "") {
+    if (response.next_page_token().empty()) {
       break;
     }
     // ... request the next page ...
