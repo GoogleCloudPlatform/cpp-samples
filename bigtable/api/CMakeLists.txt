@@ -54,9 +54,9 @@ include(FindProtobuf)
 
 # ... find the grpc and grpc++ libraries using pkg-config ...
 include(FindPkgConfig)
-pkg_check_modules(GRPCPP REQUIRED grpc++)
-pkg_check_modules(GRPC REQUIRED grpc)
-pkg_check_modules(PROTOBUF REQUIRED protobuf)
+pkg_check_modules(GRPCPP REQUIRED grpc++>=1.4.2)
+pkg_check_modules(GRPC REQUIRED grpc>=4.0)
+pkg_check_modules(PROTOBUF REQUIRED protobuf>=3.0)
 
 # ... define where the googleapis protos can be found, and add that
 # directory to the search path for header files ...
