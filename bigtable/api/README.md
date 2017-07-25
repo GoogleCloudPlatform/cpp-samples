@@ -45,3 +45,27 @@ These samples demonstrate how to call the [Google Cloud Bigtable API](https://cl
 1.  **Install gRPC.**
     1.  Visit [the gRPC github repo](https://github.com/grpc/grpc) and follow the instructions to install gRPC.
     1.  Then, follow the instructions in the **Pre-requisites** section to install **protoc**.
+
+1.  **Download or close this repo** with
+    ```console
+    git clone https://github.com/GoogleCloudPlatform/cpp-docs-samples
+    cd cpp-docs-samples
+    git submodule update --init
+    ```
+
+1.  **Generate googleapis gRPC source code.**
+    ```console
+    cd bigtable/api
+    env -u LANGUAGE make -C googleapis OUTPUT=$PWD/googleapis-gens
+    ```
+
+1.  **Compile the examples**
+    ```console
+    cmake .
+    make -j 2
+    ```
+
+1.  **Run the examples**
+    ```console
+    ./list_instances <project_id>
+    ```
