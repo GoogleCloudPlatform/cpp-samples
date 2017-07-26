@@ -21,55 +21,28 @@ matrix:
   include:
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=16.04 CXX_COMPILER=/usr/bin/clang++
+      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=17.04
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=17.04 CXX_COMPILER=/usr/bin/clang++
+      env: DOCKER_BUILD=yes DISTRO=fedora DISTRO_VERSION=24
     - os: linux
-      compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=fedora DISTRO_VERSION=24 CXX_COMPILER=/usr/bin/clang++
+      compiler: gcc
+      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=16.04
     - os: linux
+      compiler: gcc
+      env: DOCKER_BUILD=yes DISTRO=fedora DISTRO_VERSION=25
+    - os: osx
       compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=fedora DISTRO_VERSION=25 CXX_COMPILER=/usr/bin/clang++
-    - os: linux
-      compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=16.04 CXX_COMPILER=/usr/bin/g++
-    - os: linux
-      compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=17.04 CXX_COMPILER=/usr/bin/g++
-    - os: linux
-      compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=fedora DISTRO_VERSION=24 CXX_COMPILER=/usr/bin/g++
-    - os: linux
-      compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=fedora DISTRO_VERSION=25 CXX_COMPILER=/usr/bin/g++
+      env: MACOSX_BUILD=yes
 
 script:
-  - if [ "${DOCKER_BUILD?}" = "yes" ]; then
-      IMAGE="cached-${DISTRO?}-${DISTRO_VERSION?}";
-      latest_id=$(sudo docker inspect -f '{{ .Id }}' ${IMAGE?}:latest)
-      cacheargs="";
-      if [ "x${latest_id}" != "x" ]; then
-        cacheargs="--cache-from ${IMAGE?}:latest";
-      fi;
-      echo cache args = $cacheargs;
-      echo IMAGE = $IMAGE;
-      echo IMAGE LATEST ID = $latest_id;
-      sudo docker build -t ${IMAGE?}:tip ${cacheargs?}
-          --build-arg DISTRO_VERSION=${DISTRO_VERSION?}
-          --build-arg CXX_COMPILER=${CXX_COMPILER?}
-          --build-arg TRAVIS_JOB_NUMBER=${TRAVIS_JOB_NUMBER}
-          -f bigtable/api/docker/Dockerfile.${DISTRO?} bigtable/;
-    fi
+  - bigtable/api/ci/build-linux.sh
+  - bigtable/api/ci/build-macosx.sh
 
 # Cache the (saved) docker images.
 # With recent version of docker one can reuse a prior image as a
 # source cache, that can speed up the builds, as the dependencies and
 # images can be reused ...
-# TODO() - we need to add a cron job to rebuild without a cache every
-# so often, the dependencies do change and we want to validate that
-# the examples build with the newer versions.  That is easy to do with
-# a cron-based build in Travis that cleans up the cache every X days.
 cache:
   directories:
     - docker-images/ubuntu/16.04
@@ -81,25 +54,11 @@ install:
   # Restore the docker image from the cached directory.  That way we
   # can reuse the steps in the docker image that install
   # pre-requisites and build dependencies ...
-  - sudo apt-get update
-  - sudo apt-get install -y docker-ce
-  - sudo docker --version
-  - TARBALL=docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
-    if [ "${DOCKER_BUILD?}" = "yes" -a -f ${TARBALL?} ]; then
-      gunzip <${TARBALL?} | sudo docker load ||
-        echo "Could not load saved image, continue without cache";
-    fi
-  # Some debugging ...
-  - ls -l docker-images/${DISTRO}/${DISTRO_VERSION} || /bin/true
-  - sudo docker image ls
+  - bigtable/api/ci/install-linux.sh
+  - bigtable/api/ci/install-macosx.sh
 
 before_cache:
-  - IMAGE=cached-${DISTRO?}-${DISTRO_VERSION?};
-    TARBALL=docker-images/${DISTRO?}/${DISTRO_VERSION?}/saved.tar.gz;
-    if [ "${DOCKER_BUILD?}" = "yes" ]; then
-      sudo docker image tag ${IMAGE?}:tip ${IMAGE?}:latest ;
-      sudo docker save ${IMAGE?}:latest | gzip - > ${TARBALL?};
-    fi
+  - bigtable/api/ci/cache-linux.sh
 
 notifications:
   email: false

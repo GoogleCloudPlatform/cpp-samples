@@ -5,3 +5,4 @@ CMakeFiles/
 CMakeCache.txt
 libgoogleapis.a
 list_instances
+build/
