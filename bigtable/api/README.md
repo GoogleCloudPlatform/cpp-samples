@@ -19,7 +19,8 @@ These samples demonstrate how to call the [Google Cloud Bigtable API](https://cl
 1.  **Enable billing for your project**.
     If you haven't already enabled billing for your project, [enable billing now](https://console.cloud.google.com/project/_/settings).
     Enabling billing allows the application to consume billable resources such
-    as Speech API calls.  See [Google Cloud Console Help](https://support.google.com/cloud/answer/6288653) for more information about billing settings.
+    as Cloud Bigtable API calls.
+    See [Google Cloud Console Help](https://support.google.com/cloud/answer/6288653) for more information about billing settings.
 
 1.  **Enable the Cloud Bigtable Admin APIs for your project**.
     [Click here](https://console.cloud.google.com/flows/enableapi?apiid=bigtableadmin&showconfirmation=true) to visit Google Cloud Console and enable the Bigtable Admin API.
@@ -29,7 +30,7 @@ These samples demonstrate how to call the [Google Cloud Bigtable API](https://cl
 
 1.  **Download service account credentials**.
     These samples use service accounts for authentication.
-    1.  Visit the [Cloud Console](http://cloud.google.com/console), and navigate to:
+    1.  Visit the [Google Cloud Console](http://cloud.google.com/console), and navigate to:
     `API Manager > Credentials > Create credentials > Service account key`
     1.  Under **Service account**, select `New service account`.
     1.  Under **Service account name**, enter a service account name of your choosing.  For example, `transcriber`.
@@ -45,3 +46,34 @@ These samples demonstrate how to call the [Google Cloud Bigtable API](https://cl
 1.  **Install gRPC.**
     1.  Visit [the gRPC github repo](https://github.com/grpc/grpc) and follow the instructions to install gRPC.
     1.  Then, follow the instructions in the **Pre-requisites** section to install **protoc**.
+
+1.  **Download or close this repo** with
+    ```console
+    git clone https://github.com/GoogleCloudPlatform/cpp-docs-samples
+    cd cpp-docs-samples
+    git submodule update --init
+    ```
+
+1.  **Generate googleapis gRPC source code.**
+    ```console
+    cd bigtable/api
+    env -u LANGUAGE make -C googleapis OUTPUT=$PWD/googleapis-gens
+    ```
+
+1.  **Compile the examples**
+    ```console
+    cmake .
+    make -j 2
+    ```
+
+1.  **Run the examples**
+    ```console
+    # for example: list_instance my-project 
+    ./list_instances <project_id>
+
+    # for example: create_instance my-project bt-test-instance cluster00 us-east1-c
+    ./create_instance <project_id> <instance_id> <cluster_id> <zone>
+
+    ./list_instances <project_id>
+    ./delete_instance <project_id> <instance_id>
+    ```

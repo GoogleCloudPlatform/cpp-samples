@@ -13,15 +13,19 @@
 // limitations under the License.
 
 #include <google/bigtable/admin/v2/bigtable_instance_admin.grpc.pb.h>
+#include <google/longrunning/operations.grpc.pb.h>
+#include <google/protobuf/text_format.h>
 #include <grpc++/grpc++.h>
 
+#include <algorithm>
+#include <chrono>
 #include <iostream>
 
 int main(int argc, char* argv[]) try {
   auto creds = grpc::GoogleDefaultCredentials();
   // Notice that Bigtable has separate endpoints for different APIs,
-  // we are going to query the list of instances, which is one of the
-  // admin APIs, so connect to the bigtableadmin endpoint ...
+  // we are going to delete an instance, which requires the admin
+  // APIs, so connect to the bigtableadmin endpoint ...
   auto channel = grpc::CreateChannel("bigtableadmin.googleapis.com", creds);
 
   // ... save ourselves some typing ...
@@ -31,48 +35,34 @@ int main(int argc, char* argv[]) try {
   // ... a more interesting application would use getopt(3),
   // getopt_long(3), or Boost.Options to parse the command-line, we
   // want to keep things simple in the example ...
-  if (argc != 2) {
-    std::cerr << "Usage: list_instances <project_id>" << std::endl;
+  if (argc != 3) {
+    std::cerr << "Usage: create_instance <project_id> <instance_id>"
+              << std::endl;
     return 1;
   }
   char const* project_id = argv[1];
+  char const* instance_id = argv[2];
+
+  admin::DeleteInstanceRequest req;
+  req.set_name(std::string("projects/") + project_id + "/instances/" +
+               instance_id);
 
   std::unique_ptr<BigtableInstanceAdmin::Stub> instance_admin(
       BigtableInstanceAdmin::NewStub(channel));
-  admin::ListInstancesRequest req;
-  req.set_parent(std::string("projects/") + project_id);
 
-  // ... the API may return the list in "pages", it is rare that a
-  // project has so many instances that it requires multiple pages,
-  // but for completeness sake we document how to do it ...
-  int count = 0;
-  do {
-    grpc::ClientContext context;
-    admin::ListInstancesResponse response;
-    auto status = instance_admin->ListInstances(&context, req, &response);
-    if (not status.ok()) {
-      std::cerr << "Error in first ListInstances() request: "
-                << status.error_message() << " [" << status.error_code() << "] "
-                << status.error_details() << std::endl;
-      return 1;
-    }
-    for (auto const& instance : response.instances()) {
-      std::cout << "Instance[" << count << "]: " << instance.name() << ", "
-                << instance.display_name() << ", "
-                << admin::Instance_State_Name(instance.state()) << ", "
-                << admin::Instance_Type_Name(instance.type()) << "\n";
-      ++count;
-    }
-    for (auto const& location : response.failed_locations()) {
-      std::cout << "Failed location: " << location << "\n";
-    }
-    // ... nothing more to display, break the loop ...
-    if (response.next_page_token().empty()) {
-      break;
-    }
-    // ... request the next page ...
-    req.set_page_token(response.next_page_token());
-  } while (true);
+  // ... make the request to create an instance, that returns a "long
+  // running operation" object ...
+  grpc::ClientContext ctx;
+  google::protobuf::Empty response;
+  auto status = instance_admin->DeleteInstance(&ctx, req, &response);
+  if (not status.ok()) {
+    std::cerr << "Error in DeleteInstance() request: " << status.error_message()
+              << " [" << status.error_code() << "] " << status.error_details()
+              << std::endl;
+    return 1;
+  }
+
+  std::cout << "DeleteInstance() was successful" << std::endl;
 
   return 0;
 } catch (std::exception const& ex) {

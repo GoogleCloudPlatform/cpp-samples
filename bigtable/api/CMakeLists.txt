@@ -22,11 +22,10 @@ set(PACKAGE_TARNAME   "${PACKAGE_NAME}-${PACKAGE_VERSION}")
 set(PACKAGE_BUGREPORT "https://github.com/GoogleCloudPlatform/cpp-docs-samples/issues")
 project(${PACKAGE_NAME} CXX C)
 
-# ... configure the Compiler options, we will be using C++11 features,
-# so enable that, both for newer cmake versions ...
-set(CXX_STANDARD_REQUIRED 11)
-# ... and for older ones ...
-set(CMAKE_CXX_STANDARD ${CXX_STANDARD_REQUIRED})
+# ... configure the Compiler options, we will be using C++14 features,
+# so enable that ...
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ... the author is paranoid.  Turn on all available warnings
 # and turn warnings into errors to stop the build if any warning is
@@ -54,9 +53,11 @@ include(FindProtobuf)
 
 # ... find the grpc and grpc++ libraries using pkg-config ...
 include(FindPkgConfig)
-pkg_check_modules(GRPCPP REQUIRED grpc++)
-pkg_check_modules(GRPC REQUIRED grpc)
-pkg_check_modules(PROTOBUF REQUIRED protobuf)
+pkg_check_modules(GRPCPP REQUIRED grpc++>=1.4.1)
+pkg_check_modules(GRPC REQUIRED grpc>=4.0)
+pkg_check_modules(PROTOBUF REQUIRED protobuf>=3.0)
+link_directories(${GRPCPP_LIBRARY_DIRS} ${GRPC_LIBRARY_DIRS} ${PROTOBUF_LIBRARY_DIRS})
+include_directories(${GRPCPP_INCLUDE_DIRS} ${GRPC_INCLUDE_DIRS} ${PROTOBUF_INCLUDE_DIRS})
 
 # ... define where the googleapis protos can be found, and add that
 # directory to the search path for header files ...
@@ -75,6 +76,11 @@ file(GLOB_RECURSE GOOGLEAPIS_SRCS ${GOOGLEAPIS_GENS_PATH}/*.pb.cc)
 file(GLOB_RECURSE GOOGLEAPIS_HDRS ${GOOGLEAPIS_GENS_PATH}/*.pb.h)
 add_library(googleapis ${GOOGLEAPIS_SRCS} ${GOOGLEAPIS_HDRS})
 
-# A very simple example, list the instances for a give project
 add_executable(list_instances list_instances.cc)
-target_link_libraries(list_instances googleapis grpc++ grpc protobuf)
+target_link_libraries(list_instances googleapis ${GRPCPP_LIBRARIES} ${GRPC_LIBRARIES} ${PROTOBUF_LIBRARIES})
+
+add_executable(create_instance create_instance.cc)
+target_link_libraries(create_instance googleapis ${GRPCPP_LIBRARIES} ${GRPC_LIBRARIES} ${PROTOBUF_LIBRARIES})
+
+add_executable(delete_instance delete_instance.cc)
+target_link_libraries(delete_instance googleapis ${GRPCPP_LIBRARIES} ${GRPC_LIBRARIES} ${PROTOBUF_LIBRARIES})
