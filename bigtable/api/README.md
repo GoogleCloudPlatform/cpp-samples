@@ -1,5 +1,7 @@
 # Bigtable Samples.
 
+[![Build Status](https://travis-ci.org/coryan/cpp-docs-samples.svg?branch=master)](https://travis-ci.org/coryan/cpp-docs-samples) [![Build status](https://ci.appveyor.com/api/projects/status/51melcqj0g1whoug?svg=true)](https://ci.appveyor.com/project/coryan/cpp-docs-samples) 
+
 These samples demonstrate how to call the [Google Cloud Bigtable API](https://cloud.google.com/bigtable/) using C++.
 
 ## Build and Run
@@ -68,12 +70,26 @@ These samples demonstrate how to call the [Google Cloud Bigtable API](https://cl
 
 1.  **Run the examples**
     ```console
-    # for example: list_instance my-project 
-    ./list_instances <project_id>
+    # This should be the name of the project you enabled billing and the APIs for.
+    PROJECT=<your project here>
 
-    # for example: create_instance my-project bt-test-instance cluster00 us-east1-c
-    ./create_instance <project_id> <instance_id> <cluster_id> <zone>
+    # ... outside GCE you may need to set:
+    # export GOOGLE_APPLICATION_CREDENTIALS=<path to service account private key file>
 
-    ./list_instances <project_id>
-    ./delete_instance <project_id> <instance_id>
+    ./list_instances $PROJECT
+
+    ./create_instance $PROJECT bt-test-instance cluster-00 us-east1-c
+
+    ./list_instances $PROJECT
+
+    ./create_table $PROJECT bt-test-instance my-table
+
+    ./list_tables $PROJECT bt-test-instance
+
+    ./delete_table $PROJECT bt-test-instance my-table
+
+    ./delete_instance $PROJECT bt-test-instance
+
+    ./list_instances $PROJECT
     ```
+

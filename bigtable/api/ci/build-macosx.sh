@@ -21,4 +21,3 @@ cmake ..
 make -j 2
 
 exit 0
-
