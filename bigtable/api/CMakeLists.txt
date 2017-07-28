@@ -78,13 +78,15 @@ endif()
 
 include(cmake/CompileProtos.cmake)
 
-set(PROTOBUF_IMPORT_DIRS "${PROJECT_SOURCE_DIR}/googleapis")
+set(PROTOBUF_IMPORT_DIRS "${PROJECT_SOURCE_DIR}/googleapis" "${PROJECT_SOURCE_DIR}")
 PROTOBUF_GENERATE_CPP(PROTO_SOURCES PROTO_HDRS
         ${PROJECT_SOURCE_DIR}/googleapis/google/bigtable/admin/v2/bigtable_instance_admin.proto
         ${PROJECT_SOURCE_DIR}/googleapis/google/bigtable/admin/v2/bigtable_table_admin.proto
         ${PROJECT_SOURCE_DIR}/googleapis/google/bigtable/admin/v2/common.proto
         ${PROJECT_SOURCE_DIR}/googleapis/google/bigtable/admin/v2/instance.proto
         ${PROJECT_SOURCE_DIR}/googleapis/google/bigtable/admin/v2/table.proto
+        ${PROJECT_SOURCE_DIR}/googleapis/google/bigtable/v2/bigtable.proto
+        ${PROJECT_SOURCE_DIR}/googleapis/google/bigtable/v2/data.proto
         ${PROJECT_SOURCE_DIR}/googleapis/google/longrunning/operations.proto
         ${PROJECT_SOURCE_DIR}/googleapis/google/rpc/status.proto
         ${PROJECT_SOURCE_DIR}/googleapis/google/api/annotations.proto
@@ -93,6 +95,7 @@ PROTOBUF_GENERATE_CPP(PROTO_SOURCES PROTO_HDRS
 GRPC_GENERATE_CPP(GRPCPP_SOURCES GRPCPP_HDRS
         ${PROJECT_SOURCE_DIR}/googleapis/google/bigtable/admin/v2/bigtable_instance_admin.proto
         ${PROJECT_SOURCE_DIR}/googleapis/google/bigtable/admin/v2/bigtable_table_admin.proto
+        ${PROJECT_SOURCE_DIR}/googleapis/google/bigtable/v2/bigtable.proto
         ${PROJECT_SOURCE_DIR}/googleapis/google/longrunning/operations.proto)
 include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
 
@@ -120,3 +123,11 @@ target_link_libraries(delete_table googleapis ${GRPCPP_LIBRARIES} ${GRPC_LIBRARI
 
 add_executable(list_tables list_tables.cc)
 target_link_libraries(list_tables googleapis ${GRPCPP_LIBRARIES} ${GRPC_LIBRARIES} ${PROTOBUF_LIBRARIES})
+
+PROTOBUF_GENERATE_CPP(TAQ_PROTO_SRCS TAQ_PROTO_HDRS ${PROJECT_SOURCE_DIR}/taq.proto)
+
+add_executable(upload_taq upload_taq.cc ${TAQ_PROTO_SRCS} ${TAQ_PROTO_HDRS})
+target_link_libraries(upload_taq googleapis ${GRPCPP_LIBRARIES} ${GRPC_LIBRARIES} ${PROTOBUF_LIBRARIES})
+
+add_executable(upload_taq_batch upload_taq_batch.cc ${TAQ_PROTO_SRCS} ${TAQ_PROTO_HDRS})
+target_link_libraries(upload_taq_batch googleapis ${GRPCPP_LIBRARIES} ${GRPC_LIBRARIES} ${PROTOBUF_LIBRARIES})
