@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <ciso646>
 #include <iostream>
 #include <thread>
 

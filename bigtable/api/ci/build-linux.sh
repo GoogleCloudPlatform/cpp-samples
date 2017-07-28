@@ -8,7 +8,7 @@ if [ "x${DOCKER_BUILD}" != "xyes" ]; then
 fi
 
 IMAGE="cached-${DISTRO?}-${DISTRO_VERSION?}"
-latest_id=$(sudo docker inspect -f '{{ .Id }}' ${IMAGE?}:latest >/dev/null || echo "")
+latest_id=$(sudo docker inspect -f '{{ .Id }}' ${IMAGE?}:latest 2>/dev/null || echo "")
 
 echo IMAGE = $IMAGE
 echo IMAGE LATEST ID = $latest_id

@@ -12,55 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <google/bigtable/admin/v2/bigtable_instance_admin.grpc.pb.h>
-#include <google/protobuf/text_format.h>
+#include <google/bigtable/admin/v2/bigtable_table_admin.grpc.pb.h>
 #include <grpc++/grpc++.h>
 
 #include <ciso646>
 #include <iostream>
 
 int main(int argc, char* argv[]) try {
-  auto creds = grpc::GoogleDefaultCredentials();
-  // Notice that Bigtable has separate endpoints for different APIs,
-  // we are going to delete an instance, which requires the admin
-  // APIs, so connect to the bigtableadmin endpoint ...
-  auto channel = grpc::CreateChannel("bigtableadmin.googleapis.com", creds);
-
-  // ... save ourselves some typing ...
-  namespace admin = ::google::bigtable::admin::v2;
-  using admin::BigtableInstanceAdmin;
-
   // ... a more interesting application would use getopt(3),
   // getopt_long(3), or Boost.Options to parse the command-line, we
   // want to keep things simple in the example ...
-  if (argc != 3) {
-    std::cerr << "Usage: create_instance <project_id> <instance_id>"
+  if (argc != 4) {
+    std::cerr << "Usage: delete_table <project_id> <instance_id> <table>"
               << std::endl;
     return 1;
   }
   char const* project_id = argv[1];
   char const* instance_id = argv[2];
+  char const* table_id = argv[3];
 
-  admin::DeleteInstanceRequest req;
-  req.set_name(std::string("projects/") + project_id + "/instances/" +
-               instance_id);
+  // ... use the default credentials, this works automatically if your
+  // GCE instance has the Bigtable APIs enabled.  You can also set
+  // GOOGLE_APPLICATION_CREDENTIALS to work outside GCE, more details
+  // at:
+  //  https://grpc.io/docs/guides/auth.html
+  auto creds = grpc::GoogleDefaultCredentials();
 
-  std::unique_ptr<BigtableInstanceAdmin::Stub> instance_admin(
-      BigtableInstanceAdmin::NewStub(channel));
+  // ... notice that Bigtable has separate endpoints for different
+  // APIs, we are going to delete a table, which is one of the admin
+  // APIs, so connect to the bigtableadmin endpoint ...
+  auto channel = grpc::CreateChannel("bigtableadmin.googleapis.com", creds);
 
-  // ... make the request to create an instance, that returns a "long
-  // running operation" object ...
+  // ... save ourselves some typing ...
+  namespace admin = ::google::bigtable::admin::v2;
+  using admin::BigtableTableAdmin;
+  std::unique_ptr<BigtableTableAdmin::Stub> table_admin(
+      BigtableTableAdmin::NewStub(channel));
+
+  admin::DeleteTableRequest req;
+  req.set_name(std::string("projects/") + project_id + "/instances/" +  instance_id + "/tables/" + table_id);
   grpc::ClientContext ctx;
-  google::protobuf::Empty response;
-  auto status = instance_admin->DeleteInstance(&ctx, req, &response);
+  google::protobuf::Empty resp;
+  auto status = table_admin->DeleteTable(&ctx, req, &resp);
   if (not status.ok()) {
-    std::cerr << "Error in DeleteInstance() request: " << status.error_message()
+    std::cerr << "Error in DeleteTable() request: " << status.error_message()
               << " [" << status.error_code() << "] " << status.error_details()
               << std::endl;
     return 1;
   }
-
-  std::cout << "DeleteInstance() was successful" << std::endl;
 
   return 0;
 } catch (std::exception const& ex) {
