@@ -73,21 +73,21 @@ int main(int argc, char* argv[]) try {
     // ... insert a single row in each call, obviously this is not
     // very efficient, the upload_taq_batch.cc demo shows how to
     // update multiple rows at a time ...
-    bigtable::MutateRowRequest req;
-    req.set_table_name(table_name);
-    req.set_row_key(std::move(kv.first));
-    auto& set = *req.add_mutations()->mutable_set_cell();
-    set.set_family_name("taq");
-    set.set_column_qualifier("message");
-    set.set_value(std::move(kv.second));
+    bigtable::MutateRowRequest request;
+    request.set_table_name(table_name);
+    request.set_row_key(std::move(kv.first));
+    auto& set_cell = *request.add_mutations()->mutable_set_cell();
+    set_cell.set_family_name("taq");
+    set_cell.set_column_qualifier("message");
+    set_cell.set_value(std::move(kv.second));
     // ... we use the timestamp field as a simple revision count in
     // this example, so set it to 0.  The actual timestamp of the
     // quote is stored in the key ...
-    set.set_timestamp_micros(0);
+    set_cell.set_timestamp_micros(0);
 
-    bigtable::MutateRowResponse resp;
-    grpc::ClientContext ctx;
-    auto status = bt_stub->MutateRow(&ctx, req, &resp);
+    bigtable::MutateRowResponse response;
+    grpc::ClientContext client_context;
+    auto status = bt_stub->MutateRow(&client_context, request, &response);
     if (not status.ok()) {
       std::cerr << "Error in MutateRow() request: " << status.error_message()
                 << " [" << status.error_code() << "] " << status.error_details()

@@ -81,32 +81,32 @@ int main(int argc, char* argv[]) try {
   std::ifstream is(filename);
   std::string line;
   std::getline(is, line, '\n');  // ... skip the header ...
-  bigtable::MutateRowsRequest req;
-  req.set_table_name(table_name);
+  bigtable::MutateRowsRequest request;
+  request.set_table_name(table_name);
   for (int lineno = 1; lineno != max_lines and not is.eof() and is; ++lineno) {
     std::getline(is, line, '\n');
     auto kv = parse_taq_line(lineno, line);
     // ... add one more entry to the batch request ...
-    auto& entry = *req.add_entries();
+    auto& entry = *request.add_entries();
     entry.set_row_key(std::move(kv.first));
-    auto& set = *entry.add_mutations()->mutable_set_cell();
-    set.set_family_name("taq");
-    set.set_column_qualifier("message");
-    set.set_value(std::move(kv.second));
+    auto& set_cell = *entry.add_mutations()->mutable_set_cell();
+    set_cell.set_family_name("taq");
+    set_cell.set_column_qualifier("message");
+    set_cell.set_value(std::move(kv.second));
     // ... we use the timestamp field as a simple revision count in
     // this example, so set it to 0.  The actual timestamp of the
     // quote is stored in the key ...
-    set.set_timestamp_micros(0);
+    set_cell.set_timestamp_micros(0);
 
-    if (req.entries_size() >= batch_size) {
-      mutate_with_retries(*bt_stub, req);
+    if (request.entries_size() >= batch_size) {
+      mutate_with_retries(*bt_stub, request);
     }
     if (lineno % report_progress_rate == 0) {
       std::cout << lineno << " quotes uploaded so far" << std::endl;
     }
   }
   // ... CS101: the last batch needs to be uploaded too ...
-  mutate_with_retries(*bt_stub, req);
+  mutate_with_retries(*bt_stub, request);
   std::cout << max_lines << " quotes successfully uploaded" << std::endl;
 
   return 0;
@@ -175,7 +175,7 @@ bool should_retry(int code) {
 }
 
 void mutate_with_retries(bigtable::Bigtable::Stub& bt_stub,
-			 bigtable::MutateRowsRequest& req) {
+			 bigtable::MutateRowsRequest& request) {
   using namespace std::chrono_literals;
   // These should be parameters in a real application, but in a demon we can hardcode all kinds of stuff ...
   int const max_retries = 100;
@@ -193,11 +193,11 @@ void mutate_with_retries(bigtable::Bigtable::Stub& bt_stub,
 
     // ... MutateRows() is a streaming RPC call, make the call and read from the stream ...
     grpc::ClientContext ctx;
-    auto stream = bt_stub.MutateRows(&ctx, req);
-    bigtable::MutateRowsResponse resp;
-    while (stream->Read(&resp)) {
+    auto stream = bt_stub.MutateRows(&ctx, request);
+    bigtable::MutateRowsResponse response;
+    while (stream->Read(&response)) {
       // ... save the partial results to either `tmp` or `os` ...
-      for (auto const& entry : resp.entries()) {
+      for (auto const& entry : response.entries()) {
 	auto& status = entry.status();
 	if (status.code() == grpc::OK) {
 	  continue;
@@ -210,7 +210,7 @@ void mutate_with_retries(bigtable::Bigtable::Stub& bt_stub,
 	     << ": " << status.message() << " [" << status.code() << "] "
 	     << details << "\n";
 	} else {
-	  tmp.add_entries()->Swap(req.mutable_entries(entry.index()));
+	  tmp.add_entries()->Swap(request.mutable_entries(entry.index()));
 	}
       }
     }
@@ -223,12 +223,12 @@ void mutate_with_retries(bigtable::Bigtable::Stub& bt_stub,
       if (i > 0) {
 	std::cout << " done" << std::endl;
       }
-      req.mutable_entries()->Clear();
+      request.mutable_entries()->Clear();
       return;
     }
     // ... prepare the next request ...
-    tmp.mutable_table_name()->swap(*req.mutable_table_name());
-    tmp.Swap(&req);
+    tmp.mutable_table_name()->swap(*request.mutable_table_name());
+    tmp.Swap(&request);
     backoff = backoff * 2;
     if (backoff > maximum_backoff) {
       backoff = maximum_backoff;
