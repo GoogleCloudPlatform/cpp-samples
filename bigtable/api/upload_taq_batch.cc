@@ -119,13 +119,6 @@ int main(int argc, char* argv[]) try {
 }
 
 namespace {
-void throw_on_iostream_error(std::istream& is) {
-  if (is.good()) {
-    return;
-  }
-  throw std::runtime_error("parsing error");
-}
-
 // TODO(coryan) - this should return a proto representing the TAQ data.
 std::pair<std::string, std::string> parse_taq_line(
     int lineno, std::string const& line) try {
@@ -139,29 +132,27 @@ std::pair<std::string, std::string> parse_taq_line(
   // Offer_Size: integer
   // ... and many other fields we ignore in this demo.
   std::istringstream tokens(line);
+  tokens.exceptions(std::ios::failbit);
   std::string tk;
-  throw_on_iostream_error(
-      std::getline(tokens, tk, '|'));  // fetch the timestamp
+  std::getline(tokens, tk, '|');  // fetch the timestamp
 
   // ... the key will be a combination of timestamp and symbol, to
   // avoid hotspotting by either ...
   std::string key = tk + "/";
-  throw_on_iostream_error(
-      std::getline(tokens, tk, '|'));  // ignore the exchange
+  std::getline(tokens, tk, '|');  // ignore the exchange
   std::string symbol;
-  throw_on_iostream_error(
-      std::getline(tokens, symbol, '|'));  // fetch the symbol
+  std::getline(tokens, symbol, '|');  // fetch the symbol
   key += tk;
 
   // ... the value is built using a proto
   TAQ quote;
-  throw_on_iostream_error(std::getline(tokens, tk, '|'));
+  std::getline(tokens, tk, '|');
   quote.set_bid_px(std::stod(tk));
-  throw_on_iostream_error(std::getline(tokens, tk, '|'));
+  std::getline(tokens, tk, '|');
   quote.set_bid_qty(std::stol(tk));
-  throw_on_iostream_error(std::getline(tokens, tk, '|'));
+  std::getline(tokens, tk, '|');
   quote.set_offer_px(std::stod(tk));
-  throw_on_iostream_error(std::getline(tokens, tk, '|'));
+  std::getline(tokens, tk, '|');
   quote.set_offer_qty(std::stol(tk));
 
   std::string value;
