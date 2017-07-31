@@ -65,6 +65,9 @@ int main(int argc, char* argv[]) try {
   auto& trades = (*req.mutable_table()->mutable_column_families())["trades"];
   trades.mutable_gc_rule()->set_max_num_versions(2);
 
+  auto& taq = (*req.mutable_table()->mutable_column_families())["taq"];
+  taq.mutable_gc_rule()->set_max_num_versions(1);
+
   grpc::ClientContext ctx;
   admin::Table resp;
   auto status = table_admin->CreateTable(&ctx, req, &resp);

@@ -39,11 +39,11 @@ function(PROTOBUF_GENERATE_CPP SRCS HDRS)
         get_filename_component(DIR ${FIL} DIRECTORY)
         get_filename_component(FIL_WE ${FIL} NAME_WE)
 
-        # Strip all the prefixes in ${PROTOBUF_IMPOR_DIRS} from the source proto directory
+        # Strip all the prefixes in ${PROTOBUF_IMPORT_DIRS} from the source proto directory
         set(D ${DIR})
         if(DEFINED PROTOBUF_IMPORT_DIRS)
             foreach(P ${PROTOBUF_IMPORT_DIRS})
-                string(REGEX REPLACE "^${P}/" "" T ${D})
+                string(REGEX REPLACE "^${P}" "" T "${D}")
                 set(D ${T})
             endforeach()
         endif()
@@ -89,11 +89,11 @@ function(GRPC_GENERATE_CPP SRCS HDRS)
         get_filename_component(DIR ${FIL} DIRECTORY)
         get_filename_component(FIL_WE ${FIL} NAME_WE)
 
-        # Strip all the prefixes in ${PROTOBUF_IMPOR_DIRS} from the source proto directory
+        # Strip all the prefixes in ${PROTOBUF_IMPORT_DIRS} from the source proto directory
         set(D ${DIR})
         if(DEFINED PROTOBUF_IMPORT_DIRS)
             foreach(P ${PROTOBUF_IMPORT_DIRS})
-                string(REGEX REPLACE "^${P}/" "" T ${D})
+                string(REGEX REPLACE "^${P}" "" T "${D}")
                 set(D ${T})
             endforeach()
         endif()
