@@ -79,8 +79,11 @@ int main(int argc, char* argv[]) try {
     auto& set = *req.add_mutations()->mutable_set_cell();
     set.set_family_name("taq");
     set.set_column_qualifier("message");
-    set.set_timestamp_micros(0);
     set.set_value(std::move(kv.second));
+    // ... we use the timestamp field as a simple revision count in
+    // this example, so set it to 0.  The actual timestamp of the
+    // quote is stored in the key ...
+    set.set_timestamp_micros(0);
 
     bigtable::MutateRowResponse resp;
     grpc::ClientContext ctx;
