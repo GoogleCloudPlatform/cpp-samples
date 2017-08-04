@@ -49,6 +49,8 @@ These samples will only build and run on **Linux**.
 1.  **Install gRPC.**
     1.  Visit [the gRPC github repo](https://github.com/grpc/grpc) and follow the instructions to install gRPC.
     1.  Then, follow the instructions in the **Pre-requisites** section to install **protoc**.
+    1.  The examples in this directory have been tested with gRPC 1.4.1 if they do not work for you please
+        include the gRPC version you used in any bug reports.
 
 1.  **Generate googleapis gRPC source code.**
     1.  Visit [the googleapis github repo](https://github.com/googleapis/googleapis) and follow the instructions to **Generate gRPC Source Code**.

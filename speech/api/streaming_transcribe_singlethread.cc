@@ -68,6 +68,27 @@ int main(int argc, char** argv) {
   grpc::ClientContext context;
   auto streamer = speech->AsyncStreamingRecognize(
       &context, &cq, &create_stream);
+
+  bool ok = false;
+  Tag* tag = nullptr;
+  // Block until the creation of the stream is done, we cannot start
+  // writing until that happens ...
+  if (cq.Next((void**)&tag, &ok)) {
+    std::cout << tag->name << " completed." << std::endl;
+    tag->happening_now = false;
+    if (tag != &create_stream) {
+      std::cerr << "Expected create_stream in cq." << std::endl;
+      return -1;
+    }
+    if (!ok) {
+      std::cerr << "Stream closed while creating it." << std::endl;
+      return -1;
+    }
+  } else {
+    std::cerr << "The completion queue unexpectedly shutdown or timedout." << std::endl;
+    return -1;
+  }
+
   StreamingRecognizeResponse response;
   // Write the first request, containing the config only.
   streaming_config->set_interim_results(true);
@@ -81,6 +102,7 @@ int main(int argc, char** argv) {
   std::vector<char> chunk(chunk_size);
   std::chrono::system_clock::time_point next_write_time_point =
       std::chrono::system_clock::time_point::min();
+  bool writes_completed = false;
   do {
     if (!reading.happening_now && !finishing.happening_now) {
       reading.happening_now = true;
@@ -100,10 +122,7 @@ int main(int argc, char** argv) {
       streamer->Write(request, &writing);
       if (bytes_read < chunk.size()) {
         // Done writing.
-        writes_done.happening_now = true;
-          // AsyncNext(), called below, will return the writes_done tag when
-          // the writes_done operation completes.
-        streamer->WritesDone(&writes_done);
+	writes_completed = true;
         next_write_time_point =  // Never write again.
             std::chrono::system_clock::time_point::max();
       } else {
@@ -111,8 +130,6 @@ int main(int argc, char** argv) {
         next_write_time_point = now + std::chrono::duration<long>(1);
       }
     }
-    bool ok;
-    Tag* tag;
     // Wait for a pending operation to complete.  Identify the operation that
     // completed by examining tag.
     switch (cq.AsyncNext((void**)&tag, &ok, next_write_time_point)) {
@@ -135,6 +152,13 @@ int main(int argc, char** argv) {
             }
           }
         }
+	if (tag == &writing && writes_completed) {
+	  // After the last Write, send a WritesDone() ...
+	  writes_done.happening_now = true;
+          // AsyncNext(), called above, will return the writes_done tag when
+          // the writes_done operation completes.
+	  streamer->WritesDone(&writes_done);
+	}
         if (!ok) {
           server_closed_stream = true;
           finishing.happening_now = true;
