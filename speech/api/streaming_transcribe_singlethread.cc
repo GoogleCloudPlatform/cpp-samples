@@ -69,8 +69,8 @@ int main(int argc, char** argv) {
   auto streamer = speech->AsyncStreamingRecognize(
       &context, &cq, &create_stream);
 
-  bool ok;
-  Tag* tag;
+  bool ok = false;
+  Tag* tag = nullptr;
   // Block until the creation of the stream is done, we cannot start
   // writing until that happens ...
   if (cq.Next((void**)&tag, &ok)) {
