@@ -17,13 +17,15 @@ if (Test-Path vcpkg\.git) {
   cd vcpkg
 }
 
+# ... install cmake because the version in appveyor is too old for some of
+# the packages ...
+choco install -y cmake cmake.portable
+
 # ... build the tool each time, it is fast to do so ...
 powershell -exec bypass scripts\bootstrap.ps1
 
 # ... integrate installed packages into the build environment ...
 .\vcpkg integrate install
-
-.\vcpkg list
 
 # ... if necessary, install grpc again.  Normally the packages are
 # cached by the CI system (appveyor) so this is not too painful ...
