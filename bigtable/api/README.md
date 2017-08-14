@@ -88,6 +88,17 @@ These samples demonstrate how to call the [Google Cloud Bigtable API](https://cl
 
     ./delete_table $PROJECT bt-test-instance my-table
 
+    ./create_table $PROJECT bt-test-instance daily
+    ./create_table $PROJECT bt-test-instance quote-per-row
+
+    ./resources/download_taq.sh
+
+    ./upload_taq $PROJECT bt-test-instance quote-per-row NBBO.txt
+
+    ./upload_taq_batch $PROJECT bt-test-instance quote-per-row 20161024 NBBO.txt
+
+    ./read_row $PROJECT bt-test-instance quote-per-row 20161024
+
     ./delete_instance $PROJECT bt-test-instance
 
     ./list_instances $PROJECT
