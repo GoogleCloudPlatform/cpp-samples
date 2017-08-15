@@ -14,8 +14,7 @@
 
 syntax = "proto3";
 
-// Specifies how a TAQ quote is stored in the Bigtable example
-message TAQ {
+message Quote {
   // The symbol or ticker for this quote
   string ticker = 1;
 
@@ -33,4 +32,25 @@ message TAQ {
 
   // The best offer quantiy
   int32 offer_qty = 6;
+}
+
+// Specifies how a sequence of TAQ quotes is stored in the Bigtable example
+message Quotes {
+  // The symbol or ticker for this quote
+  string ticker = 1;
+
+  // The timestamp, as nanoseconds since midnight
+  repeated int64 timestamp_ns = 2;
+
+  // The best bid price
+  repeated double bid_px = 3;
+
+  // The bid quantity
+  repeated int32 bid_qty = 4;
+
+  // The best offer price
+  repeated double offer_px = 5;
+
+  // The best offer quantiy
+  repeated int32 offer_qty = 6;
 }
