@@ -1,5 +1,8 @@
 #!/usr/bin/env powershell
 
+# Stop on errors, similar (but not quite as useful as) "set -e" on Unix shells ...
+$ErrorActionPreference = "Stop"
+
 # Using relative paths works both on appveyor and in development workstations
 cd ..
 
@@ -16,22 +19,43 @@ if (Test-Path vcpkg\.git) {
   git clone https://github.com/Microsoft/vcpkg
   cd vcpkg
 }
+if ($LASTEXITCODE) {
+  throw "git setup failed with exit code $LASTEXITCODE"
+}
 
 # ... install cmake because the version in appveyor is too old for some of
 # the packages ...
 choco install -y cmake cmake.portable
+if ($LASTEXITCODE) {
+  throw "choco install cmake failed with exit code $LASTEXITCODE"
+}
 
 # ... build the tool each time, it is fast to do so ...
 powershell -exec bypass scripts\bootstrap.ps1
+if ($LASTEXITCODE) {
+  throw "vcpkg bootstrap failed with exit code $LASTEXITCODE"
+}
 
 # ... integrate installed packages into the build environment ...
 .\vcpkg integrate install
+if ($LASTEXITCODE) {
+  throw "vcpkg integrate failed with exit code $LASTEXITCODE"
+}
 
 # ... if necessary, install grpc again.  Normally the packages are
-# cached by the CI system (appveyor) so this is not too painful ...
-.\vcpkg install zlib:x86-windows-static
-#.\vcpkg install openssl:x86-windows-static
-#.\vcpkg install protobuf:x86-windows-static
-#.\vcpkg install grpc:x86-windows-static
+# cached by the CI system (appveyor) so this is not too painful.
+# We explicitly install each dependency because if we run out of time
+# in the appveyor build the cache is at least partially refreshed and
+# a rebuild will complete creating the cache ...
+$packages = @("zlib:x86-windows-static", "openssl:x86-windows-static",
+              "protobuf:x86-windows-static", "c-ares:x86-windows-static",
+              "grpc:x86-windows-static")
+foreach ($pkg in $packages) {
+  $cmd = ".\vcpkg.exe install $pkg"
+  Invoke-Expression $cmd
+  if ($LASTEXITCODE) {
+    throw "vcpkg install $pkg failed with exit code $LASTEXITCODE"
+  }
+}
 
 cd ..\cpp-docs-samples

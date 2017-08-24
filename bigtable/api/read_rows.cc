@@ -25,6 +25,7 @@
 #include <ciso646>
 #include <deque>
 #include <fstream>
+#include <numeric>
 #include <sstream>
 #include <thread>
 
@@ -135,9 +136,9 @@ int main(int argc, char* argv[]) try {
 		    << std::endl;
 	} else {
 	  double bid_px_sum =
-	    std::accumulate(quotes.bid_px().begin(), quotes.bid_px().end(), 0);
+	    std::accumulate(quotes.bid_px().begin(), quotes.bid_px().end(), 0.0);
 	  double offer_px_sum =
-	    std::accumulate(quotes.offer_px().begin(), quotes.offer_px().end(), 0);
+	    std::accumulate(quotes.offer_px().begin(), quotes.offer_px().end(), 0.0);
 	  double average_spread =
 	    (offer_px_sum - bid_px_sum) / quotes.offer_px_size();
 	  std::cout << current_row_key << ": average spread="
