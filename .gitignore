@@ -3,3 +3,4 @@
 *~
 *.o
 *.ar
+cmake-build-debug/
