@@ -50,8 +50,9 @@ include(FindProtobuf)
 # ... find the grpc and grpc++ libraries ...
 if(WIN32)
   # ... use find_package and vcpkg on Windows ...
-  find_package(GRPC REQUIRED grpc>=1.4)
   find_package(PROTOBUF REQUIRED protobuf>=3.0)
+  set(protobuf_FOUND 1)
+  find_package(GRPC REQUIRED grpc>=1.4)
   link_directories(${GRPC_LIBRARY_DIRS} ${PROTOBUF_LIBRARY_DIRS})
   include_directories(${GRPC_INCLUDE_DIRS} ${PROTOBUF_INCLUDE_DIRS})
   set(GRPC_LIBRARIES gRPC::grpc++ gRPC::grpc)

@@ -213,7 +213,8 @@ void mutate_with_retries(bigtable::Bigtable::Stub& bt_stub,
 	     << ": " << status.message() << " [" << status.code() << "] "
 	     << details << "\n";
 	} else {
-	  tmp.add_entries()->Swap(request.mutable_entries(entry.index()));
+          auto idx = static_cast<int>(entry.index());
+          tmp.add_entries()->Swap(request.mutable_entries(idx));
 	}
       }
     }

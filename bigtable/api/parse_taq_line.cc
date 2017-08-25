@@ -36,9 +36,9 @@ Quote parse_taq_line(int lineno, std::string const& line) try {
     os << "timestamp field (" << tk << ") is not in HHMMSSNNNNNNNNN format";
     throw std::runtime_error(os.str());
   }
-  int hh = std::stod(tk.substr(0, 2));
-  int mm = std::stod(tk.substr(2, 2));
-  int ss = std::stod(tk.substr(4, 2));
+  int hh = std::stoi(tk.substr(0, 2));
+  int mm = std::stoi(tk.substr(2, 2));
+  int ss = std::stoi(tk.substr(4, 2));
   long long nnn = std::stoll(tk.substr(6));
 
   using namespace std::chrono;
@@ -60,13 +60,13 @@ Quote parse_taq_line(int lineno, std::string const& line) try {
   quote.set_bid_px(std::stod(tk));
   // Bid_Size: integer
   std::getline(tokens, tk, '|');
-  quote.set_bid_qty(std::stol(tk));
+  quote.set_bid_qty(std::stoi(tk));
   // Offer_Price: float
   std::getline(tokens, tk, '|');
   quote.set_offer_px(std::stod(tk));
   // Offer_Size: integer
   std::getline(tokens, tk, '|');
-  quote.set_offer_qty(std::stol(tk));
+  quote.set_offer_qty(std::stoi(tk));
   // ... the TAQ line has many other fields that we ignore in this demo ...
 
   return quote;
