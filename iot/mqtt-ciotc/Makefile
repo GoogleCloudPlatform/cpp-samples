@@ -1,4 +1,4 @@
-CC=clang # gcc
+CC=gcc # gcc || clang
 CCOPTIONS=-std=c11 -Wall -Wextra -pedantic -Wstrict-overflow -fno-strict-aliasing
 SSLPATH=-L/openssl
 
