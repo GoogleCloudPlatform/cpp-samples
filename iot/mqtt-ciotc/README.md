@@ -1,4 +1,4 @@
-# Messagae Queue Telemetry Transport (MQTT) client for Google Cloud IoT Core
+# Message Queue Telemetry Transport (MQTT) client for Google Cloud IoT Core
 This sample app demonstrates connecting to Google Cloud IoT Core and publishing
 a single message.
 
