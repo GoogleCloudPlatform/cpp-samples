@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *****************************************************************************/
+// [START iot_mqtt_include]
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -23,6 +24,7 @@
 #include "openssl/ec.h"
 #include "openssl/evp.h"
 #include "MQTTClient.h"
+// [END iot_mqtt_include]
 
 #define TRACE 1 /* Set to 1 to enable tracing */
 
@@ -61,6 +63,7 @@ void Usage() {
   printf("\t--rootpath <e.g. ./roots.pem>\n\n");
 }
 
+// [START iot_mqtt_jwt]
 /**
  * Calculates issued at / expiration times for JWT and places the time, as a
  * Unix timestamp, in the strings passed to the function. The time_size
@@ -139,6 +142,7 @@ static char* CreateJwt(const char* ec_private_path, const char* project_id) {
   free(key);
   return out;
 }
+// [END iot_mqtt_jwt]
 
 /**
  * Helper to parse arguments passed to app. Returns false if there are missing
@@ -147,6 +151,7 @@ static char* CreateJwt(const char* ec_private_path, const char* project_id) {
  *
  * TODO: (class) Consider getopt
  */
+// [START iot_mqtt_opts]
 bool GetOpts(int argc, char** argv) {
   int pos = 2;
   bool calcvalues = false;
@@ -225,11 +230,14 @@ bool GetOpts(int argc, char** argv) {
 static const int kQos = 1;
 static const unsigned long kTimeout = 10000L;
 static const char* kUsername = "unused";
+// [END iot_mqtt_opts]
+
 /**
  * Publish a given message, passed in as payload, to Cloud IoT Core using the
  * values passed to the sample, stored in the global opts structure. Returns
  * the result code from the MQTT client.
  */
+// [START iot_mqtt_publish]
 int Publish(char* payload, int payload_size) {
   int rc = -1;
   MQTTClient client = {0};
@@ -269,10 +277,12 @@ int Publish(char* payload, int payload_size) {
 
   return rc;
 }
+// [END iot_mqtt_publish]
 
 /**
  * Connects MQTT client and transmits payload.
  */
+// [START iot_mqtt_run]
 int main(int argc, char* argv[]) {
   OpenSSL_add_all_algorithms();
   OpenSSL_add_all_digests();
@@ -286,3 +296,4 @@ int main(int argc, char* argv[]) {
 
   EVP_cleanup();
 }
+// [END iot_mqtt_run]
