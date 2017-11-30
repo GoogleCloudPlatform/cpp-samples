@@ -226,11 +226,11 @@ bool GetOpts(int argc, char** argv) {
   }
   return false;
 }
+// [END iot_mqtt_opts]
 
 static const int kQos = 1;
 static const unsigned long kTimeout = 10000L;
 static const char* kUsername = "unused";
-// [END iot_mqtt_opts]
 
 /**
  * Publish a given message, passed in as payload, to Cloud IoT Core using the
