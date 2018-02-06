@@ -247,7 +247,7 @@ int Publish(char* payload, int payload_size) {
 
   MQTTClient_create(&client, opts.address, opts.clientid,
       MQTTCLIENT_PERSISTENCE_NONE, NULL);
-  conn_opts.keepAliveInterval = 20;
+  conn_opts.keepAliveInterval = 60;
   conn_opts.cleansession = 1;
   conn_opts.username = kUsername;
   conn_opts.password = CreateJwt(opts.ecpath, opts.projectid);
