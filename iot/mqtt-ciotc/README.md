@@ -2,6 +2,11 @@
 This sample app demonstrates connecting to Google Cloud IoT Core and publishing
 a single message.
 
+[![Open in Cloud Shell][shell_img]][shell_link]
+
+[shell_img]: http://gstatic.com/cloudssh/images/open-btn.png
+[shell_link]: https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/GoogleCloudPlatform/cpp-docs-samples&page=editor&open_in_editor=iot/mqtt-ciotc/README.md
+
 # Building
 To build the sample, you must first download, build, and install the following
 projects:
