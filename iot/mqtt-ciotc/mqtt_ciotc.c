@@ -43,16 +43,16 @@ struct {
   char* topic;
   char* payload;
 } opts = {
-  "ssl://mqtt.googleapis.com:8883", /* Address */
-  "projects/{your-project-id}/locations/{your-region-id}/registries/{your-registry-id}/devices/{your-device-id}",
-  "{your-device-id}",
-  "ec_private.pem",
-  "intense-wavelet-343",
-  "{your-region-id}",
-  "{your-registry-id}",
-  "roots.pem",
-  "/devices/{your-device-id}/events",
-  "Hello world!"
+  .address = "ssl://mqtt.googleapis.com:8883",
+  .clientid = "projects/{your-project-id}/locations/{your-region-id}/registries/{your-registry-id}/devices/{your-device-id}",
+  .deviceid = "{your-device-id}",
+  .ecpath = "ec_private.pem",
+  .projectid = "intense-wavelet-343",
+  .region = "{your-region-id}",
+  .registryid = "{your-registry-id}",
+  .rootpath = "roots.pem",
+  .topic = "/devices/{your-device-id}/events",
+  .payload = "Hello world!"
 };
 
 void Usage() {
