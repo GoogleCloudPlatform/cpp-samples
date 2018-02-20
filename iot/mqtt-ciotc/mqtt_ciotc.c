@@ -13,12 +13,14 @@
  * limitations under the License.
  *****************************************************************************/
 // [START iot_mqtt_include]
+#define _XOPEN_SOURCE 500
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "jwt.h"
 #include "openssl/ec.h"
@@ -42,14 +44,14 @@ struct {
   char* payload;
 } opts = {
   "ssl://mqtt.googleapis.com:8883", /* Address */
-  "projects/intense-wavelet-343/locations/us-central1/registries/mqtt-test-reg/devices/mqtt-c-rsq2",
-  "mqtt-c-rsq2",
+  "projects/{your-project-id}/locations/{your-region-id}/registries/{your-registry-id}/devices/{your-device-id}",
+  "{your-device-id}",
   "ec_private.pem",
   "intense-wavelet-343",
-  "us-central1",
-  "mqtt-test-reg",
+  "{your-region-id}",
+  "{your-registry-id}",
   "roots.pem",
-  "/devices/mqtt-c-rsq2/events",
+  "/devices/{your-device-id}/events",
   "Hello world!"
 };
 
@@ -153,7 +155,7 @@ static char* CreateJwt(const char* ec_private_path, const char* project_id) {
  */
 // [START iot_mqtt_opts]
 bool GetOpts(int argc, char** argv) {
-  int pos = 2;
+  int pos = 1;
   bool calcvalues = false;
 
   if (argc < 2) {
@@ -232,6 +234,11 @@ static const int kQos = 1;
 static const unsigned long kTimeout = 10000L;
 static const char* kUsername = "unused";
 
+static const unsigned long kInitialConnectIntervalMillis = 500L;
+static const unsigned long kMaxConnectIntervalMillis = 6000L;
+static const unsigned long kMaxConnectRetryTimeElapsedMillis = 900000L;
+static const float kIntervalMultiplier = 1.5f;
+
 /**
  * Publish a given message, passed in as payload, to Cloud IoT Core using the
  * values passed to the sample, stored in the global opts structure. Returns
@@ -257,9 +264,24 @@ int Publish(char* payload, int payload_size) {
   sslopts.privateKey = opts.ecpath;
   conn_opts.ssl = &sslopts;
 
-  if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
+  unsigned long retry_interval_ms = kInitialConnectIntervalMillis;
+  unsigned long total_retry_time_ms = 0;
+  while ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
+    if (rc == 3) {  // connection refused: server unavailable
+      usleep(retry_interval_ms / 1000);
+      total_retry_time_ms += retry_interval_ms;
+      if (total_retry_time_ms >= kMaxConnectRetryTimeElapsedMillis) {
+        printf("Failed to connect, maximum retry time exceeded.");
+        exit(EXIT_FAILURE);
+      }
+      retry_interval_ms *= kIntervalMultiplier;
+      if (retry_interval_ms > kMaxConnectIntervalMillis) {
+        retry_interval_ms = kMaxConnectIntervalMillis;
+      }
+    } else {
       printf("Failed to connect, return code %d\n", rc);
       exit(EXIT_FAILURE);
+    }
   }
 
   pubmsg.payload = payload;
