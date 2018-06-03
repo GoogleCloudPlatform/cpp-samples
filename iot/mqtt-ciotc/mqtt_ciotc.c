@@ -83,7 +83,7 @@ static void GetIatExp(char* iat, char* exp, int time_size) {
 }
 
 /**
- * Calculates a Java Web Token (JWT) given the path to a EC private key and
+ * Calculates a JSON Web Token (JWT) given the path to a EC private key and
  * Google Cloud project ID. Returns the JWT as a string that the caller must
  * free.
  */
