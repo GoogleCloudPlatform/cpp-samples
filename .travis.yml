@@ -21,16 +21,16 @@ matrix:
   include:
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=17.04
+      env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=18.04
     - os: linux
       compiler: clang
-      env: DOCKER_BUILD=yes DISTRO=fedora DISTRO_VERSION=24
+      env: DOCKER_BUILD=yes DISTRO=fedora DISTRO_VERSION=27
     - os: linux
       compiler: gcc
       env: DOCKER_BUILD=yes DISTRO=ubuntu DISTRO_VERSION=16.04
     - os: linux
       compiler: gcc
-      env: DOCKER_BUILD=yes DISTRO=fedora DISTRO_VERSION=25
+      env: DOCKER_BUILD=yes DISTRO=fedora DISTRO_VERSION=27
     - os: osx
       compiler: clang
       env: MACOSX_BUILD=yes
