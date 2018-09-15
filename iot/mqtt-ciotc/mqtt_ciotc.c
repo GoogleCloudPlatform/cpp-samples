@@ -84,6 +84,7 @@ static void GetIatExp(char* iat, char* exp, int time_size) {
     printf("EXP: %s\n", exp);
   }
 }
+
 static int GetAlgorithmFromString(const char *algorithm) {
     if (strcmp(algorithm, "RS256") == 0) {
         return JWT_ALG_RS256;
