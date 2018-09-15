@@ -34,7 +34,7 @@ and run:
 It will take a little while for the Docker image to build. After the Docker
 image is built, you can access the builder as:
 
-    docker run -t -i your-docker-tag /bin/bash
+    docker run -v `pwd`:/src -t -i your-docker-tag /bin/bash
 
 # Running
 After you have successfully built the sample, you are almost ready to run the
@@ -50,7 +50,7 @@ sample.
     cd mqtt-ciotc
 
 3. Setup the Cloud IOT environment
-    ./setup_device.sh
+    ./setup_device.sh --registry-name <Your registry id> --registry-region <e.g. us-central1> --device-id <Your device ID>
 
 4. Run the sample
     ./mqtt_ciotc <message> \

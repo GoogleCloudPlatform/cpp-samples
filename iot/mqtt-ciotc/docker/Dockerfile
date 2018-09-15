@@ -12,22 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+FROM ubuntu:16.04 as build-dependencies
+RUN apt-get update
+RUN apt-get install -y build-essential gcc clang git libssl-dev autoconf libtool cmake doxygen pkg-config unzip wget 
+RUN mkdir /dependencies 
+RUN cd /dependencies  && git clone https://github.com/akheron/jansson  
+RUN cd /dependencies/jansson && cmake . && make && make install  
+RUN cd /dependencies  && git clone https://github.com/openssl/openssl  
+RUN cd /dependencies/openssl && ./config && make && make install  
+RUN cd /dependencies  && git clone https://github.com/benmcollins/libjwt  
+RUN cd /dependencies/libjwt && autoreconf -i && ./configure && make && make install  
+RUN cd /dependencies  && git clone https://github.com/eclipse/paho.mqtt.c.git  
+RUN cd /dependencies/paho.mqtt.c && cmake -DPAHO_WITH_SSL=TRUE -DPAHO_BUILD_DOCUMENTATION=TRUE -DPAHO_BUILD_SAMPLES=TRUE . && make all && make install  
+
 FROM ubuntu:16.04
-RUN apt-get update && \
-    apt-get install -y build-essential gcc clang git libssl-dev autoconf libtool cmake doxygen pkg-config unzip wget && \
-    mkdir /dependencies && \
-    cd /dependencies  && git clone https://github.com/akheron/jansson  && \
-    cd jansson && cmake . && make && make install  && \
-    cd /dependencies  && git clone https://github.com/openssl/openssl  && \
-    cd openssl && ./config && make && make install  && \
-    cd /dependencies  && git clone https://github.com/benmcollins/libjwt  && \
-    cd libjwt && autoreconf -i && ./configure && make && make install  && \
-    cd /dependencies  && git clone https://github.com/eclipse/paho.mqtt.c.git  && \
-    cd paho.mqtt.c && cmake -DPAHO_WITH_SSL=TRUE -DPAHO_BUILD_DOCUMENTATION=TRUE -DPAHO_BUILD_SAMPLES=TRUE . && make all && make install  && \
-    rm -rf /var/lib/apt/lists/* && \
-    export LD_LIBRARY_PATH=/usr/local/lib
-    
+
+RUN export LD_LIBRARY_PATH=/usr/local/lib && \
+    apt-get update && apt-get install -y gcc && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=build-dependencies /usr/local /usr/local    
 VOLUME /src
 
-# gcc mqtt_ciotc.c -L/dependencies/openssl -lssl -lcrypto -lpaho-mqtt3cs -L/dependencies/libjwt -ljwt -o mqtt_ciotc
-# openssl req -x509 -newkey rsa:2048 -keyout rsa_private.pem -nodes  -out rsa_cert.pem -subj "/CN=unused"

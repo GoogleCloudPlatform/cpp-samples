@@ -236,13 +236,13 @@ bool GetOpts(int argc, char** argv) {
     int n = snprintf(opts.topic, sizeof(opts.topic),
         "/devices/%s/events",
         opts.deviceid);
-    if (n < 0 || (n > sizeof(opts.topic))) {
-        if (n < 0) {
-            printf("Encoding error!\n");
-        } else {
-            printf("Error, buffer for storing device ID was too small.\n");
-        }
-        return false;
+    if (n < 0) {
+      printf("Encoding error!\n");
+      return false;
+    }
+    if (n > sizeof(opts.topic)) {
+      printf("Error, buffer for storing device ID was too small.\n");
+      return false;
     }
   }
   if (calcvalues) {
