@@ -34,7 +34,7 @@ and run:
 It will take a little while for the Docker image to build. After the Docker
 image is built, you can access the builder as:
 
-    docker run -t -i your-docker-tag /bin/bash
+    docker run -v `pwd`:/src -t -i your-docker-tag /bin/bash
 
 # Running
 After you have successfully built the sample, you are almost ready to run the
@@ -49,13 +49,17 @@ sample.
 
     cd mqtt-ciotc
 
-3. Run the sample
+3. Setup the Cloud IOT environment
+    ./setup_device.sh --registry-name <Your registry id> --registry-region <e.g. us-central1> --device-id <Your device ID>
+
+4. Run the sample
     ./mqtt_ciotc <message> \
         --deviceid <your device id>\
         --region <e.g. us-central1>\
         --registryid <your registry id>\
         --projectid <your project id>\
-        --ecpath <e.g. ./ec_private.pem>\
+        --keypath <e.g. ./ec_private.pem>\
+        --algorithm <e.g. RS256>
         --rootpath <e.g. ./roots.pem>
 
 You must provide the deviceid, registryid, and projectid parameters as they are
@@ -67,7 +71,9 @@ downloaded from https://pki.google.com/roots.pem. For example:
     wget https://pki.google.com/roots.pem
 
 The following example demonstrates usage of the sample if my device ID is
-my-device-id, registry ID is my-registry, and project ID is blue-ocean-123.
+my-device, registry ID is my-registry, and project ID is blue-ocean-123.
 
-    mqtt_ciotc "Hello world!" --deviceid my-device-id --registryid my-registry\
-        --projectid blue-ocean-123
+    mqtt_ciotc "Hello world!" --deviceid my-device --registryid my-registry \
+        --projectid blue-ocean-123 --keypath ./rsa_private.pem --algorithm RS256 \
+         --rootpath ./roots.pem --region us-central1
+    

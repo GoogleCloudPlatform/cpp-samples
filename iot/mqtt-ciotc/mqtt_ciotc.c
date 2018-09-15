@@ -35,24 +35,27 @@ struct {
   enum { clientid_maxlen = 256, clientid_size };
   char clientid[clientid_size];
   char* deviceid;
-  char* ecpath;
+  char* keypath;
   char* projectid;
   char* region;
   char* registryid;
   char* rootpath;
-  char* topic;
+  enum { topic_maxlen = 256, topic_size };
+  char topic[topic_size];
   char* payload;
+  char* algorithm;
 } opts = {
   .address = "ssl://mqtt.googleapis.com:8883",
   .clientid = "projects/{your-project-id}/locations/{your-region-id}/registries/{your-registry-id}/devices/{your-device-id}",
   .deviceid = "{your-device-id}",
-  .ecpath = "ec_private.pem",
+  .keypath = "ec_private.pem",
   .projectid = "intense-wavelet-343",
   .region = "{your-region-id}",
   .registryid = "{your-registry-id}",
   .rootpath = "roots.pem",
   .topic = "/devices/{your-device-id}/events",
-  .payload = "Hello world!"
+  .payload = "Hello world!",
+  .algorithm = "ES256"
 };
 
 void Usage() {
@@ -61,7 +64,7 @@ void Usage() {
   printf("\t--region <e.g. us-central1>\\\n");
   printf("\t--registryid <your registry id>\\\n");
   printf("\t--projectid <your project id>\\\n");
-  printf("\t--ecpath <e.g. ./ec_private.pem>\\\n");
+  printf("\t--keypath <e.g. ./ec_private.pem>\\\n");
   printf("\t--rootpath <e.g. ./roots.pem>\n\n");
 }
 
@@ -82,12 +85,22 @@ static void GetIatExp(char* iat, char* exp, int time_size) {
   }
 }
 
+static int GetAlgorithmFromString(const char *algorithm) {
+    if (strcmp(algorithm, "RS256") == 0) {
+        return JWT_ALG_RS256;
+    }
+    if (strcmp(algorithm, "ES256") == 0) {
+        return JWT_ALG_ES256;
+    }
+    return -1;
+}
+
 /**
  * Calculates a JSON Web Token (JWT) given the path to a EC private key and
  * Google Cloud project ID. Returns the JWT as a string that the caller must
  * free.
  */
-static char* CreateJwt(const char* ec_private_path, const char* project_id) {
+static char* CreateJwt(const char* ec_private_path, const char* project_id, const char *algorithm) {
   char iat_time[sizeof(time_t) * 3 + 2];
   char exp_time[sizeof(time_t) * 3 + 2];
   uint8_t* key = NULL; // Stores the Base64 encoded certificate
@@ -119,25 +132,27 @@ static char* CreateJwt(const char* ec_private_path, const char* project_id) {
   // Write JWT
   ret = jwt_add_grant(jwt, "iat", iat_time);
   if (ret) {
-    printf("Error setting issue timestamp: %d", ret);
+    printf("Error setting issue timestamp: %d\n", ret);
   }
   ret = jwt_add_grant(jwt, "exp", exp_time);
   if (ret) {
-    printf("Error setting expiration: %d", ret);
+    printf("Error setting expiration: %d\n", ret);
   }
   ret = jwt_add_grant(jwt, "aud", project_id);
   if (ret) {
-    printf("Error adding audience: %d", ret);
+    printf("Error adding audience: %d\n", ret);
   }
-  ret = jwt_set_alg(jwt, JWT_ALG_ES256, key, key_len);
+  ret = jwt_set_alg(jwt, GetAlgorithmFromString(algorithm), key, key_len);
   if (ret) {
-    printf("Error during set alg: %d", ret);
+    printf("Error during set alg: %d\n", ret);
   }
   out = jwt_encode_str(jwt);
-
+  if(!out) {
+      perror("Error during token creation:");
+  }
   // Print JWT
   if (TRACE) {
-    printf("JWT: [%s]", out);
+    printf("JWT: [%s]\n", out);
   }
 
   jwt_free(jwt);
@@ -157,6 +172,7 @@ static char* CreateJwt(const char* ec_private_path, const char* project_id) {
 bool GetOpts(int argc, char** argv) {
   int pos = 1;
   bool calcvalues = false;
+  bool calctopic = true;
 
   if (argc < 2) {
     return false;
@@ -193,9 +209,9 @@ bool GetOpts(int argc, char** argv) {
       }
       else
         return false;
-    } else if (strcmp(argv[pos], "--ecpath") == 0) {
+    } else if (strcmp(argv[pos], "--keypath") == 0) {
       if (++pos < argc)
-        opts.ecpath = argv[pos];
+        opts.keypath = argv[pos];
       else
         return false;
     } else if (strcmp(argv[pos], "--rootpath") == 0) {
@@ -203,10 +219,33 @@ bool GetOpts(int argc, char** argv) {
         opts.rootpath = argv[pos];
       else
         return false;
+    } else if (strcmp(argv[pos], "--topic") == 0) {
+      if (++pos < argc) {
+        strcpy((char * restrict)&opts.topic,argv[pos]);
+        calctopic=false;
+      } else
+        return false;
+    } else if (strcmp(argv[pos], "--algorithm") == 0) {
+      if (++pos < argc)
+        opts.algorithm = argv[pos];
+      else
+        return false;
     }
     pos++;
   }
-
+  if (calctopic) {
+    int n = snprintf(opts.topic, sizeof(opts.topic),
+        "/devices/%s/events",
+        opts.deviceid);
+    if (n < 0) {
+      printf("Encoding error!\n");
+      return false;
+    }
+    if (n > sizeof(opts.topic)) {
+      printf("Error, buffer for storing device ID was too small.\n");
+      return false;
+    }
+  }
   if (calcvalues) {
     int n = snprintf(opts.clientid, sizeof(opts.clientid),
         "projects/%s/locations/%s/registries/%s/devices/%s",
@@ -257,11 +296,11 @@ int Publish(char* payload, int payload_size) {
   conn_opts.keepAliveInterval = 60;
   conn_opts.cleansession = 1;
   conn_opts.username = kUsername;
-  conn_opts.password = CreateJwt(opts.ecpath, opts.projectid);
+  conn_opts.password = CreateJwt(opts.keypath, opts.projectid, opts.algorithm);
   MQTTClient_SSLOptions sslopts = MQTTClient_SSLOptions_initializer;
 
   sslopts.trustStore = opts.rootpath;
-  sslopts.privateKey = opts.ecpath;
+  sslopts.privateKey = opts.keypath;
   conn_opts.ssl = &sslopts;
 
   unsigned long retry_interval_ms = kInitialConnectIntervalMillis;
