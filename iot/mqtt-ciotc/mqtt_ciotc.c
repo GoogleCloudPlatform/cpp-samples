@@ -307,7 +307,7 @@ int Publish(char* payload, int payload_size) {
   unsigned long total_retry_time_ms = 0;
   while ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
     if (rc == 3) {  // connection refused: server unavailable
-      usleep(retry_interval_ms / 1000);
+      usleep(retry_interval_ms * 1000);
       total_retry_time_ms += retry_interval_ms;
       if (total_retry_time_ms >= kMaxConnectRetryTimeElapsedMillis) {
         printf("Failed to connect, maximum retry time exceeded.");
