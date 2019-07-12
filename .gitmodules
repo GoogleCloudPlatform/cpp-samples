@@ -1,3 +1,0 @@
-[submodule "bigtable/api/googleapis"]
-	path = bigtable/api/googleapis
-	url = https://github.com/googleapis/googleapis.git
