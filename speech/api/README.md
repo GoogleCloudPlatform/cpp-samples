@@ -32,7 +32,7 @@ These samples will only build and run on **Linux**.
     `API Manager > Credentials > Create credentials > Service account key`
     1.  Under **Service account**, select `New service account`.
     1.  Under **Service account name**, enter a service account name of your choosing.  For example, `transcriber`.
-    1.  Under **Role**, select `Project > Service Account Actor`.
+    1.  Under **Role**, select `Project > Owner`.
     1.  Under **Key type**, leave `JSON` selected.
     1.  Click **Create** to create a new service account, and download the json credentials file.
     1.  Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your downloaded service account credentials:
@@ -62,7 +62,7 @@ These samples will only build and run on **Linux**.
         ```
     1.  Set the environment variable `GOOGLEAPIS_GENS_PATH` to the path where you generated the gRPC source code.  For example:
         ```
-        export GOOGLEAPIS_GENS_PATH = $HOME/gitrepos/googleapis/gens
+        export GOOGLEAPIS_GENS_PATH=$HOME/gitrepos/googleapis/gens
         ```
 
 1.  **Download or clone this repo** with
