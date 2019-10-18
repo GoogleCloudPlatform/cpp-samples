@@ -51,36 +51,37 @@ echo "================================================================"
 echo "Found the following subdirs that contains ci directory $(date)."
 printf '%s\n' "${subdirs[@]}"
 
-echo "================================================================"
-echo "Detecting files changed by the pull request $(date)."
-changed_files=()
-while IFS= read -r line; do
-  changed_files+=( "${line}" )
-done < <(git --no-pager diff --name-only HEAD $(git merge-base HEAD master))
+if [[ -z "${KOKORO_GITHUB_PULL_REQUEST_NUMBER:-}" ]]; then
+  # If it's a presubmit build for a pull request, run all the tests.
+  test_dirs=${subdirs}
+else
+  test_dirs=()
+  echo "================================================================"
+  echo "Detecting files changed by the pull request $(date)."
+  changed_files=()
+  while IFS= read -r line; do
+    changed_files+=( "${line}" )
+  done < <(git --no-pager diff --name-only HEAD $(git merge-base HEAD master))
 
-echo "================================================================"
-echo "The following files are changed $(date)."
-printf '%s\n' "${changed_files[@]}"
-
-test_dirs=()
-
-for subdir in "${subdirs[@]}"
-do
-  # quadratic loop!
-  for changed_file in "${changed_files[@]}"
+  echo "================================================================"
+  echo "The following files are changed $(date)."
+  printf '%s\n' "${changed_files[@]}"
+  for subdir in "${subdirs[@]}"
   do
-    # We'll test the subdir if
-    # 1) it's not a pull request (ci for merge)
-    # 2) or the root ci directory has changes
-    # 3) or the subdir has some changes in the pull request
-    if [[ -z "${KOKORO_GITHUB_PULL_REQUEST_NUMBER:-}" ]] \
-      || [[ ${changed_file} == ci* ]] \
-      || [[ ${changed_file} == "${subdir}"* ]]; then
-      test_dirs+=( "${subdir}" )
-      break
-    fi
+    # quadratic loop!
+    for changed_file in "${changed_files[@]}"
+    do
+      # We'll test the subdir if
+      # 1) the root ci directory has changes
+      # 2) or the subdir has some changes in the pull request
+      if [[ ${changed_file} == ci* ]] \
+        || [[ ${changed_file} == "${subdir}"* ]]; then
+        test_dirs+=( "${subdir}" )
+        break
+      fi
+    done
   done
-done
+fi
 
 echo "================================================================"
 echo "We'll run tests for these subdirs $(date)."
@@ -99,7 +100,7 @@ do
       exit_status="${test_status}"
     fi
   else
-    echo "Skipped because ${subir} doesn't have build script $(date)."
+    echo "Skipped because ${subdir} doesn't have build script $(date)."
   fi
 done
 
