@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM debian:jessie
+FROM debian:jessie AS devtools
 
-# Copy in service-account.json into /home/
-COPY service-account.json /home/service-account.json
 ENV GOOGLE_APPLICATION_CREDENTIALS /home/service-account.json
 ENV GOOGLEAPIS_GENS_PATH /home/googleapis/gens
+ARG NCPU=4
 
 # Dependencies
 RUN \
@@ -42,19 +41,18 @@ RUN \
   git clone https://github.com/grpc/grpc.git && \
   cd grpc/ && \
   git submodule update --init && \
-  make && \
+  make -j ${NCPU} && \
   make install && \
   cd third_party/protobuf/ && \
-  make install && \
+  make -j ${NCPU} install && \
   cd /home/ && \
   git clone https://github.com/googleapis/googleapis.git && \
   cd googleapis/ && \
-  LANGUAGE=cpp make all
+  LANGUAGE=cpp make -j ${NCPU} all
 
+FROM devtools AS cpp-speech
 # Build Speech API
+COPY . /home/speech/api
 Run \
-  cd /home/ && \
-  git clone https://github.com/GoogleCloudPlatform/cpp-docs-samples.git && \
-  cd cpp-docs-samples/speech/api && \
-  make
-
+  cd /home/speech/api && \
+  make -j ${NCPU}
