@@ -49,6 +49,8 @@ echo "Build base image with minimal development tools $(date)."
 update_cache="false"
 
 devtools_flags=(
+  # Build only for dependencies
+  "--target" "devtools"
   "--build-arg" "NCPU=${NCPU}"
   "-t" "${DEV_IMAGE}:latest"
   "-f" "Dockerfile"
