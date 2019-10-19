@@ -34,7 +34,7 @@ echo "================================================================"
 echo "Setup Google Container Registry access $(date)."
 gcloud auth configure-docker
 
-readonly DEV_IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-docs-samples/speech-devtool"
+readonly DEV_IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-docs-samples/speech-devtools"
 
 echo "================================================================"
 echo "Download existing image (if available) $(date)."
