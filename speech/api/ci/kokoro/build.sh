@@ -36,12 +36,16 @@ gcloud auth configure-docker
 
 readonly DEV_IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-docs-samples/speech-devtools"
 
-echo "================================================================"
-echo "Download existing image (if available) $(date)."
 has_cache="false"
-if docker pull "${DEV_IMAGE}:latest"; then
-  echo "Existing image successfully downloaded."
-  has_cache="true"
+# Download the cache for local run and pull request.
+if [[ -z "${KOKORO_JOB_NAME:-}" ]] ||
+   [[ -n "${KOKORO_GITHUB_PULL_REQUEST_NUMBER:-}" ]]; then
+  echo "================================================================"
+  echo "Download existing image (if available) $(date)."
+  if docker pull "${DEV_IMAGE}:latest"; then
+    echo "Existing image successfully downloaded."
+    has_cache="true"
+  fi
 fi
 
 echo "================================================================"
