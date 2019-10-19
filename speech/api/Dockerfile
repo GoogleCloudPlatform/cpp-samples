@@ -48,11 +48,9 @@ RUN \
   cd /home/ && \
   git clone https://github.com/googleapis/googleapis.git && \
   cd googleapis/ && \
-  LANGUAGE=cpp make all
+  LANGUAGE=cpp make -j ${NCPU} all
 
 FROM devtools AS cpp-speech
 # Build Speech API
 COPY . /home/speech/api
-Run \
-  cd /home/speech/api && \
-  make -j ${NCPU}
+Run cd /home/speech/api && make
