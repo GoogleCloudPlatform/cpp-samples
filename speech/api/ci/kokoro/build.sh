@@ -35,6 +35,7 @@ echo "Setup Google Container Registry access $(date)."
 gcloud auth configure-docker
 
 readonly DEV_IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-docs-samples/speech-devtools"
+readonly IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-docs-samples/speech-sample"
 
 has_cache="false"
 # Download the cache for local run and pull request.
@@ -86,7 +87,7 @@ fi
 
 build_flags=(
   "--build-arg" "NCPU=${NCPU}"
-  "-t" "${DEV_IMAGE}:latest"
+  "-t" "${IMAGE}:latest"
   "--cache-from=${DEV_IMAGE}:latest"
   "--target=cpp-speech"
   "-f" "Dockerfile"
@@ -101,5 +102,5 @@ docker build "${build_flags[@]}" .
 # TODO(#56) configure service account json file for integration tests.
 if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]]; then
   docker run -v "${GOOGLE_APPLICATION_CREDENTIALS}:/home/service-account.json" \
-    cpp-speech bash -c "cd /home/speech/api/; make run_tests"
+    "${IMAGE}:latest" bash -c "cd /home/speech/api/; make run_tests"
 fi
