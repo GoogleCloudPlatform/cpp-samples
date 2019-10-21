@@ -53,6 +53,4 @@ RUN \
 FROM devtools AS cpp-speech
 # Build Speech API
 COPY . /home/speech/api
-Run \
-  cd /home/speech/api && \
-  make -j ${NCPU}
+Run cd /home/speech/api && make

@@ -52,8 +52,8 @@ echo "Found the following subdirs that contains ci directory $(date)."
 printf '%s\n' "${subdirs[@]}"
 
 if [[ -z "${KOKORO_GITHUB_PULL_REQUEST_NUMBER:-}" ]]; then
-  # If it's a presubmit build for a pull request, run all the tests.
-  test_dirs=${subdirs}
+  # If it's not a presubmit build for a pull request, run all the tests.
+  test_dirs=("${subdirs[@]}")
 else
   test_dirs=()
   echo "================================================================"
