@@ -50,3 +50,4 @@ FROM devtools as cpp-iot
 
 COPY . /src
 RUN cd /src && OPENSSL_DIR=/usr/local/lib make
+ENV LD_LIBRARY_PATH=/usr/local/lib
