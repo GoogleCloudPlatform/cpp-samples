@@ -24,6 +24,10 @@ if [ -z "${PROJECT_ID:-}" ]; then
   readonly PROJECT_ID="cloud-devrel-kokoro-resources"
 fi
 
+if [[ -z "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]]; then
+  readonly GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_KEYSTORE_DIR}/71386_cpp-docs-samples-service-account"
+fi
+
 readonly SUBDIR_ROOT="$(cd "$(dirname "$0")/../../"; pwd)"
 
 echo "================================================================"
@@ -99,7 +103,6 @@ printf '%s\n' "${build_flags[@]}"
 
 docker build "${build_flags[@]}" .
 
-# TODO(#56) configure service account json file for integration tests.
 if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]]; then
   docker run -v "${GOOGLE_APPLICATION_CREDENTIALS}:/home/service-account.json" \
     "${IMAGE}:latest" bash -c "cd /home/speech/api/; make run_tests"
