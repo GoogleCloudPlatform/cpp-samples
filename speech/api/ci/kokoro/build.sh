@@ -103,7 +103,6 @@ printf '%s\n' "${build_flags[@]}"
 
 docker build "${build_flags[@]}" .
 
-# TODO(#56) configure service account json file for integration tests.
 if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]]; then
   docker run -v "${GOOGLE_APPLICATION_CREDENTIALS}:/home/service-account.json" \
     "${IMAGE}:latest" bash -c "cd /home/speech/api/; make run_tests"
