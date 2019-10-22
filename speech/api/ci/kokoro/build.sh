@@ -24,6 +24,10 @@ if [ -z "${PROJECT_ID:-}" ]; then
   readonly PROJECT_ID="cloud-devrel-kokoro-resources"
 fi
 
+if [[ -z "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]]; then
+  readonly GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_KEYSTORE_DIR}/71386_cpp-docs-samples-service-account"
+fi
+
 readonly SUBDIR_ROOT="$(cd "$(dirname "$0")/../../"; pwd)"
 
 echo "================================================================"
