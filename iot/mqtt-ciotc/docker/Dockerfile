@@ -12,24 +12,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:16.04 as build-dependencies
+FROM ubuntu:16.04 as devtools
+
+ARG NCPU=4
+
 RUN apt-get update
-RUN apt-get install -y build-essential gcc clang git libssl-dev autoconf libtool cmake doxygen pkg-config unzip wget 
+RUN apt-get install -y \
+    autoconf \
+    build-essential \
+    clang \
+    cmake \
+    doxygen \
+    gcc \
+    git \
+    libssl-dev \
+    libtool \
+    pkg-config \
+    unzip \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 RUN mkdir /dependencies 
-RUN cd /dependencies  && git clone https://github.com/akheron/jansson  
-RUN cd /dependencies/jansson && cmake . && make && make install  
-RUN cd /dependencies  && git clone https://github.com/openssl/openssl  
-RUN cd /dependencies/openssl && ./config && make && make install  
-RUN cd /dependencies  && git clone https://github.com/benmcollins/libjwt  
-RUN cd /dependencies/libjwt && autoreconf -i && ./configure && make && make install  
+RUN cd /dependencies  && git clone https://github.com/akheron/jansson
+RUN cd /dependencies/jansson && cmake . && make -j ${NCPU} && make install
+RUN cd /dependencies  && git clone https://github.com/openssl/openssl
+RUN cd /dependencies/openssl && ./config && make -j ${NCPU} && make install
+RUN cd /dependencies  && git clone https://github.com/benmcollins/libjwt
+RUN cd /dependencies/libjwt && autoreconf -i && ./configure \
+    && make -j ${NCPU} && make install
 RUN cd /dependencies  && git clone https://github.com/eclipse/paho.mqtt.c.git  
-RUN cd /dependencies/paho.mqtt.c && cmake -DPAHO_WITH_SSL=TRUE -DPAHO_BUILD_DOCUMENTATION=TRUE -DPAHO_BUILD_SAMPLES=TRUE . && make all && make install  
+RUN cd /dependencies/paho.mqtt.c && \
+    cmake -DPAHO_WITH_SSL=TRUE \
+          -DPAHO_BUILD_DOCUMENTATION=TRUE \
+          -DPAHO_BUILD_SAMPLES=TRUE . \
+    && make all -j ${NCPU} \
+    && make install
+FROM devtools as cpp-iot
 
-FROM ubuntu:16.04
-
-RUN export LD_LIBRARY_PATH=/usr/local/lib && \
-    apt-get update && apt-get install -y gcc && \
-    rm -rf /var/lib/apt/lists/*
-COPY --from=build-dependencies /usr/local /usr/local    
-VOLUME /src
-
+COPY . /src
+RUN cd /src && OPENSSL_DIR=/usr/local/lib make
+ENV LD_LIBRARY_PATH=/usr/local/lib

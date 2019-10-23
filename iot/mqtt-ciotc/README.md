@@ -16,7 +16,7 @@ After you have installed all the dependencies, you can build the sample as:
 
     gcc mqtt_ciotc.c -lssl -lcrypto -lpaho-mqtt3cs -ljwt -o mqtt_ciotc
 
-or by invoking `make`.
+or by invoking `make`, specifying OPENSSL_DIR, pointiing to the OpenSSL library.
 
 Due to conflicting libraries existing on your build machine, you may need to
 specify the library paths, for example, if you installed the dependencies in
@@ -29,7 +29,7 @@ For simplifying the build process, a Docker image is provided that generates
 the build configuration. After installing Docker, browse to the `docker` folder
 and run:
 
-    docker build -t your-docker-tag .
+    docker build -t your-docker-tag --target=devtools .
 
 It will take a little while for the Docker image to build. After the Docker
 image is built, you can access the builder as:
