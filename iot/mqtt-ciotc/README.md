@@ -14,7 +14,7 @@ projects:
 
 After you have installed all the dependencies, you can build the sample as:
 
-    gcc mqtt_ciotc.c -lssl -lcrypto -lpaho-mqtt3cs -ljwt -o mqtt_ciotc
+    gcc mqtt_ciotc.c -lssl -lcrypto -lpaho-mqtt3cs -ljwt -ljansson -o mqtt_ciotc
 
 or by invoking `make`, specifying OPENSSL_DIR, pointiing to the OpenSSL library.
 
@@ -23,7 +23,7 @@ specify the library paths, for example, if you installed the dependencies in
 $HOME/code, you could do the following to help the linker find the correct
 libraries:
 
-    gcc mqtt_ciotc.c -L$HOME/code/openssl -lssl -lcrypto -lpaho-mqtt3cs -L$HOME/code/libjwt -ljwt -o mqtt_ciotc
+    gcc mqtt_ciotc.c -L$HOME/code/openssl -lssl -lcrypto -lpaho-mqtt3cs -L$HOME/code/libjwt -ljwt -ljansson -o mqtt_ciotc
 
 For simplifying the build process, a Docker image is provided that generates
 the build configuration. After installing Docker, browse to the `docker` folder
