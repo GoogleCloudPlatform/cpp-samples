@@ -4,4 +4,4 @@ CCOPTIONS=-std=c11 -Wall -Wextra -pedantic -Wstrict-overflow -fno-strict-aliasin
 SSLPATH=-L$(OPENSSL_DIR)
 
 all: mqtt_ciotc.c
-	$(CC) $(CCOPTIONS) $(SSLPATH) mqtt_ciotc.c $(BUILDARGS)  -ljwt -lcrypto -lssl -lpaho-mqtt3cs -o mqtt_ciotc
+	$(CC) $(CCOPTIONS) $(SSLPATH) mqtt_ciotc.c $(BUILDARGS) -ljwt -lcrypto -lssl -lpaho-mqtt3cs -ljansson -o mqtt_ciotc
