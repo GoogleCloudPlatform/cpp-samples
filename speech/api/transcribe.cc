@@ -13,19 +13,17 @@
 // limitations under the License.
 #include <grpc++/grpc++.h>
 #include <strings.h>
-
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
-
-#include "parse_arguments.h"
 #include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
+#include "parse_arguments.h"
 
 using google::cloud::speech::v1::RecognitionConfig;
-using google::cloud::speech::v1::Speech;
 using google::cloud::speech::v1::RecognizeRequest;
 using google::cloud::speech::v1::RecognizeResponse;
+using google::cloud::speech::v1::Speech;
 
 static const char usage[] =
     "Usage:\n"
@@ -40,8 +38,7 @@ int main(int argc, char** argv) {
   std::unique_ptr<Speech::Stub> speech(Speech::NewStub(channel));
   // Parse command line arguments.
   RecognizeRequest request;
-  char* file_path =
-      ParseArguments(argc, argv, request.mutable_config());
+  char* file_path = ParseArguments(argc, argv, request.mutable_config());
   if (nullptr == file_path) {
     std::cerr << usage;
     return -1;
@@ -66,8 +63,7 @@ int main(int argc, char** argv) {
   // Send audio content using Recognize().
   grpc::ClientContext context;
   RecognizeResponse response;
-  grpc::Status rpc_status = speech->
-        Recognize(&context, request, &response);
+  grpc::Status rpc_status = speech->Recognize(&context, request, &response);
   if (!rpc_status.ok()) {
     // Report the RPC failure.
     std::cerr << rpc_status.error_message() << std::endl;
@@ -78,8 +74,8 @@ int main(int argc, char** argv) {
     auto result = response.results(r);
     for (int a = 0; a < result.alternatives_size(); ++a) {
       auto alternative = result.alternatives(a);
-      std::cout << alternative.confidence() << "\t"
-                << alternative.transcript() << std::endl;
+      std::cout << alternative.confidence() << "\t" << alternative.transcript()
+                << std::endl;
     }
   }
   // [END speech_sync_recognize_gcs]

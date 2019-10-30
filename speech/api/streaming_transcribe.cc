@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include <grpc++/grpc++.h>
-
 #include <chrono>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
 #include <thread>
-
-#include "parse_arguments.h"
 #include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
+#include "parse_arguments.h"
 
 using google::cloud::speech::v1::RecognitionConfig;
 using google::cloud::speech::v1::Speech;

@@ -21,11 +21,10 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-
+#include "MQTTClient.h"
 #include "jwt.h"
 #include "openssl/ec.h"
 #include "openssl/evp.h"
-#include "MQTTClient.h"
 // [END iot_mqtt_include]
 
 #define TRACE 1 /* Set to 1 to enable tracing */
@@ -44,19 +43,19 @@ struct {
   char topic[topic_size];
   char* payload;
   char* algorithm;
-} opts = {
-  .address = "ssl://mqtt.googleapis.com:8883",
-  .clientid = "projects/{your-project-id}/locations/{your-region-id}/registries/{your-registry-id}/devices/{your-device-id}",
-  .deviceid = "{your-device-id}",
-  .keypath = "ec_private.pem",
-  .projectid = "intense-wavelet-343",
-  .region = "{your-region-id}",
-  .registryid = "{your-registry-id}",
-  .rootpath = "roots.pem",
-  .topic = "/devices/{your-device-id}/events",
-  .payload = "Hello world!",
-  .algorithm = "ES256"
-};
+} opts = {.address = "ssl://mqtt.googleapis.com:8883",
+          .clientid =
+              "projects/{your-project-id}/locations/{your-region-id}/"
+              "registries/{your-registry-id}/devices/{your-device-id}",
+          .deviceid = "{your-device-id}",
+          .keypath = "ec_private.pem",
+          .projectid = "intense-wavelet-343",
+          .region = "{your-region-id}",
+          .registryid = "{your-registry-id}",
+          .rootpath = "roots.pem",
+          .topic = "/devices/{your-device-id}/events",
+          .payload = "Hello world!",
+          .algorithm = "ES256"};
 
 void Usage() {
   printf("mqtt_ciotc <message> \\\n");
@@ -85,14 +84,14 @@ static void GetIatExp(char* iat, char* exp, int time_size) {
   }
 }
 
-static int GetAlgorithmFromString(const char *algorithm) {
-    if (strcmp(algorithm, "RS256") == 0) {
-        return JWT_ALG_RS256;
-    }
-    if (strcmp(algorithm, "ES256") == 0) {
-        return JWT_ALG_ES256;
-    }
-    return -1;
+static int GetAlgorithmFromString(const char* algorithm) {
+  if (strcmp(algorithm, "RS256") == 0) {
+    return JWT_ALG_RS256;
+  }
+  if (strcmp(algorithm, "ES256") == 0) {
+    return JWT_ALG_ES256;
+  }
+  return -1;
 }
 
 /**
@@ -100,25 +99,26 @@ static int GetAlgorithmFromString(const char *algorithm) {
  * Google Cloud project ID. Returns the JWT as a string that the caller must
  * free.
  */
-static char* CreateJwt(const char* ec_private_path, const char* project_id, const char *algorithm) {
+static char* CreateJwt(const char* ec_private_path, const char* project_id,
+                       const char* algorithm) {
   char iat_time[sizeof(time_t) * 3 + 2];
   char exp_time[sizeof(time_t) * 3 + 2];
-  uint8_t* key = NULL; // Stores the Base64 encoded certificate
+  uint8_t* key = NULL;  // Stores the Base64 encoded certificate
   size_t key_len = 0;
-  jwt_t *jwt = NULL;
+  jwt_t* jwt = NULL;
   int ret = 0;
-  char *out = NULL;
+  char* out = NULL;
 
   // Read private key from file
-  FILE *fp = fopen(ec_private_path, "r");
-  if (fp == (void*) NULL) {
+  FILE* fp = fopen(ec_private_path, "r");
+  if (fp == (void*)NULL) {
     printf("Could not open file: %s\n", ec_private_path);
     return "";
   }
   fseek(fp, 0L, SEEK_END);
   key_len = ftell(fp);
   fseek(fp, 0L, SEEK_SET);
-  key = malloc(sizeof(uint8_t) * (key_len + 1)); // certificate length + \0
+  key = malloc(sizeof(uint8_t) * (key_len + 1));  // certificate length + \0
 
   fread(key, 1, key_len, fp);
   key[key_len] = '\0';
@@ -147,8 +147,8 @@ static char* CreateJwt(const char* ec_private_path, const char* project_id, cons
     printf("Error during set alg: %d\n", ret);
   }
   out = jwt_encode_str(jwt);
-  if(!out) {
-      perror("Error during token creation:");
+  if (!out) {
+    perror("Error during token creation:");
   }
   // Print JWT
   if (TRACE) {
@@ -185,29 +185,25 @@ bool GetOpts(int argc, char** argv) {
       if (++pos < argc) {
         opts.deviceid = argv[pos];
         calcvalues = true;
-      }
-      else
+      } else
         return false;
     } else if (strcmp(argv[pos], "--region") == 0) {
       if (++pos < argc) {
         opts.region = argv[pos];
         calcvalues = true;
-      }
-      else
+      } else
         return false;
     } else if (strcmp(argv[pos], "--registryid") == 0) {
       if (++pos < argc) {
         opts.registryid = argv[pos];
         calcvalues = true;
-      }
-      else
+      } else
         return false;
     } else if (strcmp(argv[pos], "--projectid") == 0) {
       if (++pos < argc) {
         opts.projectid = argv[pos];
         calcvalues = true;
-      }
-      else
+      } else
         return false;
     } else if (strcmp(argv[pos], "--keypath") == 0) {
       if (++pos < argc)
@@ -221,8 +217,8 @@ bool GetOpts(int argc, char** argv) {
         return false;
     } else if (strcmp(argv[pos], "--topic") == 0) {
       if (++pos < argc) {
-        strcpy((char * restrict)&opts.topic,argv[pos]);
-        calctopic=false;
+        strcpy((char* restrict) & opts.topic, argv[pos]);
+        calctopic = false;
       } else
         return false;
     } else if (strcmp(argv[pos], "--algorithm") == 0) {
@@ -234,9 +230,8 @@ bool GetOpts(int argc, char** argv) {
     pos++;
   }
   if (calctopic) {
-    int n = snprintf(opts.topic, sizeof(opts.topic),
-        "/devices/%s/events",
-        opts.deviceid);
+    int n = snprintf(opts.topic, sizeof(opts.topic), "/devices/%s/events",
+                     opts.deviceid);
     if (n < 0) {
       printf("Encoding error!\n");
       return false;
@@ -247,9 +242,10 @@ bool GetOpts(int argc, char** argv) {
     }
   }
   if (calcvalues) {
-    int n = snprintf(opts.clientid, sizeof(opts.clientid),
-        "projects/%s/locations/%s/registries/%s/devices/%s",
-        opts.projectid, opts.region, opts.registryid, opts.deviceid);
+    int n =
+        snprintf(opts.clientid, sizeof(opts.clientid),
+                 "projects/%s/locations/%s/registries/%s/devices/%s",
+                 opts.projectid, opts.region, opts.registryid, opts.deviceid);
     if (n < 0 || (n > clientid_maxlen)) {
       if (n < 0) {
         printf("Encoding error!\n");
@@ -263,7 +259,7 @@ bool GetOpts(int argc, char** argv) {
       printf("%s\n", opts.clientid);
     }
 
-    return true; // Caller must free opts.clientid
+    return true;  // Caller must free opts.clientid
   }
   return false;
 }
@@ -292,7 +288,7 @@ int Publish(char* payload, int payload_size) {
   MQTTClient_deliveryToken token = {0};
 
   MQTTClient_create(&client, opts.address, opts.clientid,
-      MQTTCLIENT_PERSISTENCE_NONE, NULL);
+                    MQTTCLIENT_PERSISTENCE_NONE, NULL);
   conn_opts.keepAliveInterval = 60;
   conn_opts.cleansession = 1;
   conn_opts.username = kUsername;
@@ -328,9 +324,10 @@ int Publish(char* payload, int payload_size) {
   pubmsg.qos = kQos;
   pubmsg.retained = 0;
   MQTTClient_publishMessage(client, opts.topic, &pubmsg, &token);
-  printf("Waiting for up to %lu seconds for publication of %s\n"
-          "on topic %s for client with ClientID: %s\n",
-          (kTimeout/1000), opts.payload, opts.topic, opts.clientid);
+  printf(
+      "Waiting for up to %lu seconds for publication of %s\n"
+      "on topic %s for client with ClientID: %s\n",
+      (kTimeout / 1000), opts.payload, opts.topic, opts.clientid);
   rc = MQTTClient_waitForCompletion(client, token, kTimeout);
   printf("Message with delivery token %d delivered\n", token);
   MQTTClient_disconnect(client, 10000);

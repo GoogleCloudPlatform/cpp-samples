@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include <grpc++/grpc++.h>
-
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
 #include <vector>
-
-#include "parse_arguments.h"
 #include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
+#include "parse_arguments.h"
 
 using google::cloud::speech::v1::RecognitionConfig;
 using google::cloud::speech::v1::Speech;
@@ -57,17 +55,17 @@ int main(int argc, char** argv) {
     bool happening_now;  // Gets set to false when the operation completes.
     const char* name;
   };
-  Tag create_stream = { true, "create stream" };
-  Tag reading = { false, "reading" };
-  Tag writing = { false, "writing" };
-  Tag writes_done = { false, "writes done" };
-  Tag finishing = { false, "finishing" };
+  Tag create_stream = {true, "create stream"};
+  Tag reading = {false, "reading"};
+  Tag writing = {false, "writing"};
+  Tag writes_done = {false, "writes done"};
+  Tag finishing = {false, "finishing"};
   grpc::Status status;
   bool server_closed_stream = false;
   // Create the stream reader/writer.
   grpc::ClientContext context;
-  auto streamer = speech->AsyncStreamingRecognize(
-      &context, &cq, &create_stream);
+  auto streamer =
+      speech->AsyncStreamingRecognize(&context, &cq, &create_stream);
 
   bool ok = false;
   Tag* tag = nullptr;
@@ -85,7 +83,8 @@ int main(int argc, char** argv) {
       return -1;
     }
   } else {
-    std::cerr << "The completion queue unexpectedly shutdown or timedout." << std::endl;
+    std::cerr << "The completion queue unexpectedly shutdown or timedout."
+              << std::endl;
     return -1;
   }
 
@@ -122,7 +121,7 @@ int main(int argc, char** argv) {
       streamer->Write(request, &writing);
       if (bytes_read < chunk.size()) {
         // Done writing.
-	writes_completed = true;
+        writes_completed = true;
         next_write_time_point =  // Never write again.
             std::chrono::system_clock::time_point::max();
       } else {
@@ -152,13 +151,13 @@ int main(int argc, char** argv) {
             }
           }
         }
-	if (tag == &writing && writes_completed) {
-	  // After the last Write, send a WritesDone() ...
-	  writes_done.happening_now = true;
+        if (tag == &writing && writes_completed) {
+          // After the last Write, send a WritesDone() ...
+          writes_done.happening_now = true;
           // AsyncNext(), called above, will return the writes_done tag when
           // the writes_done operation completes.
-	  streamer->WritesDone(&writes_done);
-	}
+          streamer->WritesDone(&writes_done);
+        }
         if (!ok) {
           server_closed_stream = true;
           finishing.happening_now = true;
