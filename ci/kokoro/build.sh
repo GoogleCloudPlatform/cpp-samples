@@ -97,6 +97,7 @@ do
     ${subdir}/ci/kokoro/build.sh
     test_status=$?
     if [[ "${test_status}" != 0 ]]; then
+      echo "${subdir}/ci/kokoro/build.sh failed with ${test_status}."
       exit_status="${test_status}"
     fi
   else
