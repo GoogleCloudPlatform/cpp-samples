@@ -35,10 +35,13 @@ echo "================================================================"
 echo "Change working directory to project root $(date)."
 cd "${PROJECT_ROOT}"
 
-echo "================================================================"
-echo "Capture Docker version to troubleshoot $(date)."
-docker version
-echo "================================================================"
+readonly CHECK_STYLE="yes"
+
+if [[ "${CHECK_STYLE}" ]]; then
+  echo "================================================================"
+  echo "Running clang-format  $(date)."
+  ci/kokoro/check_style.sh
+fi
 
 echo "================================================================"
 echo "Detecting sub directories that contains ci directory $(date)."
