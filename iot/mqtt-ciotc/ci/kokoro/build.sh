@@ -34,8 +34,8 @@ echo "================================================================"
 echo "Setup Google Container Registry access $(date)."
 gcloud auth configure-docker
 
-readonly DEV_IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-docs-samples/iot-devtools"
-readonly IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-docs-samples/iot-sample"
+readonly DEV_IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-samples/iot-devtools"
+readonly IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-samples/iot-sample"
 
 has_cache="false"
 # Download the cache for local run and pull request.
