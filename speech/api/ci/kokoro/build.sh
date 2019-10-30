@@ -38,8 +38,8 @@ echo "================================================================"
 echo "Setup Google Container Registry access $(date)."
 gcloud auth configure-docker
 
-readonly DEV_IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-docs-samples/speech-devtools"
-readonly IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-docs-samples/speech-sample"
+readonly DEV_IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-samples/speech-devtools"
+readonly IMAGE="gcr.io/${PROJECT_ID}/cpp/cpp-samples/speech-sample"
 
 has_cache="false"
 # Download the cache for local run and pull request.
@@ -103,6 +103,10 @@ printf '%s\n' "${build_flags[@]}"
 
 docker build "${build_flags[@]}" .
 
+if [[ "${CHECK_STYLE}" ]]; then
+  docker run "${IMAGE}:latest" bash -c "cd /home/speech/api/; make tidy"
+fi
+  
 if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]]; then
   docker run -v "${GOOGLE_APPLICATION_CREDENTIALS}:/home/service-account.json" \
     "${IMAGE}:latest" bash -c "cd /home/speech/api/; make run_tests"

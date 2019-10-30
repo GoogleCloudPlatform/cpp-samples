@@ -36,6 +36,7 @@ echo "Change working directory to project root $(date)."
 cd "${PROJECT_ROOT}"
 
 readonly CHECK_STYLE="yes"
+export CHECK_STYLE
 
 if [[ "${CHECK_STYLE}" ]]; then
   echo "================================================================"

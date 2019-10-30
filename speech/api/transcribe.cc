@@ -20,12 +20,11 @@
 #include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
 #include "parse_arguments.h"
 
-using google::cloud::speech::v1::RecognitionConfig;
 using google::cloud::speech::v1::RecognizeRequest;
 using google::cloud::speech::v1::RecognizeResponse;
 using google::cloud::speech::v1::Speech;
 
-static const char usage[] =
+static const char kUsage[] =
     "Usage:\n"
     "   transcribe [--bitrate N] audio.(raw|ulaw|flac|amr|awb)\n";
 
@@ -40,7 +39,7 @@ int main(int argc, char** argv) {
   RecognizeRequest request;
   char* file_path = ParseArguments(argc, argv, request.mutable_config());
   if (nullptr == file_path) {
-    std::cerr << usage;
+    std::cerr << kUsage;
     return -1;
   }
   // [END speech_sync_recognize_gcs]
@@ -71,9 +70,9 @@ int main(int argc, char** argv) {
   }
   // Dump the transcript of all the results.
   for (int r = 0; r < response.results_size(); ++r) {
-    auto result = response.results(r);
+    const auto& result = response.results(r);
     for (int a = 0; a < result.alternatives_size(); ++a) {
-      auto alternative = result.alternatives(a);
+      const auto& alternative = result.alternatives(a);
       std::cout << alternative.confidence() << "\t" << alternative.transcript()
                 << std::endl;
     }

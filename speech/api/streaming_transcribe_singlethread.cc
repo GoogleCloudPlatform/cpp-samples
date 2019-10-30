@@ -20,12 +20,11 @@
 #include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
 #include "parse_arguments.h"
 
-using google::cloud::speech::v1::RecognitionConfig;
 using google::cloud::speech::v1::Speech;
 using google::cloud::speech::v1::StreamingRecognizeRequest;
 using google::cloud::speech::v1::StreamingRecognizeResponse;
 
-static const char usage[] =
+static const char kUsage[] =
     "Usage:\n"
     "   streaming_transcribe_singlethread "
     "[--bitrate N] audio.(raw|ulaw|flac|amr|awb)\n";
@@ -41,7 +40,7 @@ int main(int argc, char** argv) {
   char* file_path =
       ParseArguments(argc, argv, streaming_config->mutable_config());
   if (nullptr == file_path) {
-    std::cerr << usage;
+    std::cerr << kUsage;
     return -1;
   }
   // Many things are happening at once:
@@ -71,7 +70,7 @@ int main(int argc, char** argv) {
   Tag* tag = nullptr;
   // Block until the creation of the stream is done, we cannot start
   // writing until that happens ...
-  if (cq.Next((void**)&tag, &ok)) {
+  if (cq.Next(reinterpret_cast<void**>(&tag), &ok)) {
     std::cout << tag->name << " completed." << std::endl;
     tag->happening_now = false;
     if (tag != &create_stream) {
@@ -131,7 +130,8 @@ int main(int argc, char** argv) {
     }
     // Wait for a pending operation to complete.  Identify the operation that
     // completed by examining tag.
-    switch (cq.AsyncNext((void**)&tag, &ok, next_write_time_point)) {
+    switch (cq.AsyncNext(reinterpret_cast<void**>(&tag), &ok,
+                         next_write_time_point)) {
       case grpc::CompletionQueue::SHUTDOWN:
         std::cerr << "The completion queue unexpectedly shutdown." << std::endl;
         return -1;
@@ -141,11 +141,11 @@ int main(int argc, char** argv) {
         if (tag == &reading) {
           // Dump the transcript of all the results.
           for (int r = 0; r < response.results_size(); ++r) {
-            auto result = response.results(r);
+            const auto& result = response.results(r);
             std::cout << "Result stability: " << result.stability()
                       << std::endl;
             for (int a = 0; a < result.alternatives_size(); ++a) {
-              auto alternative = result.alternatives(a);
+              const auto& alternative = result.alternatives(a);
               std::cout << alternative.confidence() << "\t"
                         << alternative.transcript() << std::endl;
             }

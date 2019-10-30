@@ -24,6 +24,7 @@ RUN \
   apt-get -y install \
           autoconf \
           build-essential \
+          clang-tidy \
           curl \
           gcc \
           git-core \
@@ -49,6 +50,5 @@ RUN \
   LANGUAGE=cpp make -j ${NCPU} all
 
 FROM devtools AS cpp-speech
-# Build Speech API
 COPY . /home/speech/api
-Run cd /home/speech/api && make
+RUN cd /home/speech/api && make

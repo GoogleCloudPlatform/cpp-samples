@@ -20,8 +20,8 @@ using google::cloud::speech::v1::RecognitionConfig;
 
 char* ParseArguments(int argc, char** argv, RecognitionConfig* config) {
   // Parse the bit rate from the --bitrate command line option.
-  static struct option long_options[] = {{"bitrate", required_argument, 0, 'b'},
-                                         {0, 0, 0, 0}};
+  static struct option long_options[] = {
+      {"bitrate", required_argument, nullptr, 'b'}, {nullptr, 0, nullptr, 0}};
   config->set_language_code("en");
   config->set_sample_rate_hertz(16000);  // Default sample rate.
   int opt;
@@ -43,7 +43,7 @@ char* ParseArguments(int argc, char** argv, RecognitionConfig* config) {
   }
   // Choose the encoding by examining the audio file extension.
   char* ext = strrchr(argv[optind], '.');
-  if (!ext || 0 == strcasecmp(ext, ".raw")) {
+  if (ext == nullptr || 0 == strcasecmp(ext, ".raw")) {
     config->set_encoding(RecognitionConfig::LINEAR16);
   } else if (0 == strcasecmp(ext, ".ulaw")) {
     config->set_encoding(RecognitionConfig::MULAW);

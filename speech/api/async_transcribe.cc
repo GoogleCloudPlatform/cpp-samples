@@ -23,10 +23,9 @@
 
 using google::cloud::speech::v1::LongRunningRecognizeRequest;
 using google::cloud::speech::v1::LongRunningRecognizeResponse;
-using google::cloud::speech::v1::RecognitionConfig;
 using google::cloud::speech::v1::Speech;
 
-static const char usage[] =
+static const char kUsage[] =
     "Usage:\n"
     "   async_transcribe [--bitrate N] "
     "gs://bucket/audio.(raw|ulaw|flac|amr|awb)\n";
@@ -45,7 +44,7 @@ int main(int argc, char** argv) {
   LongRunningRecognizeRequest request;
   char* file_path = ParseArguments(argc, argv, request.mutable_config());
   if (nullptr == file_path) {
-    std::cerr << usage;
+    std::cerr << kUsage;
     return -1;
   }
   // Pass the Google Cloud Storage URI to the request.
@@ -87,9 +86,9 @@ int main(int argc, char** argv) {
   op.response().UnpackTo(&response);
   // Dump the transcript of all the results.
   for (int r = 0; r < response.results_size(); ++r) {
-    auto result = response.results(r);
+    const auto& result = response.results(r);
     for (int a = 0; a < result.alternatives_size(); ++a) {
-      auto alternative = result.alternatives(a);
+      const auto& alternative = result.alternatives(a);
       std::cout << alternative.confidence() << "\t" << alternative.transcript()
                 << std::endl;
     }
