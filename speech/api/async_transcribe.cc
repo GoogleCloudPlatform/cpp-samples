@@ -13,24 +13,22 @@
 // limitations under the License.
 #include <grpc++/grpc++.h>
 #include <unistd.h>
-
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
-
-#include "parse_arguments.h"
 #include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
 #include "google/longrunning/operations.grpc.pb.h"
+#include "parse_arguments.h"
 
-using google::cloud::speech::v1::RecognitionConfig;
-using google::cloud::speech::v1::Speech;
 using google::cloud::speech::v1::LongRunningRecognizeRequest;
 using google::cloud::speech::v1::LongRunningRecognizeResponse;
+using google::cloud::speech::v1::Speech;
 
-static const char usage[] =
+static const char kUsage[] =
     "Usage:\n"
-    "   async_transcribe [--bitrate N] gs://bucket/audio.(raw|ulaw|flac|amr|awb)\n";
+    "   async_transcribe [--bitrate N] "
+    "gs://bucket/audio.(raw|ulaw|flac|amr|awb)\n";
 
 int main(int argc, char** argv) {
   // [START speech_async_recognize_gcs]
@@ -44,10 +42,9 @@ int main(int argc, char** argv) {
       google::longrunning::Operations::NewStub(channel));
   // Parse command line arguments.
   LongRunningRecognizeRequest request;
-  char* file_path =
-      ParseArguments(argc, argv, request.mutable_config());
+  char* file_path = ParseArguments(argc, argv, request.mutable_config());
   if (nullptr == file_path) {
-    std::cerr << usage;
+    std::cerr << kUsage;
     return -1;
   }
   // Pass the Google Cloud Storage URI to the request.
@@ -55,8 +52,8 @@ int main(int argc, char** argv) {
   // Call LongRunningRecognize().
   grpc::ClientContext context;
   google::longrunning::Operation op;
-  grpc::Status rpc_status = speech->
-        LongRunningRecognize(&context, request, &op);
+  grpc::Status rpc_status =
+      speech->LongRunningRecognize(&context, request, &op);
   if (!rpc_status.ok()) {
     // Report the RPC failure.
     std::cerr << rpc_status.error_message() << std::endl;
@@ -70,8 +67,8 @@ int main(int argc, char** argv) {
     std::cout << "." << std::flush;
     sleep(1);
     grpc::ClientContext op_context;
-    rpc_status = long_operations->
-        GetOperation(&op_context, get_op_request, &op);
+    rpc_status =
+        long_operations->GetOperation(&op_context, get_op_request, &op);
     if (!rpc_status.ok()) {
       // Report the RPC failure.
       std::cerr << rpc_status.error_message() << std::endl;
@@ -89,11 +86,11 @@ int main(int argc, char** argv) {
   op.response().UnpackTo(&response);
   // Dump the transcript of all the results.
   for (int r = 0; r < response.results_size(); ++r) {
-    auto result = response.results(r);
+    const auto& result = response.results(r);
     for (int a = 0; a < result.alternatives_size(); ++a) {
-      auto alternative = result.alternatives(a);
-      std::cout << alternative.confidence() << "\t"
-                << alternative.transcript() << std::endl;
+      const auto& alternative = result.alternatives(a);
+      std::cout << alternative.confidence() << "\t" << alternative.transcript()
+                << std::endl;
     }
   }
   // [END speech_async_recognize_gcs]

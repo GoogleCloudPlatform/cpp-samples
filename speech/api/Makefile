@@ -42,6 +42,13 @@ endif
 all: transcribe async_transcribe streaming_transcribe \
 	streaming_transcribe_singlethread
 
+tidy:
+	@for src in $(shell find . -name '*.cc') ; do \
+		echo "Running tidy on $$src..." ; \
+		clang-tidy "$$src" -- $(CPPFLAGS); \
+	done
+	@echo "Done"
+
 googleapis.ar: $(GOOGLEAPIS_CCS:.cc=.o)
 	ar r $@ $?
 

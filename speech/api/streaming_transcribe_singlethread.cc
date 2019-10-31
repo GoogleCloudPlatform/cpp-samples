@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include <grpc++/grpc++.h>
-
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
 #include <vector>
-
-#include "parse_arguments.h"
 #include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
+#include "parse_arguments.h"
 
-using google::cloud::speech::v1::RecognitionConfig;
 using google::cloud::speech::v1::Speech;
 using google::cloud::speech::v1::StreamingRecognizeRequest;
 using google::cloud::speech::v1::StreamingRecognizeResponse;
 
-static const char usage[] =
+static const char kUsage[] =
     "Usage:\n"
     "   streaming_transcribe_singlethread "
     "[--bitrate N] audio.(raw|ulaw|flac|amr|awb)\n";
@@ -43,7 +40,7 @@ int main(int argc, char** argv) {
   char* file_path =
       ParseArguments(argc, argv, streaming_config->mutable_config());
   if (nullptr == file_path) {
-    std::cerr << usage;
+    std::cerr << kUsage;
     return -1;
   }
   // Many things are happening at once:
@@ -57,23 +54,23 @@ int main(int argc, char** argv) {
     bool happening_now;  // Gets set to false when the operation completes.
     const char* name;
   };
-  Tag create_stream = { true, "create stream" };
-  Tag reading = { false, "reading" };
-  Tag writing = { false, "writing" };
-  Tag writes_done = { false, "writes done" };
-  Tag finishing = { false, "finishing" };
+  Tag create_stream = {true, "create stream"};
+  Tag reading = {false, "reading"};
+  Tag writing = {false, "writing"};
+  Tag writes_done = {false, "writes done"};
+  Tag finishing = {false, "finishing"};
   grpc::Status status;
   bool server_closed_stream = false;
   // Create the stream reader/writer.
   grpc::ClientContext context;
-  auto streamer = speech->AsyncStreamingRecognize(
-      &context, &cq, &create_stream);
+  auto streamer =
+      speech->AsyncStreamingRecognize(&context, &cq, &create_stream);
 
   bool ok = false;
   Tag* tag = nullptr;
   // Block until the creation of the stream is done, we cannot start
   // writing until that happens ...
-  if (cq.Next((void**)&tag, &ok)) {
+  if (cq.Next(reinterpret_cast<void**>(&tag), &ok)) {
     std::cout << tag->name << " completed." << std::endl;
     tag->happening_now = false;
     if (tag != &create_stream) {
@@ -85,7 +82,8 @@ int main(int argc, char** argv) {
       return -1;
     }
   } else {
-    std::cerr << "The completion queue unexpectedly shutdown or timedout." << std::endl;
+    std::cerr << "The completion queue unexpectedly shutdown or timedout."
+              << std::endl;
     return -1;
   }
 
@@ -122,7 +120,7 @@ int main(int argc, char** argv) {
       streamer->Write(request, &writing);
       if (bytes_read < chunk.size()) {
         // Done writing.
-	writes_completed = true;
+        writes_completed = true;
         next_write_time_point =  // Never write again.
             std::chrono::system_clock::time_point::max();
       } else {
@@ -132,7 +130,8 @@ int main(int argc, char** argv) {
     }
     // Wait for a pending operation to complete.  Identify the operation that
     // completed by examining tag.
-    switch (cq.AsyncNext((void**)&tag, &ok, next_write_time_point)) {
+    switch (cq.AsyncNext(reinterpret_cast<void**>(&tag), &ok,
+                         next_write_time_point)) {
       case grpc::CompletionQueue::SHUTDOWN:
         std::cerr << "The completion queue unexpectedly shutdown." << std::endl;
         return -1;
@@ -142,23 +141,23 @@ int main(int argc, char** argv) {
         if (tag == &reading) {
           // Dump the transcript of all the results.
           for (int r = 0; r < response.results_size(); ++r) {
-            auto result = response.results(r);
+            const auto& result = response.results(r);
             std::cout << "Result stability: " << result.stability()
                       << std::endl;
             for (int a = 0; a < result.alternatives_size(); ++a) {
-              auto alternative = result.alternatives(a);
+              const auto& alternative = result.alternatives(a);
               std::cout << alternative.confidence() << "\t"
                         << alternative.transcript() << std::endl;
             }
           }
         }
-	if (tag == &writing && writes_completed) {
-	  // After the last Write, send a WritesDone() ...
-	  writes_done.happening_now = true;
+        if (tag == &writing && writes_completed) {
+          // After the last Write, send a WritesDone() ...
+          writes_done.happening_now = true;
           // AsyncNext(), called above, will return the writes_done tag when
           // the writes_done operation completes.
-	  streamer->WritesDone(&writes_done);
-	}
+          streamer->WritesDone(&writes_done);
+        }
         if (!ok) {
           server_closed_stream = true;
           finishing.happening_now = true;

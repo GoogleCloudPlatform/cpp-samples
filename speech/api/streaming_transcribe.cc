@@ -12,24 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include <grpc++/grpc++.h>
-
 #include <chrono>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
 #include <thread>
-
-#include "parse_arguments.h"
 #include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
+#include "parse_arguments.h"
 
-using google::cloud::speech::v1::RecognitionConfig;
 using google::cloud::speech::v1::Speech;
 using google::cloud::speech::v1::StreamingRecognizeRequest;
 using google::cloud::speech::v1::StreamingRecognizeResponse;
 
 // [START speech_streaming_recognize]
-static const char usage[] =
+static const char kUsage[] =
     "Usage:\n"
     "   streaming_transcribe "
     "[--bitrate N] audio.(raw|ulaw|flac|amr|awb)\n";
@@ -56,10 +53,9 @@ static void MicrophoneThreadMain(
       // Done reading everything from the file, so done writing to the stream.
       streamer->WritesDone();
       break;
-    } else {
-      // Wait a second before writing the next chunk.
-      std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+    // Wait a second before writing the next chunk.
+    std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 }
 
@@ -74,7 +70,7 @@ int main(int argc, char** argv) {
   char* file_path =
       ParseArguments(argc, argv, streaming_config->mutable_config());
   if (nullptr == file_path) {
-    std::cerr << usage;
+    std::cerr << kUsage;
     return -1;
   }
   // Begin a stream.
@@ -91,10 +87,10 @@ int main(int argc, char** argv) {
   while (streamer->Read(&response)) {  // Returns false when no more to read.
     // Dump the transcript of all the results.
     for (int r = 0; r < response.results_size(); ++r) {
-      auto result = response.results(r);
+      const auto& result = response.results(r);
       std::cout << "Result stability: " << result.stability() << std::endl;
       for (int a = 0; a < result.alternatives_size(); ++a) {
-        auto alternative = result.alternatives(a);
+        const auto& alternative = result.alternatives(a);
         std::cout << alternative.confidence() << "\t"
                   << alternative.transcript() << std::endl;
       }

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <getopt.h>
 #include "parse_arguments.h"
+#include <getopt.h>
 #include "google/cloud/speech/v1/cloud_speech.pb.h"
 
 using google::cloud::speech::v1::RecognitionConfig;
@@ -21,20 +21,17 @@ using google::cloud::speech::v1::RecognitionConfig;
 char* ParseArguments(int argc, char** argv, RecognitionConfig* config) {
   // Parse the bit rate from the --bitrate command line option.
   static struct option long_options[] = {
-    {"bitrate", required_argument, 0,  'b' },
-    {0,         0,                 0,  0 }
-  };
+      {"bitrate", required_argument, nullptr, 'b'}, {nullptr, 0, nullptr, 0}};
   config->set_language_code("en");
   config->set_sample_rate_hertz(16000);  // Default sample rate.
   int opt;
   int option_index = 0;
-  while ((opt = getopt_long(argc, argv, "b:", long_options,
-                            &option_index)) != -1) {
+  while ((opt = getopt_long(argc, argv, "b:", long_options, &option_index)) !=
+         -1) {
     switch (opt) {
       case 'b':
         config->set_sample_rate_hertz(atoi(optarg));
-        if (0 == config->sample_rate_hertz())
-          return nullptr;
+        if (0 == config->sample_rate_hertz()) return nullptr;
         break;
       default: /* '?' */
         return nullptr;
@@ -46,7 +43,7 @@ char* ParseArguments(int argc, char** argv, RecognitionConfig* config) {
   }
   // Choose the encoding by examining the audio file extension.
   char* ext = strrchr(argv[optind], '.');
-  if (!ext || 0 == strcasecmp(ext, ".raw")) {
+  if (ext == nullptr || 0 == strcasecmp(ext, ".raw")) {
     config->set_encoding(RecognitionConfig::LINEAR16);
   } else if (0 == strcasecmp(ext, ".ulaw")) {
     config->set_encoding(RecognitionConfig::MULAW);

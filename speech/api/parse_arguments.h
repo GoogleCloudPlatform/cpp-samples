@@ -24,11 +24,10 @@ class RecognitionConfig;
 }  // namespace cloud
 }  // namespace google
 
-
 // Parse the command line arguments, and set the config options accordingly.
 // Returns:
 //   The audio file path, or nullptr if an error occurred.
-char* ParseArguments(int argc, char** argv, google::cloud::speech::v1
-                     ::RecognitionConfig* config);
+char* ParseArguments(int argc, char** argv,
+                     google::cloud::speech::v1 ::RecognitionConfig* config);
 
 #endif  // PARSE_ARGUMENTS_H__INCLUDED
