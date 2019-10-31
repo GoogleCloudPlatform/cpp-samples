@@ -49,7 +49,7 @@ struct {
               "registries/{your-registry-id}/devices/{your-device-id}",
           .deviceid = "{your-device-id}",
           .keypath = "ec_private.pem",
-          .projectid = "intense-wavelet-343",
+          .projectid = "{your-project-id}",
           .region = "{your-region-id}",
           .registryid = "{your-registry-id}",
           .rootpath = "roots.pem",
