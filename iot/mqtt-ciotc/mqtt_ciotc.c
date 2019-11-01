@@ -13,7 +13,7 @@
  * limitations under the License.
  *****************************************************************************/
 // [START iot_mqtt_include]
-#define _XOPEN_SOURCE 500 // NOLINT
+#define _XOPEN_SOURCE 500  // NOLINT
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
