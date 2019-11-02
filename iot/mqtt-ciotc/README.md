@@ -26,15 +26,14 @@ libraries:
     gcc mqtt_ciotc.c -L$HOME/code/openssl -lssl -lcrypto -lpaho-mqtt3cs -L$HOME/code/libjwt -ljwt -ljansson -o mqtt_ciotc
 
 For simplifying the build process, a Docker image is provided that generates
-the build configuration. After installing Docker, browse to the `docker` folder
-and run:
+the build configuration. After installing Docker, build the image with:
 
-    docker build -t your-docker-tag --target=devtools .
+    docker build -t your-docker-tag -f docker/Dockerfile .
 
 It will take a little while for the Docker image to build. After the Docker
 image is built, you can access the builder as:
 
-    docker run -v `pwd`:/src -t -i your-docker-tag /bin/bash
+    docker run -t -i your-docker-tag /bin/bash
 
 # Running
 After you have successfully built the sample, you are almost ready to run the
