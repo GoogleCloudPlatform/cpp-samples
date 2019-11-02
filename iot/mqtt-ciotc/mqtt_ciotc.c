@@ -13,7 +13,7 @@
  * limitations under the License.
  *****************************************************************************/
 // [START iot_mqtt_include]
-#define _XOPEN_SOURCE 500
+#define _XOPEN_SOURCE 500  // NOLINT
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -29,18 +29,19 @@
 
 #define TRACE 1 /* Set to 1 to enable tracing */
 
+enum { kClientidMaxlen = 256, kClientidSize };
+enum { kTopicMaxlen = 256, kTopicSize };
+
 struct {
   char* address;
-  enum { clientid_maxlen = 256, clientid_size };
-  char clientid[clientid_size];
+  char clientid[kClientidSize];
   char* deviceid;
   char* keypath;
   char* projectid;
   char* region;
   char* registryid;
   char* rootpath;
-  enum { topic_maxlen = 256, topic_size };
-  char topic[topic_size];
+  char topic[kTopicSize];
   char* payload;
   char* algorithm;
 } opts = {.address = "ssl://mqtt.googleapis.com:8883",
@@ -74,7 +75,7 @@ void Usage() {
  * parameter specifies the length of the string allocated for both iat and exp.
  */
 static void GetIatExp(char* iat, char* exp, int time_size) {
-  // TODO: Use time.google.com for iat
+  // TODO(#72): Use time.google.com for iat
   time_t now_seconds = time(NULL);
   snprintf(iat, time_size, "%lu", now_seconds);
   snprintf(exp, time_size, "%lu", now_seconds + 3600);
@@ -111,7 +112,7 @@ static char* CreateJwt(const char* ec_private_path, const char* project_id,
 
   // Read private key from file
   FILE* fp = fopen(ec_private_path, "r");
-  if (fp == (void*)NULL) {
+  if (fp == NULL) {
     printf("Could not open file: %s\n", ec_private_path);
     return "";
   }
@@ -185,47 +186,55 @@ bool GetOpts(int argc, char** argv) {
       if (++pos < argc) {
         opts.deviceid = argv[pos];
         calcvalues = true;
-      } else
+      } else {
         return false;
+      }
     } else if (strcmp(argv[pos], "--region") == 0) {
       if (++pos < argc) {
         opts.region = argv[pos];
         calcvalues = true;
-      } else
+      } else {
         return false;
+      }
     } else if (strcmp(argv[pos], "--registryid") == 0) {
       if (++pos < argc) {
         opts.registryid = argv[pos];
         calcvalues = true;
-      } else
+      } else {
         return false;
+      }
     } else if (strcmp(argv[pos], "--projectid") == 0) {
       if (++pos < argc) {
         opts.projectid = argv[pos];
         calcvalues = true;
-      } else
+      } else {
         return false;
+      }
     } else if (strcmp(argv[pos], "--keypath") == 0) {
-      if (++pos < argc)
+      if (++pos < argc) {
         opts.keypath = argv[pos];
-      else
+      } else {
         return false;
+      }
     } else if (strcmp(argv[pos], "--rootpath") == 0) {
-      if (++pos < argc)
+      if (++pos < argc) {
         opts.rootpath = argv[pos];
-      else
+      } else {
         return false;
+      }
     } else if (strcmp(argv[pos], "--topic") == 0) {
       if (++pos < argc) {
         strcpy((char* restrict) & opts.topic, argv[pos]);
         calctopic = false;
-      } else
+      } else {
         return false;
+      }
     } else if (strcmp(argv[pos], "--algorithm") == 0) {
-      if (++pos < argc)
+      if (++pos < argc) {
         opts.algorithm = argv[pos];
-      else
+      } else {
         return false;
+      }
     }
     pos++;
   }
@@ -236,7 +245,7 @@ bool GetOpts(int argc, char** argv) {
       printf("Encoding error!\n");
       return false;
     }
-    if (n > sizeof(opts.topic)) {
+    if ((size_t)n > sizeof(opts.topic)) {
       printf("Error, buffer for storing device ID was too small.\n");
       return false;
     }
@@ -246,7 +255,7 @@ bool GetOpts(int argc, char** argv) {
         snprintf(opts.clientid, sizeof(opts.clientid),
                  "projects/%s/locations/%s/registries/%s/devices/%s",
                  opts.projectid, opts.region, opts.registryid, opts.deviceid);
-    if (n < 0 || (n > clientid_maxlen)) {
+    if (n < 0 || (n > kClientidMaxlen)) {
       if (n < 0) {
         printf("Encoding error!\n");
       } else {
@@ -267,7 +276,7 @@ bool GetOpts(int argc, char** argv) {
 
 static const int kQos = 1;
 static const unsigned long kTimeout = 10000L;
-static const char* kUsername = "unused";
+static const char* k_username = "unused";
 
 static const unsigned long kInitialConnectIntervalMillis = 500L;
 static const unsigned long kMaxConnectIntervalMillis = 6000L;
@@ -291,7 +300,7 @@ int Publish(char* payload, int payload_size) {
                     MQTTCLIENT_PERSISTENCE_NONE, NULL);
   conn_opts.keepAliveInterval = 60;
   conn_opts.cleansession = 1;
-  conn_opts.username = kUsername;
+  conn_opts.username = k_username;
   conn_opts.password = CreateJwt(opts.keypath, opts.projectid, opts.algorithm);
   MQTTClient_SSLOptions sslopts = MQTTClient_SSLOptions_initializer;
 

@@ -101,4 +101,8 @@ docker build "${build_flags[@]}" .
 
 # TODO(#65) Run actual tests somehow
 
+if [[ "${CHECK_STYLE}" ]]; then
+  docker run "${IMAGE}:latest" bash -c "cd /src; make tidy"
+fi
+
 docker run --rm "${IMAGE}:latest" /src/mqtt_ciotc --help

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:16.04 as devtools
+FROM ubuntu:18.04 AS devtools
 
 ARG NCPU=4
 
@@ -21,6 +21,7 @@ RUN apt-get install -y \
     autoconf \
     build-essential \
     clang \
+    clang-tidy \
     cmake \
     doxygen \
     gcc \
@@ -46,8 +47,9 @@ RUN cd /dependencies/paho.mqtt.c && \
           -DPAHO_BUILD_SAMPLES=TRUE . \
     && make all -j ${NCPU} \
     && make install
-FROM devtools as cpp-iot
+FROM devtools AS cpp-iot
 
 COPY . /src
 RUN cd /src && OPENSSL_DIR=/usr/local/lib make
 ENV LD_LIBRARY_PATH=/usr/local/lib
+ENV LD_RUN_PATH=/usr/local/lib
