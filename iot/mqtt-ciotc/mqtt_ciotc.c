@@ -222,13 +222,6 @@ bool GetOpts(int argc, char** argv) {
       } else {
         return false;
       }
-    } else if (strcmp(argv[pos], "--topic") == 0) {
-      if (++pos < argc) {
-        strcpy((char* restrict) & opts.topic, argv[pos]);
-        calctopic = false;
-      } else {
-        return false;
-      }
     } else if (strcmp(argv[pos], "--algorithm") == 0) {
       if (++pos < argc) {
         opts.algorithm = argv[pos];
@@ -238,17 +231,20 @@ bool GetOpts(int argc, char** argv) {
     }
     pos++;
   }
-  if (calctopic) {
-    int n = snprintf(opts.topic, sizeof(opts.topic), "/devices/%s/events",
-                     opts.deviceid);
-    if (n < 0) {
-      printf("Encoding error!\n");
-      return false;
+  // Construct topic from the given device id.
+  int i = snprintf(opts.topic, sizeof(opts.topic), "/devices/%s/events",
+                   opts.deviceid);
+  if (i < 0 || (i > kTopicMaxlen)) {
+    if (i < 0) {
+      printf("Encoding error for topic!\n");
+    } else {
+      printf("Error, buffer for storing topic was too small.\n");
     }
-    if ((size_t)n > sizeof(opts.topic)) {
-      printf("Error, buffer for storing device ID was too small.\n");
-      return false;
-    }
+    return false;
+  }
+  if (TRACE) {
+    printf("Topic constructed:\n");
+    printf("%s\n", opts.topic);
   }
   if (calcvalues) {
     int n =
@@ -257,7 +253,7 @@ bool GetOpts(int argc, char** argv) {
                  opts.projectid, opts.region, opts.registryid, opts.deviceid);
     if (n < 0 || (n > kClientidMaxlen)) {
       if (n < 0) {
-        printf("Encoding error!\n");
+        printf("Encoding error for client ID\n");
       } else {
         printf("Error, buffer for storing client ID was too small.\n");
       }
