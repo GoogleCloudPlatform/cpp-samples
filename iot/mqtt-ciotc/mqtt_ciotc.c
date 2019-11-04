@@ -230,21 +230,6 @@ bool GetOpts(int argc, char** argv) {
     }
     pos++;
   }
-  // Construct topic from the given device id.
-  int i = snprintf(opts.topic, sizeof(opts.topic), "/devices/%s/events",
-                   opts.deviceid);
-  if (i < 0 || (i > kTopicMaxlen)) {
-    if (i < 0) {
-      printf("Encoding error for topic!\n");
-    } else {
-      printf("Error, buffer for storing topic was too small.\n");
-    }
-    return false;
-  }
-  if (TRACE) {
-    printf("Topic constructed:\n");
-    printf("%s\n", opts.topic);
-  }
   if (calcvalues) {
     int n =
         snprintf(opts.clientid, sizeof(opts.clientid),
@@ -262,7 +247,21 @@ bool GetOpts(int argc, char** argv) {
       printf("New client id constructed:\n");
       printf("%s\n", opts.clientid);
     }
-
+    // Construct topic from the given device id.
+    int i = snprintf(opts.topic, sizeof(opts.topic), "/devices/%s/events",
+                     opts.deviceid);
+    if (i < 0 || (i > kTopicMaxlen)) {
+      if (i < 0) {
+        printf("Encoding error for topic!\n");
+      } else {
+        printf("Error, buffer for storing topic was too small.\n");
+      }
+      return false;
+    }
+    if (TRACE) {
+      printf("Topic constructed:\n");
+      printf("%s\n", opts.topic);
+    }
     return true;  // Caller must free opts.clientid
   }
   return false;
