@@ -173,7 +173,6 @@ static char* CreateJwt(const char* ec_private_path, const char* project_id,
 bool GetOpts(int argc, char** argv) {
   int pos = 1;
   bool calcvalues = false;
-  bool calctopic = true;
 
   if (argc < 2) {
     return false;
