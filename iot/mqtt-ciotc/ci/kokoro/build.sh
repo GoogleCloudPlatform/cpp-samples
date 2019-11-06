@@ -24,6 +24,10 @@ if [ -z "${PROJECT_ID:-}" ]; then
   readonly PROJECT_ID="cloud-devrel-kokoro-resources"
 fi
 
+if [ -z "${TEST_PROJECT_ID:-}" ]; then
+  readonly TEST_PROJECT_ID="cpp-docs-samples"
+fi
+
 readonly SUBDIR_ROOT="$(cd "$(dirname "$0")/../../"; pwd)"
 
 echo "================================================================"
@@ -99,10 +103,13 @@ printf '%s\n' "${build_flags[@]}"
 
 docker build "${build_flags[@]}" .
 
-# TODO(#65) Run actual tests somehow
-
 if [[ "${CHECK_STYLE}" ]]; then
   docker run "${IMAGE}:latest" bash -c "cd /src; make tidy"
 fi
 
-docker run --rm "${IMAGE}:latest" /src/mqtt_ciotc --help
+if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]]; then
+  docker run \
+    --env "PROJECT_ID=${TEST_PROJECT_ID}" \
+    -v "${GOOGLE_APPLICATION_CREDENTIALS}:/service_account.json" \
+    "${IMAGE}:latest" bash -c "/src/test_mqtt_ciotc.sh"
+fi

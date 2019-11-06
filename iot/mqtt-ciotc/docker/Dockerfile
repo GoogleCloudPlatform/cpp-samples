@@ -22,6 +22,7 @@ RUN apt-get install -y \
     build-essential \
     clang \
     clang-tidy \
+    curl \
     cmake \
     doxygen \
     gcc \
@@ -47,9 +48,9 @@ RUN cd /dependencies/paho.mqtt.c && \
           -DPAHO_BUILD_SAMPLES=TRUE . \
     && make all -j ${NCPU} \
     && make install
-FROM devtools AS cpp-iot
-
-COPY . /src
-RUN cd /src && OPENSSL_DIR=/usr/local/lib make
 ENV LD_LIBRARY_PATH=/usr/local/lib
 ENV LD_RUN_PATH=/usr/local/lib
+
+FROM devtools AS cpp-iot
+COPY . /src
+RUN cd /src && OPENSSL_DIR=/usr/local/lib make
