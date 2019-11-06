@@ -44,14 +44,20 @@ sample.
     export LD_LIBRARY_PATH=/usr/local/lib
     export LD_RUN_PATH=/usr/local/lib
 
-2. Browse to the sample folder
+1. Browse to the sample folder
 
     cd mqtt-ciotc
 
-3. Setup the Cloud IOT environment
-    ./setup_device.sh --registry-name <Your registry id> --registry-region <e.g. us-central1> --device-id <Your device ID>
+1. Create a Cloud Pub/Sub topic
+   gcloud pubsub topics create <Your telemetry topic>
 
-4. Run the sample
+1. Setup the Cloud IOT environment
+    ./setup_device.sh --registry-name <Your registry id> \
+      --registry-region <e.g. us-central1> \
+      --device-id <Your device ID> \
+      --telemetry-topic <Your telemetry Cloud Pub/Sub topic>
+
+1. Run the sample
     ./mqtt_ciotc <message> \
         --deviceid <your device id>\
         --region <e.g. us-central1>\
