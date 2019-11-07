@@ -103,7 +103,7 @@ printf '%s\n' "${build_flags[@]}"
 
 docker build "${build_flags[@]}" .
 
-if [[ "${CHECK_STYLE}" ]]; then
+if [[ "${CHECK_STYLE:-}" ]]; then
   docker run "${IMAGE}:latest" bash -c "cd /home/speech/api/; make tidy"
 fi
   
