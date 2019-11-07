@@ -31,17 +31,32 @@ curl https://sdk.cloud.google.com -o gcloud-setup.sh
 bash gcloud-setup.sh --disable-prompts --install-dir=/opt/local
 export PATH="/opt/local/google-cloud-sdk/bin:${PATH}"
 
+readonly DATE=$(date +%Y-%m-%d)
+
 # Activate the service account, set the default project id
 gcloud auth activate-service-account --key-file=/service_account.json
 gcloud config set project "${PROJECT_ID}"
 gcloud config set disable_prompts true
 
 # Set variables
-readonly TELEMETRY_TOPIC="my-telemetry-topic"
-readonly SUBSCRIPTION="iot-subscription"
-readonly REGISTRY_NAME="my-registry"
-readonly DEVICE_ID="my-device-${RANDOM}"
+readonly TELEMETRY_TOPIC="iot-topic-${DATE}-${RANDOM}"
+readonly SUBSCRIPTION="iot-sub-${DATE}-${RANDOM}"
+readonly REGISTRY_NAME="my-registry-${DATE}-${RANDOM}"
+readonly DEVICE_ID="my-device-${DATE}-${RANDOM}"
 readonly REGISTRY_REGION="us-central1"
+
+# Cleanup resources on exit
+function cleanup {
+  # We may want to retry on failure if leak often happens.
+  gcloud iot devices delete "${DEVICE_ID}" \
+    --region "${REGISTRY_REGION}" \
+    --registry "${REGISTRY_NAME}" || true
+  gcloud iot registries delete "${REGISTRY_NAME}" \
+    --region "${REGISTRY_REGION}" || true
+  gcloud pubsub subscriptions delete "${SUBSCRIPTION}" || true
+  gcloud pubsub topics delete "${TELEMETRY_TOPIC}" || true
+}
+trap cleanup EXIT
 
 # Create the topic if it doesn't exist.
 HAS_TOPIC=$(gcloud pubsub topics list \
@@ -87,12 +102,6 @@ readonly RANDOM_MESSAGE="Hello my secret number is ${RANDOM}"
   --keypath rsa_private.pem \
   --algorithm RS256 \
   --rootpath roots.pem
-
-# Delete the device because we need to use different device id
-# each time, and we don't want the leak.
-gcloud iot devices delete ${DEVICE_ID} \
-  --region "${REGISTRY_REGION}" \
-  --registry "${REGISTRY_NAME}"
 
 # Pull the message and report the result
 for i in {0..5}
