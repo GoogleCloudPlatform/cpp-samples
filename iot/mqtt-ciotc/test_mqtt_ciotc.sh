@@ -28,8 +28,24 @@ cd "${SRC_DIR}"
 mkdir -p /opt/local
 
 curl https://sdk.cloud.google.com -o gcloud-setup.sh
-bash gcloud-setup.sh --disable-prompts --install-dir=/opt/local
+
+readonly GCLOUD_INSTALL_LOG_FILE=$(mktemp)
+
+set +e
+bash gcloud-setup.sh --disable-prompts --install-dir=/opt/local \
+  > "${GCLOUD_INSTALL_LOG_FILE}" 2>&1
+if [[ $? != 0 ]]; then
+  cat "${GCLOUD_INSTALL_LOG_FILE}"
+  rm "${GCLOUD_INSTALL_LOG_FILE}"
+fi
+
+if [[ "${PRESERVE_LOGS:-}" != "yes" ]]; then
+  rm "${GCLOUD_INSTALL_LOG_FILE}"
+fi
+
 export PATH="/opt/local/google-cloud-sdk/bin:${PATH}"
+
+set -e
 
 readonly DATE=$(date +%Y-%m-%d)
 

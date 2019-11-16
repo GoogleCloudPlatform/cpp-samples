@@ -82,8 +82,22 @@ echo "================================================================"
 echo "Building docker image with the following flags $(date)."
 printf '%s\n' "${devtools_flags[@]}"
 
-if docker build "${devtools_flags[@]}" .; then
-   update_cache="true"
+readonly DOCKER_LOG_FILE=$(mktemp)
+
+# Temporary allow failure
+set +e
+if docker build "${devtools_flags[@]}" . > "${DOCKER_LOG_FILE}" 2>&1; then
+  update_cache="true"
+else
+  cat "${DOCKER_LOG_FILE}"
+  rm "${DOCKER_LOG_FILE}"
+  exit 1
+fi
+
+set -e
+
+if [[ "${PRESERVE_LOGS:-}" != "yes" ]]; then
+  rm "${DOCKER_LOG_FILE}"
 fi
 
 if "${update_cache}" && [[ -z "${KOKORO_GITHUB_PULL_REQUEST_NUMBER:-}" ]]; then
