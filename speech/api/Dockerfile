@@ -25,26 +25,66 @@ RUN \
           autoconf \
           build-essential \
           clang-tidy \
+          cmake \
           curl \
           gcc \
           git-core \
+          golang \
           g++ \
           libtool \
+          libssl-dev \
           make \
           pkg-config \
-          vim
+          wget \
+          vim \
+          zlib1g-dev
+
+# Install c-ares
+RUN \
+  mkdir -p ${HOME}/Downloads && \
+  cd ${HOME}/Downloads && \
+  wget -q https://github.com/c-ares/c-ares/archive/cares-1_15_0.tar.gz && \
+  tar -xf cares-1_15_0.tar.gz && \
+  cd c-ares-cares-1_15_0 && \
+  mkdir build && cd build && \
+  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local .. && \
+  make install && \
+  ldconfig
+
+
+RUN \
+  cd ${HOME}/Downloads && \
+  wget -q https://github.com/google/protobuf/archive/v3.11.2.tar.gz && \
+  tar -xf v3.11.2.tar.gz && \
+  cd protobuf-3.11.2/cmake && \
+  cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=yes \
+        -Dprotobuf_BUILD_TESTS=OFF \
+        -H. -Bcmake-out && \
+    cmake --build cmake-out -- -j ${NCPU:-4} && \
+    cmake --build cmake-out --target install -- -j ${NCPU:-4} && \
+    ldconfig
 
 # Build source dependencies
 RUN \
   cd /home/ && \
   git clone https://github.com/grpc/grpc.git && \
   cd grpc/ && \
-  git checkout v1.25.0 && \
+  git checkout v1.26.0 && \
   git submodule update --init && \
+  mkdir -p cmake/build && \
+  cd cmake/build && \
+  cmake ../.. \
+    -DgRPC_CARES_PROVIDER=package \
+    -DgRPC_PROTOBUF_PROVIDER=package \
+    -DgRPC_SSL_PROVIDER=package \
+    -DgRPC_ZLIB_PROVIDER=package \
+    -DgRPC_INSTALL=on && \
   make -j ${NCPU} && \
   make install && \
-  cd third_party/protobuf/ && \
-  make -j ${NCPU} install && \
+# cd ../../third_party/protobuf/ && \
+# make -j ${NCPU} install && \
   cd /home/ && \
   git clone https://github.com/googleapis/googleapis.git && \
   cd googleapis/ && \
