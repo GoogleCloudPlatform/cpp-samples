@@ -27,7 +27,7 @@ with the following instructions.
 
     ```bash
       docker run \
-        -v "${CPP_SPEECH_SERVICE_ACCOUNT}:/home/service-account.json" \
+        -v "${GOOGLE_APPLICATION_CREDENTIALS}:/home/service-account.json" \
         cpp-speech bash -c "cd /home/speech/api; make run_tests"
     ```
 
