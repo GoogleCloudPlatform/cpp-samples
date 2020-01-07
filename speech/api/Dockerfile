@@ -83,8 +83,6 @@ RUN \
     -DgRPC_INSTALL=on && \
   make -j ${NCPU} && \
   make install && \
-# cd ../../third_party/protobuf/ && \
-# make -j ${NCPU} install && \
   cd /home/ && \
   git clone https://github.com/googleapis/googleapis.git && \
   cd googleapis/ && \
