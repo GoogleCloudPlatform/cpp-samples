@@ -23,11 +23,3 @@ IncludeCategories:
   Priority: 4000
 - Regex: '^<[^/]*>'
   Priority: 5000
-
-# Format raw string literals with a `pb` or `proto` tag as proto.
-RawStringFormats:
-- Language: TextProto
-  Delimiters:
-  - 'pb'
-  - 'proto'
-  BasedOnStyle: Google
