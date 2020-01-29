@@ -5,4 +5,5 @@ doc/html/
 .git/
 .idea/
 README.md
-cmake-out
+cmake-out/
+.build/
