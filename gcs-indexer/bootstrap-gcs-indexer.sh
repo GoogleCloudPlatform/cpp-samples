@@ -155,7 +155,7 @@ else
         --description="Calls the gcs-indexer in Cloud Run from Cloud Pub/Sub"
 fi
 
-cloud beta run services add-iam-policy-binding gcs-indexer-pubsub-handler \
+gcloud beta run services add-iam-policy-binding gcs-indexer-pubsub-handler \
     "--project=${GOOGLE_CLOUD_PROJECT}" \
     "--region=${GOOGLE_CLOUD_REGION}" \
     "--platform=managed" \
