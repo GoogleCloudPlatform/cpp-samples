@@ -21,7 +21,7 @@ if [[ -z "${SUBPROJECT_ROOT+x}" ]]; then
 fi
 cd "${SUBPROJECT_ROOT}"
 
-# Verify the code compiles with Docker.
+# Verify the Dockerfile is working.
 if type -t docker>/dev/null; then
   echo "================================================================"
   echo "$(date -u): building Docker container for the code."
@@ -31,6 +31,7 @@ else
   echo "Docker not found, skipping Docker tests."
 fi
 
+# Verify the code compiles as a CMake Super Build.
 if type -t cmake>/dev/null && type -t ninja>/dev/null; then
   echo "================================================================"
   echo "$(date -u): building the code with CMake."
