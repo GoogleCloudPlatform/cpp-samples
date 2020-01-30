@@ -61,7 +61,7 @@ echo "================================================================"
 echo "Building docker image with the following flags $(date)."
 printf '%s\n' "${build_flags[@]}"
 
-if docker build "${build_flags[@]}" .; then
+if docker build "${build_flags[@]}" ci; then
    update_cache="true"
 fi
 
