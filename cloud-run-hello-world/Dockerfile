@@ -49,14 +49,8 @@ RUN cmake -S/v/source -B/v/binary -GNinja \
 RUN cmake --build /v/binary
 RUN strip /v/binary/cloud_run_hello
 
-FROM base AS with-certs
-RUN apk update && \
-    apk add ca-certificates && \
-    rm -rf /var/cache/apk/*
-RUN update-ca-certificates
-
-FROM with-certs AS cloud-run-hello
+FROM scratch AS cloud-run-hello
 WORKDIR /r
 COPY --from=build /v/binary/cloud_run_hello /r
 
-CMD "/r/cloud_run_hello"
+ENTRYPOINT [ "/r/cloud_run_hello" ]
