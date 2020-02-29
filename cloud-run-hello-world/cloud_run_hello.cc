@@ -18,9 +18,9 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/program_options.hpp>
+#include <cstdlib>
 #include <iostream>
 #include <optional>
-#include <cstdlib>
 #include <thread>
 
 namespace be = boost::beast;
