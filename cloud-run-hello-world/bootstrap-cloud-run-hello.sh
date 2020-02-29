@@ -50,7 +50,7 @@ else
 fi
 
 # Create the Cloud Run deployment to update the index
-gcloud beta run deploy cloud-run-hello \
+gcloud run deploy cloud-run-hello \
     "--project=${GOOGLE_CLOUD_PROJECT}" \
     "--service-account=${SA_NAME}" \
     "--image=gcr.io/${GOOGLE_CLOUD_PROJECT}/cloud-run-hello:latest" \
