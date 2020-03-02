@@ -18,6 +18,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/program_options.hpp>
+#include <cstdlib>
 #include <iostream>
 #include <optional>
 #include <thread>
@@ -96,7 +97,11 @@ int main(int argc, char* argv[]) try {
       response.set(be::http::field::server, BOOST_BEAST_VERSION_STRING);
       response.set(be::http::field::content_type, "text/plain");
       response.keep_alive(request.keep_alive());
-      response.body() = "Hello World\n";
+      std::string greeting = "Hello ";
+      auto const* target = std::getenv("TARGET");
+      greeting += target == nullptr ? "World" : target;
+      greeting += "\n";
+      response.body() = std::move(greeting);
       response.prepare_payload();
       be::http::write(socket, response, ec);
       if (ec) return report_error(ec, "write");

@@ -8,8 +8,6 @@ Google Cloud Run.
 Install the command-line tools:
 
 ```bash
-gcloud components install beta
-gcloud components install kubectl
 gcloud components install docker-credential-gcr
 gcloud auth configure-docker
 ```
@@ -36,7 +34,7 @@ cd google/cloud/examples/cloud_run_hello
 First capture the URL for the Cloud Run service:
 
 ```bash
-SERVICE_URL=$(gcloud beta run services list \
+SERVICE_URL=$(gcloud run services list \
     "--project=${GOOGLE_CLOUD_PROJECT}" \
     "--platform=managed" \
     '--format=csv[no-heading](URL)' \
