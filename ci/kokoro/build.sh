@@ -87,6 +87,11 @@ else
   done
 fi
 
+if [[ ${#test_dirs[@]} == 0 ]]; then
+   echo "No need to run tests, exiting"
+   exit 0
+fi
+
 echo "================================================================"
 echo "We'll run tests for these subdirs $(date)."
 printf '%s\n' "${test_dirs[@]}"
