@@ -24,6 +24,7 @@ RUN \
   apt-get -y install \
           autoconf \
           build-essential \
+          clang \
           clang-tidy \
           cmake \
           curl \
