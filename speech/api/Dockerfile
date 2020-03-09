@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM debian:buster AS devtools
+FROM ubuntu:18.04 AS devtools
 
 ENV GOOGLE_APPLICATION_CREDENTIALS /home/service-account.json
 ENV GOOGLEAPIS_GENS_PATH /home/googleapis/gens
@@ -24,6 +24,7 @@ RUN \
   apt-get -y install \
           autoconf \
           build-essential \
+          clang \
           clang-tidy \
           cmake \
           curl \
