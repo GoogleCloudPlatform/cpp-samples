@@ -73,6 +73,6 @@ These samples will only build and run on **Linux**.
 
 1.  **Run the tests:**
     ```sh
-    cd cpp-docs-sample/speech/api
+    cd cpp-docs-samples/speech/api
     make run_tests
     ```
