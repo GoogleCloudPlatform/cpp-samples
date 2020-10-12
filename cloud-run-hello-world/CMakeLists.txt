@@ -14,6 +14,7 @@
 # limitations under the License.
 # ~~~
 
+# [START makelist]
 cmake_minimum_required(VERSION 3.10)
 
 # Define the project name and where to report bugs.
@@ -37,3 +38,4 @@ target_link_libraries(cloud_run_hello PRIVATE Boost::headers
 
 include(GNUInstallDirs)
 install(TARGETS cloud_run_hello RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+# [END makelist]
