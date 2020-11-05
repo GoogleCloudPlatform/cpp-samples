@@ -14,6 +14,7 @@
 # limitations under the License.
 # ~~~
 
+# [START cloudrun_helloworld_makelist]
 # [START makelist]
 cmake_minimum_required(VERSION 3.10)
 
@@ -39,3 +40,4 @@ target_link_libraries(cloud_run_hello PRIVATE Boost::headers
 include(GNUInstallDirs)
 install(TARGETS cloud_run_hello RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 # [END makelist]
+# [END cloudrun_helloworld_makelist]
