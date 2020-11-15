@@ -277,19 +277,30 @@ void worker(boost::program_options::variables_map const& vm) {
   auto const project_id = vm["project"].as<std::string>();
   auto const subscription_id = vm["subscription"].as<std::string>();
 
+  using namespace std::chrono_literals;
+  using std::chrono::milliseconds;
+  using std::chrono::duration_cast;
   auto const subscription = pubsub::Subscription(project_id, subscription_id);
   auto subscriber = pubsub::Subscriber(pubsub::MakeSubscriberConnection(
       subscription,
       pubsub::SubscriberOptions{}
           .set_max_outstanding_messages(concurrency)
-          .set_max_concurrency(concurrency),
+          .set_max_outstanding_bytes(concurrency * 1024)
+          .set_max_concurrency(concurrency)
+          .set_max_deadline_time(300s),
       pubsub::ConnectionOptions{}.set_background_thread_pool_size(
           concurrency)));
 
+  std::atomic<std::int64_t> latency{0};
+  std::atomic<std::int64_t> attempts{0};
   std::atomic<std::int64_t> counter{0};
-  auto handler = [&counter, cl = gcs::Client::CreateDefaultClient().value()](
+  auto handler = [&, cl = gcs::Client::CreateDefaultClient().value()](
                      pubsub::Message const& m, pubsub::AckHandler h) {
+    auto const start = std::chrono::steady_clock::now();
     process_one_item(cl, m);
+    auto const elapsed = std::chrono::steady_clock::now() - start;
+    latency.fetch_add(duration_cast<milliseconds>(elapsed).count());
+    attempts.fetch_add(h.delivery_attempt());
     ++counter;
     std::move(h).ack();
   };
@@ -298,9 +309,19 @@ void worker(boost::program_options::variables_map const& vm) {
   using google::cloud::StatusCode;
   while (true) {
     auto session = subscriber.Subscribe(handler);
-    while (session.wait_for(10s) == std::future_status::timeout) {
+    auto total = counter.exchange(0);
+    auto mean = [&total](std::int64_t v) -> std::int64_t {
+      if (total == 0) return 0;
+      return v / total;
+    };
+    while (session.wait_for(30s) == std::future_status::timeout) {
       auto last = counter.exchange(0);
-      std::cout << "Processed " << last << " work items" << std::endl;
+      std::cout << "Processed " << last << " work items"
+                << ", latency=" << mean(latency.load())
+                << ", attempts=" << mean(attempts.load())
+                << ", count=" << total
+                << std::endl;
+      total += last;
     }
 
     auto status = session.get();
