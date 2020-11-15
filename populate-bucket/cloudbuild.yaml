@@ -16,7 +16,7 @@ timeout: 3600s
 steps:
   - name: 'gcr.io/kaniko-project/executor:latest'
     args: [
-        "--destination=gcr.io/${PROJECT_ID}/cpp-samples-populate-bucket:${SHORT_SHA}",
+        "--destination=gcr.io/${PROJECT_ID}/cpp-samples/populate-bucket:${SHORT_SHA}",
         "--cache=true",
         "--cache-ttl=48h"
     ]

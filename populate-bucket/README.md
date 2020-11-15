@@ -54,8 +54,15 @@ gcloud services enable pubsub.googleapis.com \
 
 ### Create the GKE cluster
 
+We use preemptible nodes (the `--preemptible` flag) because they have lower cost, and the application can safely restart.
+The cluster will grow dynamically, the maximum (`60`) is just based on our quota constraints. Finally, we enable
+[workload identity][workload-identity], which is the recommended way for GKE-based applications to consume services in
+Google Cloud.
+
+[workload-identity]: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
+
 ```sh
-gcloud container clusters create cpp-samples-parallel-jobs \
+gcloud container clusters create cpp-samples \
       "--project=${GOOGLE_CLOUD_PROJECT}" \
       "--region=${GOOGLE_CLOUD_REGION}" \
       "--preemptible" \
@@ -63,13 +70,18 @@ gcloud container clusters create cpp-samples-parallel-jobs \
       "--max-nodes=60" \
       "--enable-autoscaling" \
       "--workload-pool=${GOOGLE_CLOUD_PROJECT}.svc.id.goog"
-gcloud container clusters get-credentials cpp-samples-parallel-jobs
 ```
 
-### Create a service account for the workers
+Once created, we configure the `kubectl` credentials to use this cluster:
 
 ```sh
-readonly SA_ID="cpp-samples-sa"
+gcloud container clusters get-credentials cpp-samples
+```
+
+### Create a service account for the GKE workload
+
+```sh
+readonly SA_ID="populate-bucket-worker-sa"
 readonly SA_NAME="${SA_ID}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
 
 gcloud iam service-accounts create "${SA_ID}" \
@@ -97,33 +109,34 @@ gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT}" \
 ### Create a k8s namespace for the example resources
 
 ```sh
-kubectl create namespace cpp-samples-sa
+NAMESPACE=populate-bucket
+kubectl create namespace ${NAMESPACE}
 ```
 
-### Create the service account id in the k8s cluster
+### Create a GKE service account
 
 ```sh
-kubectl create serviceaccount --namespace cpp-samples-sa worker
+kubectl create serviceaccount --namespace ${NAMESPACE} worker
 ```
 
-### Grant the k8s permissions to impersonate the SA in GCP
+### Grant the GKE permissions to impersonate the GCP Service Account in GCP
 
 ```sh
 gcloud iam service-accounts add-iam-policy-binding \
   --role roles/iam.workloadIdentityUser \
-  --member "serviceAccount:${GOOGLE_CLOUD_PROJECT}.svc.id.goog[cpp-samples-sa/worker]" \
+  --member "serviceAccount:${GOOGLE_CLOUD_PROJECT}.svc.id.goog[${NAMESPACE}/worker]" \
   ${SA_NAME}
 ```
 
-### Annotate the Service Account
+### Map the GKE service account to the GCP service account
 
 ```sh
 kubectl annotate serviceaccount \
-  --namespace cpp-samples-sa worker \
+  --namespace ${NAMESPACE} worker \
   iam.gke.io/gcp-service-account=${SA_NAME}
 ```
 
-### Build the Docker images containing the program
+### Build the Docker image containing the program
 
 ```
 gcloud builds submit \
@@ -143,7 +156,7 @@ gcloud pubsub subscriptions create "--project=${GOOGLE_CLOUD_PROJECT}" --topic p
 
 ```sh
 ./deployment.py --project=${GOOGLE_CLOUD_PROJECT} | kubectl apply -f -
-kubectl autoscale deployment cpp-samples-populate-bucket --max 100 --min 1 --cpu-percent 50
+kubectl autoscale deployment populate-bucket --max 100 --min 1 --cpu-percent 50
 ```
 
 ### Pick a bucket, and create it if needed

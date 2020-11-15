@@ -18,37 +18,33 @@
 import argparse
 import jinja2 as j2
 import os
-import random
-import subprocess
-import time
 
-template = j2.Template("""
-apiVersion: apps/v1
+template = j2.Template("""apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cpp-samples-populate-bucket
-  namespace: cpp-samples-sa
+  name: populate-bucket
+  namespace: {{namespace}}
 spec:
   replicas: 3
   selector:
     matchLabels:
-      run: cpp-samples-populate-bucket
+      run: populate-bucket
   template:
     metadata:
       labels:
-        run: cpp-samples-populate-bucket
+        run: populate-bucket
     spec:
       serviceAccountName: worker
       containers:
-      - name: cpp-samples-populate-bucket
-        image: gcr.io/{{project}}/cpp-samples-populate-bucket:{{image_version}}
+      - name: populate-bucket-image
+        image: gcr.io/{{project}}/cpp-samples/populate-bucket:{{image_version}}
         imagePullPolicy: Always
         command: [
-              '/r/populate_bucket', 'worker',
-              '--project={{project}}',
-              '--subscription=populate-bucket',
-              '--concurrency=32'
-          ]
+            '/r/populate_bucket', 'worker',
+            '--project={{project}}',
+            '--subscription=populate-bucket',
+            '--concurrency=32'
+        ]
         resources:
           requests:
             cpu: '250m'
@@ -62,6 +58,10 @@ parser.add_argument('--project', type=str,
 parser.add_argument('--image-version', type=str,
                     default='latest',
                     help='which image version to use')
+parser.add_argument('--namespace', type=str,
+                    default='populate-bucket',
+                    help='the GKE namespace')
 args = parser.parse_args()
 
-print(template.render(action='deploy', project=args.project, image_version=args.image_version))
+print(
+    template.render(action='deploy', project=args.project, image_version=args.image_version, namespace=args.namespace))
