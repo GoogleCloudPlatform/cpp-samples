@@ -22,33 +22,33 @@ import os
 template = j2.Template("""apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: populate-bucket
+  name: worker
   namespace: {{namespace}}
 spec:
   replicas: 3
   selector:
     matchLabels:
-      run: populate-bucket
+      run: worker
   template:
     metadata:
       labels:
-        run: populate-bucket
+        run: worker
     spec:
       serviceAccountName: worker
       containers:
-      - name: populate-bucket-image
+      - name: worker-image
         image: gcr.io/{{project}}/cpp-samples/populate-bucket:{{image_version}}
         imagePullPolicy: Always
         command: [
             '/r/populate_bucket', 'worker',
             '--project={{project}}',
             '--subscription=populate-bucket',
-            '--concurrency=32'
+            '--concurrency=16'
         ]
         resources:
           requests:
-            cpu: '250m'
-            memory: '64Mi'
+            cpu: '100m'
+            memory: '32Mi'
 """)
 
 parser = argparse.ArgumentParser()

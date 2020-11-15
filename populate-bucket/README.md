@@ -25,20 +25,6 @@ This example assumes that you have an existing GCP (Google Cloud Platform) proje
 enabled, as some of the services used in this example require it. Throughput the example we will use
 `GOOGLE_CLOUD_PROJECT` as an environment variable containing the name of the project.
 
-```bash
-gcloud components install docker-credential-gcr
-gcloud auth configure-docker
-```
-
-## Bootstrap the Example
-
-### Pick a region to run your project
-
-```
-GOOGLE_CLOUD_REGION="${REGION:-us-central1}"
-readonly GOOGLE_CLOUD_REGION
-```
-
 ### Make sure the necessary services are enabled
 
 ```sh
@@ -52,12 +38,29 @@ gcloud services enable pubsub.googleapis.com \
     "--project=${GOOGLE_CLOUD_PROJECT}"
 ```
 
+### Install the tools to manage GKE clusters
+
+```bash
+sudo apt install kubectl
+gcloud components install docker-credential-gcr
+gcloud auth configure-docker
+```
+
+## Bootstrap the Example
+
+### Pick a region to run your project
+
+```
+GOOGLE_CLOUD_REGION="us-central1"  # Example, pick other region if preferred
+readonly GOOGLE_CLOUD_REGION
+```
+
 ### Create the GKE cluster
 
-We use preemptible nodes (the `--preemptible` flag) because they have lower cost, and the application can safely restart.
-The cluster will grow dynamically, the maximum (`60`) is just based on our quota constraints. Finally, we enable
-[workload identity][workload-identity], which is the recommended way for GKE-based applications to consume services in
-Google Cloud.
+We use preemptible nodes (the `--preemptible` flag) because they have lower cost, and the application can safely
+restart. We also configure the cluster to grow as needed, the maximum number of nodes (in this case `64`), should be
+set based on your available quota or budget. Note that we enable [workload identity][workload-identity], the recommended
+way for GKE-based applications to consume services in Google Cloud.
 
 [workload-identity]: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
 
@@ -67,7 +70,7 @@ gcloud container clusters create cpp-samples \
       "--region=${GOOGLE_CLOUD_REGION}" \
       "--preemptible" \
       "--min-nodes=0" \
-      "--max-nodes=60" \
+      "--max-nodes=64" \
       "--enable-autoscaling" \
       "--workload-pool=${GOOGLE_CLOUD_PROJECT}.svc.id.goog"
 ```
@@ -79,6 +82,8 @@ gcloud container clusters get-credentials cpp-samples
 ```
 
 ### Create a service account for the GKE workload
+
+The GKE workload will need a GCP service account to access GCP resources, pick a name and create the account:
 
 ```sh
 readonly SA_ID="populate-bucket-worker-sa"
@@ -123,9 +128,10 @@ kubectl create serviceaccount --namespace ${NAMESPACE} worker
 
 ```sh
 gcloud iam service-accounts add-iam-policy-binding \
-  --role roles/iam.workloadIdentityUser \
-  --member "serviceAccount:${GOOGLE_CLOUD_PROJECT}.svc.id.goog[${NAMESPACE}/worker]" \
-  ${SA_NAME}
+  "--project=${GOOGLE_CLOUD_PROJECT}" \
+  "--role=roles/iam.workloadIdentityUser" \
+  "--member=serviceAccount:${GOOGLE_CLOUD_PROJECT}.svc.id.goog[${NAMESPACE}/worker]" \
+  "${SA_NAME}"
 ```
 
 ### Map the GKE service account to the GCP service account
@@ -139,9 +145,10 @@ kubectl annotate serviceaccount \
 ### Build the Docker image containing the program
 
 ```
+IMAGE_VERSION=$(git rev-parse --short HEAD)
 gcloud builds submit \
     "--project=${GOOGLE_CLOUD_PROJECT}" \
-    "--substitutions=SHORT_SHA=$(git rev-parse --short HEAD)" \
+    "--substitutions=SHORT_SHA=${IMAGE_VERSION}" \
     "--config=cloudbuild.yaml"
 ```
 
@@ -155,15 +162,15 @@ gcloud pubsub subscriptions create "--project=${GOOGLE_CLOUD_PROJECT}" --topic p
 ### Run the deployment with workers
 
 ```sh
-./deployment.py --project=${GOOGLE_CLOUD_PROJECT} | kubectl apply -f -
-kubectl autoscale deployment populate-bucket --max 100 --min 1 --cpu-percent 50
+./deployment.py --project=${GOOGLE_CLOUD_PROJECT} --image-version=${IMAGE_VERSION} | kubectl apply -f -
+kubectl --namespace ${NAMESPACE} autoscale deployment worker  --max 200 --min 1 --cpu-percent 50
 ```
 
 ### Pick a bucket, and create it if needed
 
 ```bash
-BUCKET_NAME=...
-gsutil -p ${GOOGLE_CLOUD_PROJECT} mb gs://${BUCKET_NAME}
+BUCKET_NAME=${GOOGLE_CLOUD_PROJECT}-bucket-1000000
+gsutil mb -p ${GOOGLE_CLOUD_PROJECT} gs://${BUCKET_NAME}
 ```
 
 ### Run the program locally to schedule the work
@@ -172,5 +179,7 @@ gsutil -p ${GOOGLE_CLOUD_PROJECT} mb gs://${BUCKET_NAME}
 ./populate_bucket schedule \
     --project=${GOOGLE_CLOUD_PROJECT} \
     --topic=populate-bucket \
-    --bucket=${BUCKET_NAME}
+    --bucket=${BUCKET_NAME} \
+    --object-count=1000000 \
+    --task-size=100
 ```
