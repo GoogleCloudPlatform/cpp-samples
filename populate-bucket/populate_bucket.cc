@@ -316,12 +316,12 @@ void worker(boost::program_options::variables_map const& vm) {
     };
     while (session.wait_for(30s) == std::future_status::timeout) {
       auto last = counter.exchange(0);
+      total += last;
       std::cout << "Processed " << last << " work items"
                 << ", latency=" << mean(latency.load())
                 << ", attempts=" << mean(attempts.load())
                 << ", count=" << total
                 << std::endl;
-      total += last;
     }
 
     auto status = session.get();
