@@ -307,6 +307,7 @@ void worker(boost::program_options::variables_map const& vm) {
 
   using namespace std::chrono_literals;
   using google::cloud::StatusCode;
+  // TODO(coryan) - this is a workaround for googleapis/google-cloud-cpp#5506
   while (true) {
     auto session = subscriber.Subscribe(handler);
     auto total = counter.exchange(0);
@@ -326,6 +327,7 @@ void worker(boost::program_options::variables_map const& vm) {
 
     auto status = session.get();
     std::cout << "Session finished with " << status << std::endl;
+    // TODO(coryan) - this is a workaround for googleapis/google-cloud-cpp#5506
     if (status.code() == StatusCode::kUnavailable) continue;
 
     std::ostringstream os;
