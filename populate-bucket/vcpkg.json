@@ -1,5 +1,5 @@
 {
-  "name": "gcp-cpp-samples-gke-batch-job",
+  "name": "gcp-cpp-samples-populate-bucket",
   "version-string": "0.0.1-dev",
   "port-version": 1,
   "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
