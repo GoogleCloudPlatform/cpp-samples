@@ -1,0 +1,11 @@
+{
+  "name": "gcp-cpp-samples-populate-bucket",
+  "version-string": "0.0.1-dev",
+  "port-version": 1,
+  "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
+  "description": "Running GKE Batch Jobs with C++",
+  "dependencies": [
+    "boost-program-options",
+    "google-cloud-cpp"
+  ]
+}
