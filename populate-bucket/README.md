@@ -3,7 +3,7 @@
 ## Motivation
 
 From time to time the Cloud C++ team needs to generate buckets with millions or hundreds of millions of objects to test
-our libraries or applications. We often generate synthetic data for these tests. Like many C++ all developers, we are
+our libraries or applications. We often generate synthetic data for these tests. Like many C++ developers, we are
 impatient, and we want our synthetic data to be generated as quickly as possible so we can start with the rest of our
 work. This directory contains an example using C++, CPS (Google Cloud Pub/Sub), and GKE (Google Kubernetes Engine) to
 populate a GCS (Google Cloud Storage) bucket with millions or hundreds of millions of objects.

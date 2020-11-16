@@ -71,8 +71,8 @@ int main(int argc, char* argv[]) try {
 }
 
 namespace {
-std::string getenv_or_empty(std::string_view name) {
-  auto value = std::getenv(name.data());
+std::string getenv_or_empty(char const* name) {
+  auto value = std::getenv(name);
   return value == nullptr ? std::string{} : value;
 }
 
@@ -184,7 +184,7 @@ pubsub::Message format_work_item(work_item wi) {
 void schedule(boost::program_options::variables_map const& vm) {
   std::cout << "Scheduling jobs through work queue" << std::endl;
 
-  if (vm.count("project") == 0 || vm["project"].as<std::string>().empty()) {
+  if (vm.count("project") == 0 or vm["project"].as<std::string>().empty()) {
     throw std::runtime_error("the `schedule` action requires --project");
   }
   if (vm.count("topic") == 0) {
@@ -267,7 +267,7 @@ void process_one_item(gcs::Client client, pubsub::Message const& m) {
 void worker(boost::program_options::variables_map const& vm) {
   std::cout << "Running in worker mode" << std::endl;
 
-  if (vm.count("project") == 0 || vm["project"].as<std::string>().empty()) {
+  if (vm.count("project") == 0 or vm["project"].as<std::string>().empty()) {
     throw std::runtime_error("the `schedule` action requires --subscription");
   }
   if (vm.count("subscription") == 0) {

@@ -12,30 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# We chose Alpine to build the image because it has good support for creating
-# statically-linked, small programs.
+# We chose Ubuntu to build the image because we are familiar with it.
 FROM ubuntu:20.04 AS base
 
-# Create separate targets for each phase, this allows us to cache intermediate
-# stages when using Google Cloud Build, and makes the final deployment stage
+# Create separate targets for each phase, this makes the final deployment stage
 # small as it contains only what is needed.
 FROM base AS devtools
 
-# Install the typical development tools and some additions:
-#   - ninja-build is a backend for CMake that often compiles faster than
-#     CMake with GNU Make.
-#   - Install the boost libraries.
+# Install the minimal tools necessary to download vcpkg, and then download it.
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update && apt install -y curl gzip tar unzip
 WORKDIR /var/tmp/build/vcpkg
 RUN curl -s -L https://github.com/Microsoft/vcpkg/archive/5dc53211caedebf4387d590155ed53ee44161f10.tar.gz | \
     tar -xzf - --strip-components=1
 
+# Install the typical development tools, zip + unzip are used by vcpkg to
+# maintain its cache.
 RUN apt update && \
     apt install -y build-essential cmake git gcc g++ ninja-build unzip zip
 RUN apt install -y pkg-config
 RUN ./bootstrap-vcpkg.sh
 
+# Create a separate stage where we build all the dependencies.
 FROM devtools AS dependencies
 
 RUN ./vcpkg install openssl
@@ -52,8 +50,7 @@ FROM dependencies AS build
 COPY . /v/source
 WORKDIR /v/source
 
-# Run the CMake configuration step, setting the options to create
-# a statically linked C++ program
+# Run the CMake configuration step, setting the options to use vcpkg.
 RUN cmake -S/v/source -B/v/binary -GNinja \
     -DCMAKE_TOOLCHAIN_FILE=/var/tmp/build/vcpkg/scripts/buildsystems/vcpkg.cmake
 
@@ -61,8 +58,8 @@ RUN cmake -S/v/source -B/v/binary -GNinja \
 RUN cmake --build /v/binary
 RUN strip /v/binary/populate_bucket
 
-# Create the final deployment image, we need the CA certificates for the
-# application to verify the Google SSL certificates.
+# Create the final deployment image, we need the CA certificates, as the
+# application needs to verify the Google SSL certificates.
 FROM base AS populate-bucket
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update && \
@@ -73,4 +70,5 @@ WORKDIR /r
 # Copy the program from the previously created stage and make it the entry point.
 COPY --from=build /v/binary/populate_bucket /r
 
+# Make the image fail if invoked with an explicit command line.
 CMD "/bin/false"
