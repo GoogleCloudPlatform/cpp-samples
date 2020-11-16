@@ -278,8 +278,8 @@ void worker(boost::program_options::variables_map const& vm) {
   auto const subscription_id = vm["subscription"].as<std::string>();
 
   using namespace std::chrono_literals;
-  using std::chrono::milliseconds;
   using std::chrono::duration_cast;
+  using std::chrono::milliseconds;
   auto const subscription = pubsub::Subscription(project_id, subscription_id);
   auto subscriber = pubsub::Subscriber(pubsub::MakeSubscriberConnection(
       subscription,
@@ -320,8 +320,7 @@ void worker(boost::program_options::variables_map const& vm) {
       total += last;
       std::cout << "Processed " << last << " work items"
                 << ", latency=" << mean(latency.load())
-                << ", attempts=" << mean(attempts.load())
-                << ", count=" << total
+                << ", attempts=" << mean(attempts.load()) << ", count=" << total
                 << std::endl;
     }
 
