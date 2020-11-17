@@ -12,116 +12,60 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG DISTRO_VERSION=edge
-FROM alpine:${DISTRO_VERSION} AS base
+# We chose Ubuntu to build the image because we are familiar with it.
+FROM ubuntu:20.04 AS base
 
+# Create separate targets for each phase, this makes the final deployment stage
+# small as it contains only what is needed.
 FROM base AS devtools
 
-# Install the typical development tools and some additions:
-#   - ninja-build is a backend for CMake that often compiles faster than
-#     CMake with GNU Make.
-#   - Install the boost libraries.
-RUN apk update && \
-    apk add \
-        boost-dev \
-        boost-static \
-        build-base \
-        cmake \
-        curl \
-        curl-dev \
-        curl-static \
-        git \
-        gcc \
-        g++ \
-        grpc \
-        grpc-dev \
-        grpc-cli \
-        libc-dev \
-        nghttp2-static \
-        ninja \
-        protobuf \
-        protobuf-dev \
-        openssl-dev \
-        openssl-libs-static \
-        tar \
-        zlib-static
+# Install the minimal tools necessary to download vcpkg, and then download it.
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt update && apt install -y curl gzip tar unzip
+WORKDIR /var/tmp/build/vcpkg
+RUN curl -s -L https://github.com/Microsoft/vcpkg/archive/5dc53211caedebf4387d590155ed53ee44161f10.tar.gz | \
+    tar -xzf - --strip-components=1
 
-WORKDIR /var/tmp/build
-RUN curl -s -L -o 1.1.0.tar.gz https://github.com/google/crc32c/archive/1.1.0.tar.gz
-RUN tar -zxf 1.1.0.tar.gz
-WORKDIR /var/tmp/build/crc32c-1.1.0
-RUN cmake -S. -B.build -GNinja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCRC32C_BUILD_TESTS=OFF \
-    -DCRC32C_BUILD_BENCHMARKS=OFF \
-    -DCRC32C_USE_GLOG=OFF
-RUN cmake --build .build --target install
+# Install the typical development tools, zip + unzip are used by vcpkg to
+# maintain its cache.
+RUN apt update && \
+    apt install -y build-essential cmake git gcc g++ ninja-build unzip zip
+RUN apt install -y pkg-config
+RUN ./bootstrap-vcpkg.sh
 
-WORKDIR /var/tmp/build
-RUN curl -s -L -o v0.2.1.tar.gz https://github.com/googleapis/cpp-cmakefiles/archive/v0.2.1.tar.gz
-RUN tar -zxf v0.2.1.tar.gz
-WORKDIR /var/tmp/build/cpp-cmakefiles-0.2.1
-RUN cmake -S. -B.build -GNinja \
-    -DCMAKE_BUILD_TYPE=Release
-RUN cmake --build .build --target install
+# Create a separate stage where we build all the dependencies.
+FROM devtools AS dependencies
 
-WORKDIR /var/tmp/build
-RUN curl -s -L -o v0.17.0.tar.gz \
-    https://github.com/googleapis/google-cloud-cpp-common/archive/v0.17.0.tar.gz
-RUN tar -zxf v0.17.0.tar.gz
-WORKDIR /var/tmp/build/google-cloud-cpp-common-0.17.0
-RUN cmake -S. -B.build -GNinja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_TESTING=OFF
-RUN cmake --build .build --target install
+RUN ./vcpkg install openssl
+RUN ./vcpkg install curl
+RUN ./vcpkg install crc32c
+RUN ./vcpkg install protobuf
+RUN ./vcpkg install abseil
+RUN ./vcpkg install grpc
+RUN ./vcpkg install google-cloud-cpp
+RUN ./vcpkg install boost
 
-WORKDIR /var/tmp/build
-RUN curl -s -L -o v0.17.0.tar.gz \
-    https://github.com/googleapis/google-cloud-cpp/archive/v0.17.0.tar.gz
-RUN tar -zxf v0.17.0.tar.gz
-WORKDIR /var/tmp/build/google-cloud-cpp-0.17.0
-RUN cmake -S. -B.build -GNinja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_TESTING=OFF
-RUN cmake --build .build --target install
+FROM base AS with-certs
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt update && \
+    apt-get --no-install-recommends install -y libstdc++6 ca-certificates && \
+    apt-get upgrade -y && \
+    rm -rf /var/cache/apt/*
+RUN update-ca-certificates
+WORKDIR /r
 
-WORKDIR /var/tmp/build
-RUN curl -s -L -o v0.5.0.tar.gz \
-    https://github.com/googleapis/google-cloud-cpp-spanner/archive/v0.5.0.tar.gz
-RUN tar -zxf v0.5.0.tar.gz
-WORKDIR /var/tmp/build/google-cloud-cpp-spanner-0.5.0
-RUN cmake -S. -B.build -GNinja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_TESTING=OFF
-RUN cmake --build .build --target install
-
-RUN apk update && \
-    apk add \
-        c-ares-static
-
-FROM devtools AS build
+# Copy the source code to /v/source and compile it.
+FROM dependencies AS build
 COPY . /v/source
 WORKDIR /v/source
+
+# Run the CMake configuration step, setting the options to use vcpkg.
 RUN cmake -S/v/source -B/v/binary -GNinja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DBoost_USE_STATIC_LIBS=ON \
-    -D_gRPC_USE_STATIC_LIBS=ON \
-    -DProtobuf_USE_STATIC_LIBS=ON \
-    -DOPENSSL_USE_STATIC_LIBS=ON \
-    -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/libcrypto.a \
-    -DOPENSSL_SSL_LIBRARY=/usr/lib/libssl.a \
-    -DZLIB_LIBRARY=/lib/libz.a \
-    -DEXTRA_LIBRARY="/usr/lib/libnghttp2.a;/usr/lib/libcares.a" \
-    -DCMAKE_EXE_LINKER_FLAGS="-static"
+    -DCMAKE_TOOLCHAIN_FILE=/var/tmp/build/vcpkg/scripts/buildsystems/vcpkg.cmake || \
+    cat /v/binary/vcpkg-manifest-install.log
 
 RUN cmake --build /v/binary
 RUN strip /v/binary/pubsub_handler
-
-FROM base AS with-certs
-RUN apk update && \
-    apk add ca-certificates && \
-    rm -rf /var/cache/apk/*
-RUN update-ca-certificates
 
 FROM with-certs AS pubsub-handler
 WORKDIR /r
