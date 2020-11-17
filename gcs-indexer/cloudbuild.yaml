@@ -16,26 +16,18 @@ timeout: 3600s
 steps:
   - name: 'gcr.io/kaniko-project/executor:latest'
     args: [
-        "--destination=gcr.io/${PROJECT_ID}/cpp-samples/gcs-indexer/dependencies:${SHORT_SHA}",
-        "--target=dependencies",
-        "--cache=true",
-        "--cache-ttl=48h"
-    ]
-    timeout: 3600s
-  - name: 'gcr.io/kaniko-project/executor:latest'
-    args: [
         "--destination=gcr.io/${PROJECT_ID}/cpp-samples/gcs-indexer/pubsub-handler:${SHORT_SHA}",
+        "--cache-repo=gcr.io/${PROJECT_ID}/cpp-samples/cache",
         "--target=pubsub-handler",
-        "--cache=true",
-        "--cache-ttl=48h"
+        "--cache=true"
     ]
     timeout: 3600s
   - name: 'gcr.io/kaniko-project/executor:latest'
     args: [
         "--destination=gcr.io/${PROJECT_ID}/cpp-samples/gcs-indexer/tools:${SHORT_SHA}",
+        "--cache-repo=gcr.io/${PROJECT_ID}/cpp-samples/cache",
         "--target=tools",
-        "--cache=true",
-        "--cache-ttl=48h",
+        "--cache=true"
     ]
     timeout: 3600s
 
