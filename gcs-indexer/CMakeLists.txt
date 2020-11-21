@@ -80,17 +80,6 @@ target_link_libraries(refresh_index_for_bucket
         OpenSSL::SSL
         ZLIB::ZLIB)
 
-add_executable(generate_randomly_named_objects generate_randomly_named_objects.cc)
-target_link_libraries(generate_randomly_named_objects
-        PRIVATE storage_client
-        Boost::headers
-        Boost::program_options
-        CURL::libcurl
-        ${EXTRA_LIBRARY}
-        OpenSSL::Crypto
-        OpenSSL::SSL
-        ZLIB::ZLIB)
-
 add_executable(delete_index_for_bucket delete_index_for_bucket.cc)
 target_link_libraries(delete_index_for_bucket
         PRIVATE spanner_client

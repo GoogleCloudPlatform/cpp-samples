@@ -84,7 +84,6 @@ FROM with-certs AS tools
 WORKDIR /r
 COPY --from=build /v/binary/create_database /r
 COPY --from=build /v/binary/delete_index_for_bucket /r
-COPY --from=build /v/binary/generate_randomly_named_objects /r
 COPY --from=build /v/binary/refresh_index_for_bucket /r
 
 CMD "/bin/false"
