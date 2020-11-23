@@ -1,0 +1,16 @@
+{
+  "name": "gcp-cpp-samples-gcs-indexer",
+  "version-string": "0.0.1-dev",
+  "port-version": 1,
+  "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
+  "description": "Indexing GCS Buckets with C++ and Cloud Spanner",
+  "dependencies": [
+    "boost-program-options",
+    "boost-core",
+    "boost-serialization",
+    "boost-asio",
+    "boost-beast",
+    "boost-property-tree",
+    "google-cloud-cpp"
+  ]
+}

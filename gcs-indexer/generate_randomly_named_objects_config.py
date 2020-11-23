@@ -39,7 +39,7 @@ spec:
             secretName: service-account-key
       containers:
         - name: gcs-indexer-tools
-          image: gcr.io/{{project_id}}/gcs-indexer-tools:latest
+          image: gcr.io/{{project_id}}/cpp-samples/gcs-indexer/tools:latest
           imagePullPolicy: Always
           command: [
               '/r/generate_randomly_named_objects',

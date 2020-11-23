@@ -106,7 +106,7 @@ gcloud beta run deploy gcs-indexer-pubsub-handler \
     "--project=${GOOGLE_CLOUD_PROJECT}" \
     "--service-account=${SA_NAME}" \
     "--set-env-vars=SPANNER_PROJECT=${GOOGLE_CLOUD_PROJECT},SPANNER_INSTANCE=${GOOGLE_CLOUD_SPANNER_INSTANCE},SPANNER_DATABASE=${GOOGLE_CLOUD_SPANNER_DATABASE}" \
-    "--image=gcr.io/${GOOGLE_CLOUD_PROJECT}/gcs-indexer-pubsub-handler:latest" \
+    "--image=gcr.io/${GOOGLE_CLOUD_PROJECT}/cpp-samples/gcs-indexer/pubsub-handler:latest" \
     "--region=${GOOGLE_CLOUD_REGION}" \
     "--platform=managed" \
     "--no-allow-unauthenticated"
