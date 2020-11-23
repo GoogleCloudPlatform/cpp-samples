@@ -36,14 +36,18 @@ RUN ./bootstrap-vcpkg.sh
 # Create a separate stage where we build all the dependencies.
 FROM devtools AS dependencies
 
-RUN ./vcpkg install openssl
-RUN ./vcpkg install curl
-RUN ./vcpkg install crc32c
-RUN ./vcpkg install protobuf
-RUN ./vcpkg install abseil
-RUN ./vcpkg install grpc
-RUN ./vcpkg install google-cloud-cpp
-RUN ./vcpkg install boost
+RUN ./vcpkg install --clean-after-build openssl
+RUN ./vcpkg install --clean-after-build curl
+RUN ./vcpkg install --clean-after-build crc32c
+RUN ./vcpkg install --clean-after-build protobuf
+RUN ./vcpkg install --clean-after-build abseil
+RUN ./vcpkg install --clean-after-build grpc
+RUN ./vcpkg install --clean-after-build google-cloud-cpp
+RUN ./vcpkg install --clean-after-build boost-program-options
+RUN ./vcpkg install --clean-after-build boost-asio
+RUN ./vcpkg install --clean-after-build boost-beast
+RUN ./vcpkg install --clean-after-build boost-property-tree
+RUN ./vcpkg install --clean-after-build boost-serialization
 
 FROM base AS with-certs
 ENV DEBIAN_FRONTEND=noninteractive
