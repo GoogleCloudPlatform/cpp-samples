@@ -78,7 +78,7 @@ gcloud container clusters create cpp-samples \
 Once created, we configure the `kubectl` credentials to use this cluster:
 
 ```sh
-gcloud container clusters get-credentials cpp-samples
+gcloud container clusters --region=${GOOGLE_CLOUD_REGION} --project=${GOOGLE_CLOUD_PROJECT} get-credentials cpp-samples
 ```
 
 ### Create a service account for the GKE workload
