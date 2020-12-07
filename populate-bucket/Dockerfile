@@ -23,7 +23,7 @@ FROM base AS devtools
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update && apt install -y curl gzip tar unzip
 WORKDIR /var/tmp/build/vcpkg
-RUN curl -s -L https://github.com/Microsoft/vcpkg/archive/5dc53211caedebf4387d590155ed53ee44161f10.tar.gz | \
+RUN curl -s -L https://github.com/Microsoft/vcpkg/archive/09f0dc0a79f8075606f83b61492e814511b54d9f.tar.gz | \
     tar -xzf - --strip-components=1
 
 # Install the typical development tools, zip + unzip are used by vcpkg to

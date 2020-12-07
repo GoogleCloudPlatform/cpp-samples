@@ -307,32 +307,27 @@ void worker(boost::program_options::variables_map const& vm) {
 
   using namespace std::chrono_literals;
   using google::cloud::StatusCode;
-  // TODO(coryan) - this is a workaround for googleapis/google-cloud-cpp#5506
-  while (true) {
-    auto session = subscriber.Subscribe(handler);
-    auto total = counter.exchange(0);
-    auto mean = [&total](std::int64_t v) -> std::int64_t {
-      if (total == 0) return 0;
-      return v / total;
-    };
-    while (session.wait_for(30s) == std::future_status::timeout) {
-      auto last = counter.exchange(0);
-      total += last;
-      std::cout << "Processed " << last << " work items"
-                << ", latency=" << mean(latency.load())
-                << ", attempts=" << mean(attempts.load()) << ", count=" << total
-                << std::endl;
-    }
-
-    auto status = session.get();
-    std::cout << "Session finished with " << status << std::endl;
-    // TODO(coryan) - this is a workaround for googleapis/google-cloud-cpp#5506
-    if (status.code() == StatusCode::kUnavailable) continue;
-
-    std::ostringstream os;
-    os << "Unrecoverable error in Subscriber::Subscribe " << status;
-    throw std::runtime_error(std::move(os).str());
+  auto session = subscriber.Subscribe(handler);
+  auto total = counter.exchange(0);
+  auto mean = [&total](std::int64_t v) -> std::int64_t {
+    if (total == 0) return 0;
+    return v / total;
+  };
+  while (session.wait_for(30s) == std::future_status::timeout) {
+    auto last = counter.exchange(0);
+    total += last;
+    std::cout << "Processed " << last << " work items"
+              << ", latency=" << mean(latency.load())
+              << ", attempts=" << mean(attempts.load()) << ", count=" << total
+              << std::endl;
   }
+
+  auto status = session.get();
+  std::cout << "Session finished with " << status << std::endl;
+
+  std::ostringstream os;
+  os << "Unrecoverable error in Subscriber::Subscribe " << status;
+  throw std::runtime_error(std::move(os).str());
 }
 
 }  // namespace
