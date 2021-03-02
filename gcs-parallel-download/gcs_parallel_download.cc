@@ -27,6 +27,12 @@ namespace po = boost::program_options;
 namespace gcs = google::cloud::storage;
 std::tuple<po::variables_map, po::options_description> parse_command_line(
     int argc, char* argv[]);
+std::string format_size(std::int64_t size);
+auto constexpr kKiB = std::int64_t(1024);
+auto constexpr kMiB = 1024 * kKiB;
+auto constexpr kGiB = 1024 * kMiB;
+auto constexpr kTiB = 1024 * kGiB;
+auto constexpr kPiB = 1024 * kTiB;
 }  // namespace
 
 int main(int argc, char* argv[]) try {
@@ -68,9 +74,10 @@ int main(int argc, char* argv[]) try {
 
   std::cout << "Downloading " << object << " from bucket " << bucket
             << " to file " << destination << "\nThis object has "
-            << metadata.size() << " bytes, it will be downloaded in "
-            << thread_count << " slices, each approximately " << slice_size
-            << " bytes long" << std::endl;
+            << format_size(metadata.size())
+            << " in size. It will be downloaded in " << thread_count
+            << " slices, each approximately " << format_size(slice_size)
+            << " in size" << std::endl;
 
   auto task = [](std::int64_t offset, std::int64_t length,
                  std::string const& bucket, std::string const& object,
@@ -102,7 +109,16 @@ int main(int argc, char* argv[]) try {
 
   for (auto& t : tasks) t.get();
 
-  std::cout << "Download completed\n";
+  auto const end = std::chrono::steady_clock::now();
+  auto const elapsed_us =
+      std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  auto const elapsed_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  auto const effective_bandwidth_MiBs =
+      (static_cast<double>(metadata.size()) / kMiB) /
+      (elapsed_us.count() / 1'000'000.0);
+  std::cout << "Download completed in " << elapsed_ms.count() << "ms\n"
+            << "Effective bandwidth " << effective_bandwidth_MiBs << " MiB/s\n";
 
   return 0;
 } catch (std::exception const& ex) {
@@ -157,6 +173,21 @@ std::tuple<po::variables_map, po::options_description> parse_command_line(
             vm);
   po::notify(vm);
   return {vm, desc};
+}
+
+std::string format_size(std::int64_t size) {
+  struct range_definition {
+    std::int64_t max_value;
+    std::int64_t scale;
+    char const* units;
+  } ranges[] = {
+      {kKiB, 1, "Bytes"},  {kMiB, kKiB, "KiB"}, {kGiB, kMiB, "MiB"},
+      {kTiB, kGiB, "GiB"}, {kPiB, kTiB, "TiB"},
+  };
+  for (auto d : ranges) {
+    if (size < d.max_value) return std::to_string(size / d.scale) + d.units;
+  }
+  return std::to_string(size / kPiB) + "PiB";
 }
 
 }  // namespace
