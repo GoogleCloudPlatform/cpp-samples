@@ -1,0 +1,12 @@
+{
+  "name": "cpp-samples-gcs-parallel-download",
+  "version-string": "0.1.0",
+  "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
+  "description": [
+    "Shows how to index GCS buckets using Cloud Run"
+  ],
+  "dependencies": [
+    "google-cloud-cpp",
+    "boost-program-options"
+  ]
+}
