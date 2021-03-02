@@ -22,6 +22,9 @@
 #include <string>
 #include <thread>
 #include <utility>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 namespace {
 namespace po = boost::program_options;
@@ -82,20 +85,20 @@ int main(int argc, char* argv[]) try {
 
   auto task = [](std::int64_t offset, std::int64_t length,
                  std::string const& bucket, std::string const& object,
-                 std::string const& destination) {
+                 int fd) {
     auto client = gcs::Client::CreateDefaultClient().value();
     auto is = client.ReadObject(bucket, object,
                                 gcs::ReadRange(offset, offset + length));
 
-    std::ofstream os(destination, std::ios::binary | std::ios::ate);
-    os.seekp(offset, std::ios::beg);
     std::vector<char> buffer(1024 * 1024L);
     std::int64_t count = 0;
+    std::int64_t write_offset = offset;
     do {
       is.read(buffer.data(), buffer.size());
       if (is.bad()) break;
       count += is.gcount();
-      os.write(buffer.data(), is.gcount());
+      ::pwrite(fd, buffer.data(), is.gcount(), write_offset);
+      write_offset += is.gcount();
     } while (not is.eof());
     std::ostringstream result;
     result << "Downloaded range [" << offset << ","
@@ -106,19 +109,20 @@ int main(int argc, char* argv[]) try {
 
   auto const start = std::chrono::steady_clock::now();
   std::vector<std::future<std::string>> tasks;
-  std::ofstream os(destination, std::ios::binary | std::ios::trunc);
+  auto const fd = ::open(destination.c_str(), O_CREAT | O_TRUNC | O_WRONLY);
   for (std::int64_t offset = 0; offset < metadata.size();
        offset += slice_size) {
     auto const current_slice_size =
         std::min<std::int64_t>(slice_size, metadata.size() - offset);
     tasks.push_back(std::async(std::launch::async, task, offset,
                                current_slice_size, bucket, object,
-                               destination));
+                               fd));
   }
 
   for (auto& t : tasks) {
     std::cout << t.get() << "\n";
   }
+  ::close(fd);
 
   auto const end = std::chrono::steady_clock::now();
   auto const elapsed_us =
