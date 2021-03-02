@@ -13,8 +13,12 @@
 // limitations under the License.
 
 #include <boost/program_options.hpp>
+#include <fmt/format.h>
 #include <google/cloud/storage/client.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <cstdint>
+#include <fcntl.h>
 #include <fstream>
 #include <future>
 #include <iostream>
@@ -22,9 +26,6 @@
 #include <string>
 #include <thread>
 #include <utility>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 namespace {
 namespace po = boost::program_options;
@@ -50,7 +51,8 @@ int main(int argc, char* argv[]) try {
   for (std::string opt : {"bucket", "object", "destination"}) {
     if (vm.count(opt) != 0) continue;
     if (not vm[opt].as<std::string>().empty()) continue;
-    throw std::runtime_error("the --" + opt + " option cannot be empty");
+    throw std::runtime_error(
+        fmt::format("the --{} option cannot be empty", opt));
   }
   auto const bucket = vm["bucket"].as<std::string>();
   auto const object = vm["object"].as<std::string>();
@@ -77,15 +79,22 @@ int main(int argc, char* argv[]) try {
   }();
 
   std::cout << "Downloading " << object << " from bucket " << bucket
-            << " to file " << destination << "\nThis object has "
-            << format_size(metadata.size())
-            << " in size. It will be downloaded in " << thread_count
-            << " slices, each approximately " << format_size(slice_size)
-            << " in size" << std::endl;
+            << " to file " << destination << "\n";
+  std::cout << "This object size is approximately "
+            << format_size(metadata.size()) << ". It will be downloaded in "
+            << thread_count << " slices, each approximately "
+            << format_size(slice_size) << " in size." << std::endl;
 
-  auto task = [](std::int64_t offset, std::int64_t length,
-                 std::string const& bucket, std::string const& object,
-                 int fd) {
+  auto check_system_call = [](std::string const& op, int r) {
+    if (r >= 0) return r;
+    auto err = errno;
+    throw std::runtime_error(
+        fmt::format("Error in {}() - return value={}, error=[{}] {}", op, r,
+                    err, strerror(err)));
+  };
+  auto task = [&](std::int64_t offset, std::int64_t length,
+                  std::string const& bucket, std::string const& object,
+                  int fd) {
     auto client = gcs::Client::CreateDefaultClient().value();
     auto is = client.ReadObject(bucket, object,
                                 gcs::ReadRange(offset, offset + length));
@@ -97,32 +106,32 @@ int main(int argc, char* argv[]) try {
       is.read(buffer.data(), buffer.size());
       if (is.bad()) break;
       count += is.gcount();
-      ::pwrite(fd, buffer.data(), is.gcount(), write_offset);
+      check_system_call("pwrite()",
+                        ::pwrite(fd, buffer.data(), is.gcount(), write_offset));
       write_offset += is.gcount();
     } while (not is.eof());
-    std::ostringstream result;
-    result << "Downloaded range [" << offset << ","
-           << std::to_string(offset + length) << "] got " << count << "/"
-           << length << " bytes";
-    return std::move(result).str();
+    return fmt::format("Download range [{}, {}] got {}/{} bytes", offset,
+                       offset + length, count, length);
   };
 
   auto const start = std::chrono::steady_clock::now();
   std::vector<std::future<std::string>> tasks;
-  auto const fd = ::open(destination.c_str(), O_CREAT | O_TRUNC | O_WRONLY);
+  auto constexpr kOpenFlags = O_CREAT | O_TRUNC | O_WRONLY;
+  auto constexpr kOpenMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+  auto const fd = check_system_call(
+      "open()", ::open(destination.c_str(), kOpenFlags, kOpenMode));
   for (std::int64_t offset = 0; offset < metadata.size();
        offset += slice_size) {
     auto const current_slice_size =
         std::min<std::int64_t>(slice_size, metadata.size() - offset);
     tasks.push_back(std::async(std::launch::async, task, offset,
-                               current_slice_size, bucket, object,
-                               fd));
+                               current_slice_size, bucket, object, fd));
   }
 
   for (auto& t : tasks) {
     std::cout << t.get() << "\n";
   }
-  ::close(fd);
+  check_system_call("close(fd)", ::close(fd));
 
   auto const end = std::chrono::steady_clock::now();
   auto const elapsed_us =
