@@ -18,6 +18,7 @@
 #include <fstream>
 #include <future>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <utility>
@@ -86,18 +87,26 @@ int main(int argc, char* argv[]) try {
     auto is = client.ReadObject(bucket, object,
                                 gcs::ReadRange(offset, offset + length));
 
-    std::ofstream os(destination, std::ios::binary | std::ios::app);
+    std::ofstream os(destination, std::ios::binary | std::ios::ate);
     os.seekp(offset, std::ios::beg);
     std::vector<char> buffer(1024 * 1024L);
+    std::int64_t count = 0;
     do {
       is.read(buffer.data(), buffer.size());
       if (is.bad()) break;
+      count += is.gcount();
       os.write(buffer.data(), is.gcount());
     } while (not is.eof());
+    std::ostringstream result;
+    result << "Downloaded range [" << offset << ","
+           << std::to_string(offset + length) << "] got " << count << "/"
+           << length << " bytes";
+    return std::move(result).str();
   };
 
   auto const start = std::chrono::steady_clock::now();
-  std::vector<std::future<void>> tasks;
+  std::vector<std::future<std::string>> tasks;
+  std::ofstream os(destination, std::ios::binary | std::ios::trunc);
   for (std::int64_t offset = 0; offset < metadata.size();
        offset += slice_size) {
     auto const current_slice_size =
@@ -107,7 +116,9 @@ int main(int argc, char* argv[]) try {
                                destination));
   }
 
-  for (auto& t : tasks) t.get();
+  for (auto& t : tasks) {
+    std::cout << t.get() << "\n";
+  }
 
   auto const end = std::chrono::steady_clock::now();
   auto const elapsed_us =
