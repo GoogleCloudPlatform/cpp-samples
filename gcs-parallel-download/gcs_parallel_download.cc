@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <boost/algorithm/string.hpp>
+#include <boost/endian/buffers.hpp>
+#include <boost/endian/conversion.hpp>
 #include <boost/program_options.hpp>
+#include <cppcodec/base64_rfc4648.hpp>
+#include <crc32c/crc32c.h>
 #include <fmt/format.h>
 #include <google/cloud/storage/client.h>
 #include <sys/stat.h>
@@ -23,7 +26,6 @@
 #include <fstream>
 #include <future>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <utility>
@@ -34,6 +36,7 @@ namespace gcs = google::cloud::storage;
 std::tuple<po::variables_map, po::options_description> parse_command_line(
     int argc, char* argv[]);
 std::string format_size(std::int64_t size);
+
 auto constexpr kKiB = std::int64_t(1024);
 auto constexpr kMiB = 1024 * kKiB;
 auto constexpr kGiB = 1024 * kMiB;
@@ -144,6 +147,41 @@ int main(int argc, char* argv[]) try {
       (elapsed_us.count() / 1'000'000.0);
   std::cout << "Download completed in " << elapsed_ms.count() << "ms\n"
             << "Effective bandwidth " << effective_bandwidth_MiBs << " MiB/s\n";
+
+  auto downloaded_file_info = [](std::string const& filename) {
+    std::ifstream is(filename);
+    std::vector<char> buffer(1024 * 1024L);
+    std::uint32_t crc32c = 0;
+    std::int64_t size = 0;
+    do {
+      is.read(buffer.data(), buffer.size());
+      if (is.bad()) break;
+      crc32c = crc32c::Extend(
+          crc32c, reinterpret_cast<std::uint8_t*>(buffer.data()), is.gcount());
+      size += is.gcount();
+    } while (!is.eof());
+
+    static_assert(std::numeric_limits<unsigned char>::digits == 8,
+                  "This program assumes an 8-bit char");
+    boost::endian::big_uint32_buf_at buf(crc32c);
+    return std::make_pair(size, cppcodec::base64_rfc4648::encode(std::string(
+                                    buf.data(), buf.data() + sizeof(buf))));
+  };
+
+  auto [size, crc32c] = downloaded_file_info(destination);
+  if (size != metadata.size()) {
+    std::cout << "Downloaded file size mismatch, expected=" << metadata.size()
+              << ", got=" << size << std::endl;
+    return 1;
+  }
+
+  if (crc32c != metadata.crc32c()) {
+    std::cout << "Download file CRC32C mismatch, expected=" << metadata.crc32c()
+              << ", got=" << crc32c << std::endl;
+    return 1;
+  }
+
+  std::cout << "File size and CRC32C match expected values" << std::endl;
 
   return 0;
 } catch (std::exception const& ex) {
