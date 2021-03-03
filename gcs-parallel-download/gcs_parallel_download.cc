@@ -154,6 +154,22 @@ int main(int argc, char* argv[]) try {
   return 1;
 }
 
+[[noreturn]] void Usage(std::string const& argv0,
+                        po::options_description const& desc,
+                        po::positional_options_description const& positional) {
+  // format positional args
+  std::string positional_names;
+  for (int i = 0; i < positional.max_total_count(); i++) {
+    positional_names += std::string(" ") += positional.name_for_position(i);
+  }
+  positional_names += " [OPTIONS]";
+  boost::to_upper(positional_names);
+
+  // print usage + options help, and exit normally
+  std::cout << "usage: " << argv0 << positional_names << "\n\n" << desc << "\n";
+  std::exit(0);
+}
+
 namespace {
 std::tuple<po::variables_map, po::options_description> parse_command_line(
     int argc, char* argv[]) {
@@ -203,24 +219,8 @@ std::tuple<po::variables_map, po::options_description> parse_command_line(
     po::notify(vm);
   } catch (po::required_option const& ex) {
     // if required arguments are missing but help is desired, just print help
-    if (vm.count("help") || argc == 1) {
-      // format positional args
-      std::stringstream pn;
-      for (int i = 0; i < positional.max_total_count(); i++) {
-        pn << " " << positional.name_for_position(i);
-      }
-      pn << " [OPTIONS]";
-      std::string positional_names = pn.str();
-      boost::to_upper(positional_names);
-
-      // print usage + options help, and exit normally
-      std::cout << "USAGE: " << argv[0] << positional_names << "\n\n"
-                << desc << "\n";
-      std::exit(0);
-
-    } else {
-      throw ex;
-    }
+    if (vm.count("help") > 0 || argc == 1) Usage(argv[0], desc, positional);
+    throw ex;
   }
 
   return {vm, desc};
