@@ -19,22 +19,24 @@
 #include <crc32c/crc32c.h>
 #include <fmt/format.h>
 #include <google/cloud/storage/client.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <cstdint>
-#include <fcntl.h>
 #include <fstream>
 #include <future>
 #include <iostream>
+#include <numeric>
 #include <string>
 #include <thread>
 #include <utility>
 
+// Posix headers last:
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
 namespace {
 namespace po = boost::program_options;
 namespace gcs = google::cloud::storage;
-std::tuple<po::variables_map, po::options_description> parse_command_line(
-    int argc, char* argv[]);
+po::variables_map parse_command_line(int argc, char* argv[]);
 std::string format_size(std::int64_t size);
 
 auto constexpr kKiB = std::int64_t(1024);
@@ -45,26 +47,12 @@ auto constexpr kPiB = 1024 * kTiB;
 }  // namespace
 
 int main(int argc, char* argv[]) try {
-  auto [vm, desc] = parse_command_line(argc, argv);
-  auto help = [d = std::move(desc)](po::variables_map const&) {
-    std::cout << "Usage: " << d << "\n";
-    return 0;
-  };
-  if (vm.count("help")) return help(vm);
+  auto vm = parse_command_line(argc, argv);
 
-  for (std::string opt : {"bucket", "object", "destination"}) {
-    if (vm.count(opt) != 0) continue;
-    if (not vm[opt].as<std::string>().empty()) continue;
-    throw std::runtime_error(
-        fmt::format("the --{} option cannot be empty", opt));
-  }
   auto const bucket = vm["bucket"].as<std::string>();
   auto const object = vm["object"].as<std::string>();
   auto const destination = vm["destination"].as<std::string>();
   auto const desired_thread_count = vm["thread-count"].as<int>();
-  if (desired_thread_count == 0) {
-    throw std::runtime_error("the --thread-count option cannot be zero");
-  }
   auto const minimum_slice_size = vm["minimum-slice-size"].as<std::int64_t>();
 
   auto client = gcs::Client::CreateDefaultClient().value();
@@ -192,25 +180,33 @@ int main(int argc, char* argv[]) try {
   return 1;
 }
 
+char const* kPositional[] = {"bucket", "object", "destination"};
+
 [[noreturn]] void Usage(std::string const& argv0,
                         po::options_description const& desc,
-                        po::positional_options_description const& positional) {
-  // format positional args
-  std::string positional_names;
-  for (int i = 0; i < positional.max_total_count(); i++) {
-    positional_names += std::string(" ") += positional.name_for_position(i);
+                        std::string const& message = {}) {
+  auto exit_status = EXIT_SUCCESS;
+  if (!message.empty()) {
+    exit_status = EXIT_FAILURE;
+    std::cout << "Error: " << message << "\n";
   }
-  positional_names += " [OPTIONS]";
-  boost::to_upper(positional_names);
+
+  // format positional args
+  auto const positional_names =
+      std::accumulate(std::begin(kPositional), std::end(kPositional),
+                      std::string{" [options]"}, [](auto a, auto const& b) {
+                        a += ' ';
+                        a += b;
+                        return a;
+                      });
 
   // print usage + options help, and exit normally
   std::cout << "usage: " << argv0 << positional_names << "\n\n" << desc << "\n";
-  std::exit(0);
+  std::exit(exit_status);
 }
 
 namespace {
-std::tuple<po::variables_map, po::options_description> parse_command_line(
-    int argc, char* argv[]) {
+po::variables_map parse_command_line(int argc, char* argv[]) {
   auto const default_minimum_slice_size = 64 * 1024 * 1024L;
   auto const default_thread_count = [] {
     auto constexpr kFallbackThreadCount = 2;
@@ -221,9 +217,7 @@ std::tuple<po::variables_map, po::options_description> parse_command_line(
   }();
 
   po::positional_options_description positional;
-  positional.add("bucket", 1);
-  positional.add("object", 1);
-  positional.add("destination", 1);
+  for (auto const* name : kPositional) positional.add(name, 1);
   po::options_description desc(
       "Download a single GCS object using multiple slices");
   desc.add_options()("help", "produce help message")
@@ -232,7 +226,7 @@ std::tuple<po::variables_map, po::options_description> parse_command_line(
        "set the GCS bucket to download from")
       //
       ("object", po::value<std::string>()->required(),
-       "set the GCS object to download from")
+       "set the GCS object to download")
       //
       ("destination", po::value<std::string>()->required(),
        "set the destination file to download into")
@@ -246,22 +240,36 @@ std::tuple<po::variables_map, po::options_description> parse_command_line(
 
   // parse the input into the map
   po::variables_map vm;
-  po::parsed_options parsed = po::command_line_parser(argc, argv)
-                                  .options(desc)
-                                  .positional(positional)
-                                  .run();
-  po::store(parsed, vm);
 
   // run notify() for all registered options in the map
   try {
+    po::parsed_options parsed = po::command_line_parser(argc, argv)
+                                    .options(desc)
+                                    .positional(positional)
+                                    .run();
+    po::store(parsed, vm);
     po::notify(vm);
-  } catch (po::required_option const& ex) {
+  } catch (std::exception const& ex) {
     // if required arguments are missing but help is desired, just print help
-    if (vm.count("help") > 0 || argc == 1) Usage(argv[0], desc, positional);
-    throw ex;
+    if (vm.count("help") > 0 || argc == 1) Usage(argv[0], desc);
+    Usage(argv[0], desc, ex.what());
   }
 
-  return {vm, desc};
+  if (vm.count("help") != 0) Usage(argv[0], desc);
+
+  for (std::string opt : {"bucket", "object", "destination"}) {
+    if (not vm[opt].as<std::string>().empty()) continue;
+    Usage(argv[0], desc, fmt::format("the {} argument cannot be empty", opt));
+  }
+
+  if (vm["thread-count"].as<int>() == 0) {
+    Usage(argv[0], desc, "the --thread-count option cannot be zero");
+  }
+  if (vm["minimum-slice-size"].as<std::int64_t>() == 0) {
+    Usage(argv[0], desc, "the --minimum-slice-size option cannot be zero");
+  }
+
+  return vm;
 }
 
 std::string format_size(std::int64_t size) {
