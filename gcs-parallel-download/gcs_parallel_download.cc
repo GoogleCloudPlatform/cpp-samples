@@ -189,6 +189,12 @@ std::tuple<po::variables_map, po::options_description> parse_command_line(
        po::value<std::int64_t>()->default_value(default_minimum_slice_size),
        "minimum slice size");
 
+  // If no arguments are provided, print options and exit.
+  if (argc == 1) {
+    std::cout << desc << std::endl;
+    exit(1);
+  }
+
   po::variables_map vm;
   po::store(po::command_line_parser(argc, argv)
                 .options(desc)
