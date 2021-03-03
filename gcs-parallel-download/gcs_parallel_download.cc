@@ -20,6 +20,7 @@
 #include <fmt/format.h>
 #include <google/cloud/storage/client.h>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <future>
 #include <iostream>
@@ -27,8 +28,7 @@
 #include <string>
 #include <thread>
 #include <utility>
-
-// Posix headers last:
+// Posix headers last.
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -180,9 +180,10 @@ int main(int argc, char* argv[]) try {
   return 1;
 }
 
+namespace {
 char const* kPositional[] = {"bucket", "object", "destination"};
 
-[[noreturn]] void Usage(std::string const& argv0,
+[[noreturn]] void usage(std::string const& argv0,
                         po::options_description const& desc,
                         std::string const& message = {}) {
   auto exit_status = EXIT_SUCCESS;
@@ -205,7 +206,6 @@ char const* kPositional[] = {"bucket", "object", "destination"};
   std::exit(exit_status);
 }
 
-namespace {
 po::variables_map parse_command_line(int argc, char* argv[]) {
   auto const default_minimum_slice_size = 64 * 1024 * 1024L;
   auto const default_thread_count = [] {
@@ -251,22 +251,22 @@ po::variables_map parse_command_line(int argc, char* argv[]) {
     po::notify(vm);
   } catch (std::exception const& ex) {
     // if required arguments are missing but help is desired, just print help
-    if (vm.count("help") > 0 || argc == 1) Usage(argv[0], desc);
-    Usage(argv[0], desc, ex.what());
+    if (vm.count("help") > 0 || argc == 1) usage(argv[0], desc);
+    usage(argv[0], desc, ex.what());
   }
 
-  if (vm.count("help") != 0) Usage(argv[0], desc);
+  if (vm.count("help") != 0) usage(argv[0], desc);
 
   for (std::string opt : {"bucket", "object", "destination"}) {
     if (not vm[opt].as<std::string>().empty()) continue;
-    Usage(argv[0], desc, fmt::format("the {} argument cannot be empty", opt));
+    usage(argv[0], desc, fmt::format("the {} argument cannot be empty", opt));
   }
 
   if (vm["thread-count"].as<int>() == 0) {
-    Usage(argv[0], desc, "the --thread-count option cannot be zero");
+    usage(argv[0], desc, "the --thread-count option cannot be zero");
   }
   if (vm["minimum-slice-size"].as<std::int64_t>() == 0) {
-    Usage(argv[0], desc, "the --minimum-slice-size option cannot be zero");
+    usage(argv[0], desc, "the --minimum-slice-size option cannot be zero");
   }
 
   return vm;
