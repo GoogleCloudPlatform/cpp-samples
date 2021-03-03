@@ -37,8 +37,6 @@ std::tuple<po::variables_map, po::options_description> parse_command_line(
     int argc, char* argv[]);
 std::string format_size(std::int64_t size);
 
-std::string encode_crc32c(std::uint32_t value) {}
-
 auto constexpr kKiB = std::int64_t(1024);
 auto constexpr kMiB = 1024 * kKiB;
 auto constexpr kGiB = 1024 * kMiB;
