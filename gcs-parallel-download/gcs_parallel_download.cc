@@ -192,6 +192,22 @@ int main(int argc, char* argv[]) try {
   return 1;
 }
 
+[[noreturn]] void Usage(std::string const& argv0,
+                        po::options_description const& desc,
+                        po::positional_options_description const& positional) {
+  // format positional args
+  std::string positional_names;
+  for (int i = 0; i < positional.max_total_count(); i++) {
+    positional_names += std::string(" ") += positional.name_for_position(i);
+  }
+  positional_names += " [OPTIONS]";
+  boost::to_upper(positional_names);
+
+  // print usage + options help, and exit normally
+  std::cout << "usage: " << argv0 << positional_names << "\n\n" << desc << "\n";
+  std::exit(0);
+}
+
 namespace {
 std::tuple<po::variables_map, po::options_description> parse_command_line(
     int argc, char* argv[]) {
@@ -212,13 +228,13 @@ std::tuple<po::variables_map, po::options_description> parse_command_line(
       "Download a single GCS object using multiple slices");
   desc.add_options()("help", "produce help message")
       //
-      ("bucket", po::value<std::string>(),
+      ("bucket", po::value<std::string>()->required(),
        "set the GCS bucket to download from")
       //
-      ("object", po::value<std::string>(),
+      ("object", po::value<std::string>()->required(),
        "set the GCS object to download from")
       //
-      ("destination", po::value<std::string>(),
+      ("destination", po::value<std::string>()->required(),
        "set the destination file to download into")
       //
       ("thread-count", po::value<int>()->default_value(default_thread_count),
@@ -228,13 +244,23 @@ std::tuple<po::variables_map, po::options_description> parse_command_line(
        po::value<std::int64_t>()->default_value(default_minimum_slice_size),
        "minimum slice size");
 
+  // parse the input into the map
   po::variables_map vm;
-  po::store(po::command_line_parser(argc, argv)
-                .options(desc)
-                .positional(positional)
-                .run(),
-            vm);
-  po::notify(vm);
+  po::parsed_options parsed = po::command_line_parser(argc, argv)
+                                  .options(desc)
+                                  .positional(positional)
+                                  .run();
+  po::store(parsed, vm);
+
+  // run notify() for all registered options in the map
+  try {
+    po::notify(vm);
+  } catch (po::required_option const& ex) {
+    // if required arguments are missing but help is desired, just print help
+    if (vm.count("help") > 0 || argc == 1) Usage(argv[0], desc, positional);
+    throw ex;
+  }
+
   return {vm, desc};
 }
 
