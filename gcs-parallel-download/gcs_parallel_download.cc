@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 #include <fmt/format.h>
 #include <google/cloud/storage/client.h>
@@ -173,13 +174,13 @@ std::tuple<po::variables_map, po::options_description> parse_command_line(
       "Download a single GCS object using multiple slices");
   desc.add_options()("help", "produce help message")
       //
-      ("bucket", po::value<std::string>(),
+      ("bucket", po::value<std::string>()->required(),
        "set the GCS bucket to download from")
       //
-      ("object", po::value<std::string>(),
+      ("object", po::value<std::string>()->required(),
        "set the GCS object to download from")
       //
-      ("destination", po::value<std::string>(),
+      ("destination", po::value<std::string>()->required(),
        "set the destination file to download into")
       //
       ("thread-count", po::value<int>()->default_value(default_thread_count),
@@ -189,13 +190,39 @@ std::tuple<po::variables_map, po::options_description> parse_command_line(
        po::value<std::int64_t>()->default_value(default_minimum_slice_size),
        "minimum slice size");
 
+  // parse the input into the map
   po::variables_map vm;
-  po::store(po::command_line_parser(argc, argv)
-                .options(desc)
-                .positional(positional)
-                .run(),
-            vm);
-  po::notify(vm);
+  po::parsed_options parsed = po::command_line_parser(argc, argv)
+                                  .options(desc)
+                                  .positional(positional)
+                                  .run();
+  po::store(parsed, vm);
+
+  // run notify() for all registered options in the map
+  try {
+    po::notify(vm);
+  } catch (po::required_option const& ex) {
+    // if required arguments are missing but help is desired, just print help
+    if (vm.count("help") || argc == 1) {
+      // format positional args
+      std::stringstream pn;
+      for (int i = 0; i < positional.max_total_count(); i++) {
+        pn << " " << positional.name_for_position(i);
+      }
+      pn << " [OPTIONS]";
+      std::string positional_names = pn.str();
+      boost::to_upper(positional_names);
+
+      // print usage + options help, and exit normally
+      std::cout << "USAGE: " << argv[0] << positional_names << "\n\n"
+                << desc << "\n";
+      std::exit(0);
+
+    } else {
+      throw ex;
+    }
+  }
+
   return {vm, desc};
 }
 
