@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include <boost/program_options.hpp>
+#include <cppcodec/base64_rfc4648.hpp>
+#include <crc32c/crc32c.h>
 #include <fmt/format.h>
 #include <google/cloud/storage/client.h>
 #include <sys/stat.h>
@@ -22,7 +24,6 @@
 #include <fstream>
 #include <future>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <utility>
@@ -33,6 +34,29 @@ namespace gcs = google::cloud::storage;
 std::tuple<po::variables_map, po::options_description> parse_command_line(
     int argc, char* argv[]);
 std::string format_size(std::int64_t size);
+
+// Encodes signed or unsigned integers as a big-endian sequence of bytes. The
+// returned string has a size matching `sizeof(T)`. Example:
+//
+//   std::string s = EncodeBigEndian(std::int32_t{255});
+//   assert(s == std::string("\0\0\0\xFF", 4));
+//
+template <typename T,
+          typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+std::string encode_big_endian(T value) {
+  static_assert(std::numeric_limits<unsigned char>::digits == 8,
+                "This code assumes an 8-bit char");
+  using unsigned_type = typename std::make_unsigned<T>::type;
+  unsigned_type const n = *reinterpret_cast<unsigned_type*>(&value);
+  auto shift = sizeof(n) * 8;
+  std::array<std::uint8_t, sizeof(n)> a;
+  for (auto& c : a) {
+    shift -= 8;
+    c = static_cast<std::uint8_t>(n >> shift);
+  }
+  return {reinterpret_cast<char const*>(a.data()), a.size()};
+}
+
 auto constexpr kKiB = std::int64_t(1024);
 auto constexpr kMiB = 1024 * kKiB;
 auto constexpr kGiB = 1024 * kMiB;
@@ -143,6 +167,33 @@ int main(int argc, char* argv[]) try {
       (elapsed_us.count() / 1'000'000.0);
   std::cout << "Download completed in " << elapsed_ms.count() << "ms\n"
             << "Effective bandwidth " << effective_bandwidth_MiBs << " MiB/s\n";
+
+  std::ifstream is(destination);
+  std::vector<char> buffer(1024 * 1024L);
+  std::uint32_t crc32c = 0;
+  std::int64_t size = 0;
+  do {
+    is.read(buffer.data(), buffer.size());
+    if (is.bad()) break;
+    crc32c = crc32c::Extend(
+        crc32c, reinterpret_cast<std::uint8_t*>(buffer.data()), is.gcount());
+    size += is.gcount();
+  } while (!is.eof());
+
+  if (size != metadata.size()) {
+    std::cout << "Downloaded file size mismatch, expected=" << metadata.size()
+              << ", got=" << size << std::endl;
+    return 1;
+  }
+  auto const encoded =
+      cppcodec::base64_rfc4648::encode(encode_big_endian(crc32c));
+  if (encoded != metadata.crc32c()) {
+    std::cout << "Download file CRC32C mismatch, expected=" << metadata.crc32c()
+              << ", got=" << encoded << std::endl;
+    return 1;
+  }
+
+  std::cout << "File size and CRC32C match expected values" << std::endl;
 
   return 0;
 } catch (std::exception const& ex) {

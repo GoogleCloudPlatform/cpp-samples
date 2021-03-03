@@ -6,6 +6,8 @@
     "Shows how to index GCS buckets using Cloud Run"
   ],
   "dependencies": [
+    "crc32c",
+    "cppcodec",
     "google-cloud-cpp",
     "boost-program-options",
     "fmt"
