@@ -38,6 +38,7 @@ namespace po = boost::program_options;
 namespace gcs = google::cloud::storage;
 po::variables_map parse_command_line(int argc, char* argv[]);
 std::string format_size(std::int64_t size);
+int check_system_call(std::string const& name, int result);
 
 auto constexpr kKiB = std::int64_t(1024);
 auto constexpr kMiB = 1024 * kKiB;
@@ -52,41 +53,40 @@ int main(int argc, char* argv[]) try {
   auto const bucket = vm["bucket"].as<std::string>();
   auto const object = vm["object"].as<std::string>();
   auto const destination = vm["destination"].as<std::string>();
-  auto const desired_thread_count = vm["thread-count"].as<int>();
-  auto const minimum_slice_size = vm["minimum-slice-size"].as<std::int64_t>();
 
   auto client = gcs::Client::CreateDefaultClient().value();
   auto metadata = client.GetObjectMetadata(bucket, object).value();
 
-  auto [slice_size, thread_count] = [&]() -> std::pair<std::int64_t, int> {
-    auto const thread_slice = metadata.size() / desired_thread_count;
+  auto compute_slices = [&vm](std::int64_t object_size) {
+    auto const minimum_slice_size = vm["minimum-slice-size"].as<std::int64_t>();
+    auto const thread_count = vm["thread-count"].as<int>();
+
+    std::vector<std::int64_t> result;
+    auto const thread_slice = object_size / thread_count;
     if (thread_slice >= minimum_slice_size) {
-      return {thread_slice, desired_thread_count};
+      std::fill_n(std::back_inserter(result), thread_count, thread_slice);
+      // If the object size is not a multiple of the thread count we may need
+      // to spread any excess bytes across the slices.
+      auto loc = result.rbegin();
+      for (auto e = object_size % thread_count; e != 0; --e, ++loc) ++(*loc);
+      return result;
     }
-    auto const threads = metadata.size() / minimum_slice_size;
-    if (threads == 0) {
-      return {metadata.size(), 1};
+    for (; object_size > 0; object_size -= minimum_slice_size) {
+      result.push_back(std::min(minimum_slice_size, object_size));
     }
-    return {minimum_slice_size, static_cast<int>(threads)};
-  }();
+    return result;
+  };
+
+  auto slices = compute_slices(metadata.size());
 
   std::cout << "Downloading " << object << " from bucket " << bucket
             << " to file " << destination << "\n";
   std::cout << "This object size is approximately "
             << format_size(metadata.size()) << ". It will be downloaded in "
-            << thread_count << " slices, each approximately "
-            << format_size(slice_size) << " in size." << std::endl;
+            << slices.size() << " slices." << std::endl;
 
-  auto check_system_call = [](std::string const& op, int r) {
-    if (r >= 0) return r;
-    auto err = errno;
-    throw std::runtime_error(
-        fmt::format("Error in {}() - return value={}, error=[{}] {}", op, r,
-                    err, strerror(err)));
-  };
-  auto task = [&](std::int64_t offset, std::int64_t length,
-                  std::string const& bucket, std::string const& object,
-                  int fd) {
+  auto task = [](std::int64_t offset, std::int64_t length,
+                 std::string const& bucket, std::string const& object, int fd) {
     auto client = gcs::Client::CreateDefaultClient().value();
     auto is = client.ReadObject(bucket, object,
                                 gcs::ReadRange(offset, offset + length));
@@ -107,22 +107,21 @@ int main(int argc, char* argv[]) try {
   };
 
   auto const start = std::chrono::steady_clock::now();
-  std::vector<std::future<std::string>> tasks;
   auto constexpr kOpenFlags = O_CREAT | O_TRUNC | O_WRONLY;
   auto constexpr kOpenMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
   auto const fd = check_system_call(
       "open()", ::open(destination.c_str(), kOpenFlags, kOpenMode));
-  for (std::int64_t offset = 0; offset < metadata.size();
-       offset += slice_size) {
-    auto const current_slice_size =
-        std::min<std::int64_t>(slice_size, metadata.size() - offset);
-    tasks.push_back(std::async(std::launch::async, task, offset,
-                               current_slice_size, bucket, object, fd));
-  }
 
-  for (auto& t : tasks) {
-    std::cout << t.get() << "\n";
-  }
+  std::vector<std::future<std::string>> tasks(slices.size());
+  std::int64_t offset = 0;
+  std::transform(slices.begin(), slices.end(), tasks.begin(), [&](auto length) {
+    auto f = std::async(std::launch::async, task, offset, length, bucket,
+                        object, fd);
+    offset += length;
+    return f;
+  });
+
+  for (auto& t : tasks) std::cout << t.get() << "\n";
   check_system_call("close(fd)", ::close(fd));
 
   auto const end = std::chrono::steady_clock::now();
@@ -285,6 +284,14 @@ std::string format_size(std::int64_t size) {
     if (size < d.max_value) return std::to_string(size / d.scale) + d.units;
   }
   return std::to_string(size / kPiB) + "PiB";
+}
+
+int check_system_call(std::string const& name, int result) {
+  if (result >= 0) return result;
+  auto err = errno;
+  throw std::runtime_error(
+      fmt::format("Error in {}() - return value={}, error=[{}] {}", name,
+                  result, err, strerror(err)));
 }
 
 }  // namespace
