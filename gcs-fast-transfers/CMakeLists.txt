@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.10)
 
 # Define the project name and where to report bugs.
 set(PACKAGE_BUGREPORT "https://github.com/GoogleCloudPlatform/cpp-samples/issues")
-project(GCS-Parallel-Download CXX)
+project(GCS-Fast-Transfers CXX)
 
 # Configure the Compiler options, we will be using C++17 features.
 set(CMAKE_CXX_STANDARD 17)

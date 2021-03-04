@@ -1,9 +1,10 @@
 {
-  "name": "cpp-samples-gcs-file-transfer",
+  "name": "cpp-samples-gcs-fast-transfers",
   "version-string": "0.1.0",
   "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
   "description": [
-    "Shows how to index GCS buckets using Cloud Run"
+    "Shows how to parallelize downloads with GCS.",
+    " (soon it will include uploads)."
   ],
   "dependencies": [
     "crc32c",
