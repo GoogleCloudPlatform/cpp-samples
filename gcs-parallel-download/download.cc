@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) try {
       crc32c = crc32c::Extend(
           crc32c, reinterpret_cast<std::uint8_t*>(buffer.data()), is.gcount());
       size += is.gcount();
-    } while (!is.eof());
+    } while (not is.eof());
 
     static_assert(std::numeric_limits<unsigned char>::digits == 8,
                   "This program assumes an 8-bit char");
@@ -186,7 +186,7 @@ char const* kPositional[] = {"bucket", "object", "destination"};
                         po::options_description const& desc,
                         std::string const& message = {}) {
   auto exit_status = EXIT_SUCCESS;
-  if (!message.empty()) {
+  if (not message.empty()) {
     exit_status = EXIT_FAILURE;
     std::cout << "Error: " << message << "\n";
   }
@@ -231,7 +231,7 @@ po::variables_map parse_command_line(int argc, char* argv[]) {
        "set the destination file to download into")
       //
       ("thread-count", po::value<int>()->default_value(default_thread_count),
-       "number of parallel handlers to handle work items")
+       "number of parallel streams for the download")
       //
       ("minimum-slice-size",
        po::value<std::int64_t>()->default_value(default_minimum_slice_size),
@@ -250,7 +250,7 @@ po::variables_map parse_command_line(int argc, char* argv[]) {
     po::notify(vm);
   } catch (std::exception const& ex) {
     // if required arguments are missing but help is desired, just print help
-    if (vm.count("help") > 0 || argc == 1) usage(argv[0], desc);
+    if (vm.count("help") > 0 or argc == 1) usage(argv[0], desc);
     usage(argv[0], desc, ex.what());
   }
 

@@ -1,5 +1,5 @@
 {
-  "name": "cpp-samples-gcs-parallel-download",
+  "name": "cpp-samples-gcs-file-transfer",
   "version-string": "0.1.0",
   "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
   "description": [

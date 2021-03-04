@@ -29,8 +29,8 @@ find_package(fmt CONFIG REQUIRED)
 find_package(Boost 1.66 REQUIRED COMPONENTS program_options)
 find_package(Threads)
 
-add_executable(gcs_parallel_download gcs_parallel_download.cc)
-target_link_libraries(gcs_parallel_download
+add_executable(download download.cc)
+target_link_libraries(download
         PRIVATE google-cloud-cpp::storage
         Boost::program_options
         fmt::fmt
@@ -42,5 +42,5 @@ find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 
 include(GNUInstallDirs)
-install(TARGETS gcs_parallel_download
+install(TARGETS ;download
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
