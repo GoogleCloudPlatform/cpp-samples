@@ -42,5 +42,5 @@ find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 
 include(GNUInstallDirs)
-install(TARGETS ;download
+install(TARGETS download
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
