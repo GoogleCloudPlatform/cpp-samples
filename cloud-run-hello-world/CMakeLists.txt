@@ -14,12 +14,12 @@
 # limitations under the License.
 # ~~~
 
-# [START cloudrun_helloworld_makelist]
-# [START makelist]
+# [START cloudrun_helloworld_makelist] [START makelist]
 cmake_minimum_required(VERSION 3.10)
 
 # Define the project name and where to report bugs.
-set(PACKAGE_BUGREPORT "https://github.com/GoogleCloudPlatform/cpp-samples/issues")
+set(PACKAGE_BUGREPORT
+    "https://github.com/GoogleCloudPlatform/cpp-samples/issues")
 project(Docker-Run-C++ CXX C)
 
 # Configure the Compiler options, we will be using C++17 features.
@@ -33,11 +33,10 @@ find_package(Threads)
 # correct dependencies (OpenSSL::Crypto, c-cares, etc) for gRPC::grpc.
 # Explicitly listing these dependencies avoids the undefined symbols problems.
 add_executable(cloud_run_hello cloud_run_hello.cc)
-target_link_libraries(cloud_run_hello PRIVATE Boost::headers
-                                              Boost::program_options
-    Threads::Threads)
+target_link_libraries(
+  cloud_run_hello PRIVATE Boost::headers Boost::program_options
+                          Threads::Threads)
 
 include(GNUInstallDirs)
 install(TARGETS cloud_run_hello RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-# [END makelist]
-# [END cloudrun_helloworld_makelist]
+# [END makelist] [END cloudrun_helloworld_makelist]

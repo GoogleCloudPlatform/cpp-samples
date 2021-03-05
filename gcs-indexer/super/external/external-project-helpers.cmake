@@ -18,21 +18,28 @@ include(ExternalProject)
 include(GNUInstallDirs)
 
 function (set_external_project_build_parallel_level var_name)
-    if ("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles"
-        OR "${CMAKE_GENERATOR}" STREQUAL "Ninja")
+    if ("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles" OR "${CMAKE_GENERATOR}"
+                                                          STREQUAL "Ninja")
         if (DEFINED ENV{NCPU})
-            set(${var_name} "--" "-j" "$ENV{NCPU}" PARENT_SCOPE)
-        else()
+            set(${var_name}
+                "--" "-j" "$ENV{NCPU}"
+                PARENT_SCOPE)
+        else ()
             include(ProcessorCount)
-            processorcount(NCPU)
-            set(${var_name} "--" "-j" "${NCPU}" PARENT_SCOPE)
+            ProcessorCount(NCPU)
+            set(${var_name}
+                "--" "-j" "${NCPU}"
+                PARENT_SCOPE)
         endif ()
-    else()
-        set(${var_name} "" PARENT_SCOPE)
+    else ()
+        set(${var_name}
+            ""
+            PARENT_SCOPE)
     endif ()
 endfunction ()
 
-set(GOOGLE_CLOUD_CPP_EXTERNAL_PREFIX "${CMAKE_BINARY_DIR}/local"
+set(GOOGLE_CLOUD_CPP_EXTERNAL_PREFIX
+    "${CMAKE_BINARY_DIR}/local"
     CACHE STRING "Configure where are the external projects installed.")
 mark_as_advanced(GOOGLE_CLOUD_CPP_EXTERNAL_PREFIX)
 
@@ -46,23 +53,20 @@ function (google_cloud_cpp_set_prefix_vars)
     # a delimiter since it is a typical path-list separator, but it is a special
     # character in CMake.
     set(GOOGLE_CLOUD_CPP_PREFIX_PATH
-            "${CMAKE_PREFIX_PATH}"
-            "${GOOGLE_CLOUD_CPP_EXTERNAL_PREFIX}"
-            "<INSTALL_DIR>")
-    string(REPLACE ";"
-                   "|"
-                   GOOGLE_CLOUD_CPP_PREFIX_PATH
+        "${CMAKE_PREFIX_PATH}" "${GOOGLE_CLOUD_CPP_EXTERNAL_PREFIX}"
+        "<INSTALL_DIR>")
+    string(REPLACE ";" "|" GOOGLE_CLOUD_CPP_PREFIX_PATH
                    "${GOOGLE_CLOUD_CPP_PREFIX_PATH}")
 
     # Depending on the platform libraries get installed in `lib` or `lib64`
     set(GOOGLE_CLOUD_CPP_INSTALL_RPATH "<INSTALL_DIR>/lib;<INSTALL_DIR>/lib64")
-    string(REPLACE ";"
-                   "|"
-                   GOOGLE_CLOUD_CPP_INSTALL_RPATH
+    string(REPLACE ";" "|" GOOGLE_CLOUD_CPP_INSTALL_RPATH
                    "${GOOGLE_CLOUD_CPP_INSTALL_RPATH}")
 
-    set(GOOGLE_CLOUD_CPP_PREFIX_PATH "${GOOGLE_CLOUD_CPP_PREFIX_PATH}"
+    set(GOOGLE_CLOUD_CPP_PREFIX_PATH
+        "${GOOGLE_CLOUD_CPP_PREFIX_PATH}"
         PARENT_SCOPE)
-    set(GOOGLE_CLOUD_CPP_INSTALL_RPATH "${GOOGLE_CLOUD_CPP_INSTALL_RPATH}"
+    set(GOOGLE_CLOUD_CPP_INSTALL_RPATH
+        "${GOOGLE_CLOUD_CPP_INSTALL_RPATH}"
         PARENT_SCOPE)
 endfunction ()
