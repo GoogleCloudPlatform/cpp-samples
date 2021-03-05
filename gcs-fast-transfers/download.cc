@@ -12,22 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <boost/endian/buffers.hpp>
-#include <boost/endian/conversion.hpp>
+#include "gcs_fast_transfers.h"
 #include <boost/program_options.hpp>
-#include <cppcodec/base64_rfc4648.hpp>
-#include <crc32c/crc32c.h>
 #include <fmt/format.h>
 #include <google/cloud/storage/client.h>
 #include <cstdint>
 #include <cstdlib>
-#include <fstream>
 #include <future>
 #include <iostream>
 #include <numeric>
 #include <string>
 #include <thread>
-#include <utility>
 // Posix headers last.
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -37,7 +32,6 @@ namespace {
 namespace po = boost::program_options;
 namespace gcs = google::cloud::storage;
 po::variables_map parse_command_line(int argc, char* argv[]);
-std::string format_size(std::int64_t size);
 int check_system_call(std::string const& name, int result);
 
 std::vector<std::int64_t> compute_slices(std::int64_t object_size,
@@ -82,14 +76,10 @@ std::string task(std::int64_t offset, std::int64_t length,
                      offset + length, count, length);
 }
 
-// Get the size and crc32c checksum of a file
-std::pair<std::int64_t, std::string> file_info(std::string const& filename);
+using ::gcs_fast_transfers::format_size;
+using ::gcs_fast_transfers::file_info;
+using ::gcs_fast_transfers::kMiB;
 
-auto constexpr kKiB = std::int64_t(1024);
-auto constexpr kMiB = 1024 * kKiB;
-auto constexpr kGiB = 1024 * kMiB;
-auto constexpr kTiB = 1024 * kGiB;
-auto constexpr kPiB = 1024 * kTiB;
 }  // namespace
 
 int main(int argc, char* argv[]) try {
@@ -239,7 +229,7 @@ po::variables_map parse_command_line(int argc, char* argv[]) {
 
   if (vm.count("help") != 0) usage(argv[0], desc);
 
-  for (std::string opt : {"bucket", "object", "destination"}) {
+  for (std::string opt : kPositional) {
     if (not vm[opt].as<std::string>().empty()) continue;
     usage(argv[0], desc, fmt::format("the {} argument cannot be empty", opt));
   }
@@ -254,47 +244,12 @@ po::variables_map parse_command_line(int argc, char* argv[]) {
   return vm;
 }
 
-std::string format_size(std::int64_t size) {
-  struct range_definition {
-    std::int64_t max_value;
-    std::int64_t scale;
-    char const* units;
-  } ranges[] = {
-      {kKiB, 1, "Bytes"},  {kMiB, kKiB, "KiB"}, {kGiB, kMiB, "MiB"},
-      {kTiB, kGiB, "GiB"}, {kPiB, kTiB, "TiB"},
-  };
-  for (auto d : ranges) {
-    if (size < d.max_value) return std::to_string(size / d.scale) + d.units;
-  }
-  return std::to_string(size / kPiB) + "PiB";
-}
-
 int check_system_call(std::string const& name, int result) {
   if (result >= 0) return result;
   auto err = errno;
   throw std::runtime_error(
       fmt::format("Error in {}() - return value={}, error=[{}] {}", name,
                   result, err, strerror(err)));
-}
-
-std::pair<std::int64_t, std::string> file_info(std::string const& filename) {
-  std::ifstream is(filename);
-  std::vector<char> buffer(1024 * 1024L);
-  std::uint32_t crc32c = 0;
-  std::int64_t size = 0;
-  do {
-    is.read(buffer.data(), buffer.size());
-    if (is.bad()) break;
-    crc32c = crc32c::Extend(
-        crc32c, reinterpret_cast<std::uint8_t*>(buffer.data()), is.gcount());
-    size += is.gcount();
-  } while (not is.eof());
-
-  static_assert(std::numeric_limits<unsigned char>::digits == 8,
-                "This program assumes an 8-bit char");
-  boost::endian::big_uint32_buf_at buf(crc32c);
-  return {size, cppcodec::base64_rfc4648::encode(
-                    std::string(buf.data(), buf.data() + sizeof(buf)))};
 }
 
 }  // namespace

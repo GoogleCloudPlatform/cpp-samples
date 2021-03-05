@@ -4,3 +4,4 @@
 *.o
 *.ar
 cmake-build-debug/
+.build/
