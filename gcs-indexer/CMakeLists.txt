@@ -17,7 +17,8 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Define the project name and where to report bugs.
-set(PACKAGE_BUGREPORT "https://github.com/GoogleCloudPlatform/cpp-samples/issues")
+set(PACKAGE_BUGREPORT
+    "https://github.com/GoogleCloudPlatform/cpp-samples/issues")
 project(Docker-Run-C++ CXX C)
 
 # Configure the Compiler options, we will be using C++17 features.
@@ -30,7 +31,11 @@ find_package(CURL REQUIRED)
 find_package(Boost 1.66 REQUIRED COMPONENTS program_options)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
-set(EXTRA_LIBRARY "" CACHE FILEPATH "Additional libraries.
+set(EXTRA_LIBRARY
+    ""
+    CACHE
+        FILEPATH
+        "Additional libraries.
         Several CMake modules (but not CONFIGs!) do not link the dependencies
         when using static libraries. This flag can be used to add additional
         from the command line (or a Dockerfile).")
@@ -40,62 +45,65 @@ mark_as_advanced(EXTRA_LIBRARY)
 # correct dependencies (OpenSSL::Crypto, c-cares, etc) for gRPC::grpc.
 # Explicitly listing these dependencies avoids the undefined symbols problems.
 add_executable(pubsub_handler pubsub_handler.cc gcs_indexer_constants.h)
-target_link_libraries(pubsub_handler
-        PRIVATE spanner_client
-        Boost::headers
-        Boost::program_options
-        googleapis-c++::spanner_protos
-        gRPC::grpc++
-        gRPC::grpc
-        ${EXTRA_LIBRARY}
-        OpenSSL::Crypto
-        OpenSSL::SSL
-        ZLIB::ZLIB)
+target_link_libraries(
+    pubsub_handler
+    PRIVATE spanner_client
+            Boost::headers
+            Boost::program_options
+            googleapis-c++::spanner_protos
+            gRPC::grpc++
+            gRPC::grpc
+            ${EXTRA_LIBRARY}
+            OpenSSL::Crypto
+            OpenSSL::SSL
+            ZLIB::ZLIB)
 
 add_executable(create_database create_database.cc)
-target_link_libraries(create_database
-        PRIVATE spanner_client
-        Boost::headers
-        Boost::program_options
-        googleapis-c++::spanner_protos
-        gRPC::grpc++
-        gRPC::grpc
-        ${EXTRA_LIBRARY}
-        OpenSSL::Crypto
-        OpenSSL::SSL
-        ZLIB::ZLIB)
-        
-add_executable(refresh_index_for_bucket refresh_index_for_bucket.cc gcs_indexer_constants.h)
-target_link_libraries(refresh_index_for_bucket
-        PRIVATE spanner_client
-        storage_client
-        Boost::headers
-        Boost::program_options
-        googleapis-c++::spanner_protos
-        gRPC::grpc++
-        gRPC::grpc
-        CURL::libcurl
-        ${EXTRA_LIBRARY}
-        OpenSSL::Crypto
-        OpenSSL::SSL
-        ZLIB::ZLIB)
+target_link_libraries(
+    create_database
+    PRIVATE spanner_client
+            Boost::headers
+            Boost::program_options
+            googleapis-c++::spanner_protos
+            gRPC::grpc++
+            gRPC::grpc
+            ${EXTRA_LIBRARY}
+            OpenSSL::Crypto
+            OpenSSL::SSL
+            ZLIB::ZLIB)
+
+add_executable(refresh_index_for_bucket refresh_index_for_bucket.cc
+                                        gcs_indexer_constants.h)
+target_link_libraries(
+    refresh_index_for_bucket
+    PRIVATE spanner_client
+            storage_client
+            Boost::headers
+            Boost::program_options
+            googleapis-c++::spanner_protos
+            gRPC::grpc++
+            gRPC::grpc
+            CURL::libcurl
+            ${EXTRA_LIBRARY}
+            OpenSSL::Crypto
+            OpenSSL::SSL
+            ZLIB::ZLIB)
 
 add_executable(delete_index_for_bucket delete_index_for_bucket.cc)
-target_link_libraries(delete_index_for_bucket
-        PRIVATE spanner_client
-        Boost::headers
-        Boost::program_options
-        googleapis-c++::spanner_protos
-        gRPC::grpc++
-        gRPC::grpc
-        ${EXTRA_LIBRARY}
-        OpenSSL::Crypto
-        OpenSSL::SSL
-        ZLIB::ZLIB)
+target_link_libraries(
+    delete_index_for_bucket
+    PRIVATE spanner_client
+            Boost::headers
+            Boost::program_options
+            googleapis-c++::spanner_protos
+            gRPC::grpc++
+            gRPC::grpc
+            ${EXTRA_LIBRARY}
+            OpenSSL::Crypto
+            OpenSSL::SSL
+            ZLIB::ZLIB)
 
 include(GNUInstallDirs)
-install(
-        TARGETS create_database pubsub_handler
-         refresh_index_for_bucket
-         delete_index_for_bucket
+install(TARGETS create_database pubsub_handler refresh_index_for_bucket
+                delete_index_for_bucket
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

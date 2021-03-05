@@ -17,7 +17,8 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Define the project name and where to report bugs.
-set(PACKAGE_BUGREPORT "https://github.com/GoogleCloudPlatform/cpp-samples/issues")
+set(PACKAGE_BUGREPORT
+    "https://github.com/GoogleCloudPlatform/cpp-samples/issues")
 project(populate-bucket CXX)
 
 # Configure the Compiler options, we will be using C++17 features.
@@ -30,11 +31,9 @@ find_package(Boost 1.66 REQUIRED COMPONENTS program_options)
 find_package(Threads)
 
 add_executable(populate_bucket populate_bucket.cc)
-target_link_libraries(populate_bucket
-        PRIVATE googleapis-c++::pubsub_client
-        storage_client
-        Boost::program_options
-        Threads::Threads)
+target_link_libraries(
+  populate_bucket PRIVATE googleapis-c++::pubsub_client storage_client
+                          Boost::program_options Threads::Threads)
 
 include(GNUInstallDirs)
 install(TARGETS populate_bucket RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

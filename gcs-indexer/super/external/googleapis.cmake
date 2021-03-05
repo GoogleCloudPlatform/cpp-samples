@@ -34,8 +34,7 @@ if (NOT TARGET googleapis-project)
         PREFIX "${CMAKE_BINARY_DIR}/external/googleapis"
         INSTALL_DIR "${GOOGLE_CLOUD_CPP_EXTERNAL_PREFIX}"
         URL ${GOOGLE_CLOUD_CPP_GOOGLEAPIS_URL}
-        URL_HASH SHA256=${GOOGLE_CLOUD_CPP_GOOGLEAPIS_SHA256}
-        LIST_SEPARATOR |
+        URL_HASH SHA256=${GOOGLE_CLOUD_CPP_GOOGLEAPIS_SHA256} LIST_SEPARATOR |
         CONFIGURE_COMMAND
             ${CMAKE_COMMAND}
             -G${CMAKE_GENERATOR}
@@ -48,10 +47,7 @@ if (NOT TARGET googleapis-project)
             -DCMAKE_INSTALL_RPATH=${GOOGLE_CLOUD_CPP_INSTALL_RPATH}
             -H<SOURCE_DIR>
             -B<BINARY_DIR>
-        BUILD_COMMAND ${CMAKE_COMMAND}
-                      --build
-                      <BINARY_DIR>
-                      ${PARALLEL}
+        BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> ${PARALLEL}
         LOG_DOWNLOAD ON
         LOG_CONFIGURE ON
         LOG_BUILD ON

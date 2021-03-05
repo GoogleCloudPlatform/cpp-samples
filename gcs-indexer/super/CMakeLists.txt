@@ -30,10 +30,8 @@ include(external/google-cloud-cpp-spanner)
 include(external/boost)
 
 set(GOOGLE_CLOUD_CPP_DEPENDENCIES_LIST
-    google-cloud-cpp-spanner-project
-        google-cloud-cpp-project
-        google-cloud-cpp-common-project
-        boost-project)
+    google-cloud-cpp-spanner-project google-cloud-cpp-project
+    google-cloud-cpp-common-project boost-project)
 
 google_cloud_cpp_set_prefix_vars()
 message("-DCMAKE_PREFIX_PATH=${GOOGLE_CLOUD_CPP_PREFIX_PATH}")
@@ -43,20 +41,14 @@ externalproject_add(
     DEPENDS ${GOOGLE_CLOUD_CPP_DEPENDENCIES_LIST}
     EXCLUDE_FROM_ALL OFF
     PREFIX "${CMAKE_BINARY_DIR}"
-    INSTALL_DIR "${GOOGLE_CLOUD_CPP_EXTERNAL_PREFIX}"
-    SOURCE_DIR
-    "${CLOUD_RUN_CPP_ROOT}"
-    LIST_SEPARATOR
-    |
-    BUILD_ALWAYS ON
+    INSTALL_DIR
+        "${GOOGLE_CLOUD_CPP_EXTERNAL_PREFIX}" SOURCE_DIR "${CLOUD_RUN_CPP_ROOT}"
+                                              LIST_SEPARATOR | BUILD_ALWAYS ON
     CMAKE_ARGS -G${CMAKE_GENERATOR}
                -DCMAKE_PREFIX_PATH=${GOOGLE_CLOUD_CPP_PREFIX_PATH}
                -DCMAKE_INSTALL_RPATH=${GOOGLE_CLOUD_CPP_INSTALL_RPATH}
                -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-    BUILD_COMMAND ${CMAKE_COMMAND}
-                  --build
-                  <BINARY_DIR>
-                  ${PARALLEL}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> ${PARALLEL}
     TEST_COMMAND ""
     LOG_DOWNLOAD OFF
     LOG_CONFIGURE OFF
