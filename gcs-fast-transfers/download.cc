@@ -76,8 +76,8 @@ std::string task(std::int64_t offset, std::int64_t length,
                      offset + length, count, length);
 }
 
-using ::gcs_fast_transfers::format_size;
 using ::gcs_fast_transfers::file_info;
+using ::gcs_fast_transfers::format_size;
 using ::gcs_fast_transfers::kMiB;
 
 }  // namespace

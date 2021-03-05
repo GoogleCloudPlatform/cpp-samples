@@ -54,7 +54,7 @@ std::pair<std::int64_t, std::string> file_info(std::string const& filename) {
                 "This program assumes an 8-bit char");
   boost::endian::big_uint32_buf_at buf(crc32c);
   return {size, cppcodec::base64_rfc4648::encode(
-      std::string(buf.data(), buf.data() + sizeof(buf)))};
+                    std::string(buf.data(), buf.data() + sizeof(buf)))};
 }
 
-}  // gcs_fast_transfers
+}  // namespace gcs_fast_transfers

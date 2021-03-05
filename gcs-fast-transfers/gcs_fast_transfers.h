@@ -15,8 +15,8 @@
 #ifndef GCS_FAST_TRANSFERS_GCS_FAST_TRANSFERS_H
 #define GCS_FAST_TRANSFERS_GCS_FAST_TRANSFERS_H
 
-#include <string>
 #include <cstdint>
+#include <string>
 #include <utility>
 
 namespace gcs_fast_transfers {
@@ -33,6 +33,6 @@ auto constexpr kGiB = 1024 * kMiB;
 auto constexpr kTiB = 1024 * kGiB;
 auto constexpr kPiB = 1024 * kTiB;
 
-}  // gcs_fast_transfers
+}  // namespace gcs_fast_transfers
 
 #endif  // GCS_FAST_TRANSFERS_GCS_FAST_TRANSFERS_H
