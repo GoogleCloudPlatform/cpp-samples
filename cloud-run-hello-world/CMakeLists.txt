@@ -14,7 +14,7 @@
 # limitations under the License.
 # ~~~
 
-# [START cloudrun_helloworld_makelist] [START makelist]
+# [START cloudrun_helloworld_makelist]
 cmake_minimum_required(VERSION 3.10)
 
 # Define the project name and where to report bugs.
@@ -39,4 +39,4 @@ target_link_libraries(
 
 include(GNUInstallDirs)
 install(TARGETS cloud_run_hello RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-# [END makelist] [END cloudrun_helloworld_makelist]
+# [END cloudrun_helloworld_makelist]
