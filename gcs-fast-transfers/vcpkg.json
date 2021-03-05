@@ -12,6 +12,7 @@
     "google-cloud-cpp",
     "boost-endian",
     "boost-program-options",
+    "boost-uuid",
     "fmt"
   ]
 }

@@ -25,13 +25,24 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(google_cloud_cpp_storage REQUIRED)
+find_package(Crc32c REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(Boost 1.66 REQUIRED COMPONENTS program_options)
 find_package(Threads)
 
+add_library(gcs_fast_transfers STATIC gcs_fast_transfers.cc gcs_fast_transfers.h)
+target_link_libraries(gcs_fast_transfers PRIVATE Boost::headers Crc32c::crc32c)
+
 add_executable(download download.cc)
 target_link_libraries(download
-        PRIVATE google-cloud-cpp::storage
+        PRIVATE gcs_fast_transfers google-cloud-cpp::storage
+        Boost::program_options
+        fmt::fmt
+        Threads::Threads)
+
+add_executable(upload upload.cc)
+target_link_libraries(upload
+        PRIVATE gcs_fast_transfers google-cloud-cpp::storage
         Boost::program_options
         fmt::fmt
         Threads::Threads)
@@ -42,5 +53,5 @@ find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 
 include(GNUInstallDirs)
-install(TARGETS download
+install(TARGETS download upload
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
