@@ -96,15 +96,11 @@ class bounded_queue {
  private:
   [[nodiscard]] bool empty() const { return buffer_.empty(); }
 
-      [[nodiscard]] bool below_hwm() const {
-    return buffer_.size() <= hwm_;
-  }
+  [[nodiscard]] bool below_hwm() const { return buffer_.size() <= hwm_; }
 
   [[nodiscard]] bool below_lwm() const { return buffer_.size() <= lwm_; }
 
-      [[nodiscard]] bool has_readers() const {
-    return reader_count_ > 0;
-  }
+  [[nodiscard]] bool has_readers() const { return reader_count_ > 0; }
 
   [[nodiscard]] bool has_writers() const { return writer_count_ > 0; }
 
