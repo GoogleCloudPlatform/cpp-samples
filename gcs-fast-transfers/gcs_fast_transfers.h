@@ -27,11 +27,11 @@ std::string format_size(std::int64_t size);
 // Get the size and crc32c checksum of a file
 std::pair<std::int64_t, std::string> file_info(std::string const& filename);
 
-auto constexpr kKiB = std::int64_t(1024);
-auto constexpr kMiB = 1024 * kKiB;
-auto constexpr kGiB = 1024 * kMiB;
-auto constexpr kTiB = 1024 * kGiB;
-auto constexpr kPiB = 1024 * kTiB;
+inline auto constexpr kKiB = std::int64_t(1024);
+inline auto constexpr kMiB = 1024 * kKiB;
+inline auto constexpr kGiB = 1024 * kMiB;
+inline auto constexpr kTiB = 1024 * kGiB;
+inline auto constexpr kPiB = 1024 * kTiB;
 
 }  // namespace gcs_fast_transfers
 
