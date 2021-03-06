@@ -87,6 +87,24 @@ steps:
         path: '/b'
     args: ['cmake', '--build', '/b']
 
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    env:
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+    volumes:
+      - name: 'speech-api'
+        path: '/b'
+    args: [
+        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
+        '-S', '/workspace/speech/api', '-B', '/b',
+    ]
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    env:
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+    volumes:
+      - name: 'speech-api'
+        path: '/b'
+    args: ['cmake', '--build', '/b']
+
   # Remove the images created by this build.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
