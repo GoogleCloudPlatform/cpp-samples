@@ -16,6 +16,7 @@
 #include <google/cloud/spanner/client.h>
 #include <google/cloud/spanner/database_admin_client.h>
 #include <google/cloud/spanner/timestamp.h>
+#include <absl/time/time.h>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -165,21 +166,23 @@ class http_handler {
     if (event_type == event_archive || event_type == event_finalize) {
       bool is_archived = event_type == event_archive;
 
+      auto parse_rfc3339 = [](absl::string_view time) {
+        std::string err;
+        absl::Time t;
+        if (absl::ParseTime(absl::RFC3339_full, time, &t, &err)) {
+          return spanner::MakeTimestamp(t).value();
+        }
+        throw std::runtime_error(err);
+      };
       auto update = spanner::MakeInsertOrUpdateMutation(
           std::string(table_name), columns(), bucket, object, generation,
           payload.get<std::string>("metaGeneration", ""), is_archived,
           payload.get<std::int64_t>("size", 0),
           payload.get<std::string>("contentType", ""),
-          spanner::internal::TimestampFromRFC3339(
-              payload.get<std::string>("timeCreated"))
-              .value(),
-          spanner::internal::TimestampFromRFC3339(
-              payload.get<std::string>("updated"))
-              .value(),
+          parse_rfc3339(payload.get<std::string>("timeCreated")),
+          parse_rfc3339(payload.get<std::string>("updated")),
           payload.get<std::string>("storageClass", ""),
-          spanner::internal::TimestampFromRFC3339(
-              payload.get<std::string>("timeStorageClassUpdated"))
-              .value(),
+          parse_rfc3339(payload.get<std::string>("timeStorageClassUpdated")),
           payload.get<std::string>("md5Hash", ""),
           payload.get<std::string>("crc32c", ""),
           spanner::MakeTimestamp(std::chrono::system_clock::now()).value());
