@@ -28,4 +28,3 @@ Those repos also have code samples for using those libraries.
 [style-link]: https://github.com/GoogleCloudPlatform/cpp-samples/actions/workflows/style.yaml
 [cloud-build-badge]: https://img.shields.io/badge/cloud%20build-TODO-yellowgreen
 [cloud-build-link]: https://github.com/GoogleCloudPlatform/cpp-samples/issues/119
-
