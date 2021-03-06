@@ -1,23 +1,18 @@
 # C++ Samples
 
-A small collection of samples that demonstrate how to call
-Google Cloud services from C++.
+A small collection of samples that demonstrate how to call Google Cloud services from C++.
 
-**Build status:**
-[![Kokoro CI status][kokoro-shield]][kokoro-link]
+[![style][style-badge]][style-link] [![cloud build][cloud-build-badge]][cloud-build-link]
 
-[kokoro-shield]: https://storage.googleapis.com/cloud-devrel-public/cpp/badges/cpp-samples/continuous.svg
-[kokoro-link]: https://storage.googleapis.com/cloud-devrel-public/cpp/badges/cpp-samples/continuous.html
-
-The samples in this repo cover only a _small fraction_ of the total APIs that you can call from C++.
-See the [googleapis repo](https://github.com/googleapis/googleapis) to see the full list of APIs callable from C++.
+The samples in this repo cover only a _small fraction_ of the total APIs that you can call from C++. See
+the [googleapis repo](https://github.com/googleapis/googleapis) to see the full list of APIs callable from C++.
 
 These samples will only build and run on **Linux**.
 
-There are also hand written client libraries for some services as follows:
+There is a growing collection of [C++ client libraries] for Google Cloud services. These include Cloud Bigtable, Cloud
+Pub/Sub, Cloud Spanner, and Google Cloud Storage.
 
-* [google-cloud-cpp](https://github.com/googleapis/google-cloud-cpp) Storage and Bigtable
-* [google-cloud-cpp-spanner](https://github.com/googleapis/google-cloud-cpp) Cloud Spanner
+[C++ client libraries]: https://github.com/googleapis/google-cloud-cpp
 
 Those repos also have code samples for using those libraries.
 
@@ -28,3 +23,9 @@ Those repos also have code samples for using those libraries.
 ## Licensing
 
 * See [LICENSE](LICENSE)
+
+[style-badge]: https://github.com/GoogleCloudPlatform/cpp-samples/actions/workflows/style.yaml/badge.svg
+[style-link]: https://github.com/GoogleCloudPlatform/cpp-samples/actions/workflows/style.yaml
+[cloud-build-badge]: https://img.shields.io/badge/cloud%20build-TODO-yellowgreen
+[cloud-build-link]: https://github.com/GoogleCloudPlatform/cpp-samples/issues/119
+
