@@ -16,6 +16,8 @@ timeout: 3600s
 options:
   machineType: 'N1_HIGHCPU_32'
   diskSizeGb: '512'
+substitutions:
+  _VCPKG_BUCKET_PREFIX: 'gs://cloud-cpp-testing-resources-vcpkg-cache/cpp-samples'
 
 steps:
   # Create a container will all the development tools
@@ -33,21 +35,20 @@ steps:
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     env:
-      'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
-      name: fcs-fast-transfers-build
-      path: '/b'
+      - name: 'gcs-fast-transfers'
+        path: '/b'
     args: [
       'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-      '-S', '/workspace/gcs-fast-transfers', '-B', '/b'
+      '-S', '/workspace/gcs-fast-transfers', '-B', '/b',
     ]
-
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     env:
-      'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
-      name: fcs-fast-transfers-build
-      path: '/b'
+      - name: 'gcs-fast-transfers'
+        path: '/b'
     args: ['cmake', '--build', '/b']
 
   # Remove the images created by this build.
@@ -78,6 +79,3 @@ steps:
         done | \
         xargs -P 4 -L 32 gcloud container images delete -q --force-delete-tags
         exit 0
-
-substitutions:
-  _VCPKG_BUCKET_PREFIX: "gs://cloud-cpp-testing-resources-vcpkg-cache/cpp-samples"
