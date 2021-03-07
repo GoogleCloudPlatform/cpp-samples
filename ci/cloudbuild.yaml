@@ -54,127 +54,127 @@ steps:
             'jansson', 'openssl', 'paho-mqtt',
     ]
 
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'cloud-run-hello-world'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/cloud-run-hello-world', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'cloud-run-hello-world'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b' ]
-
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: 'vcpkg-warmup'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'gcs-fast-transfers'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/gcs-fast-transfers', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'gcs-fast-transfers'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b' ]
-
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: 'vcpkg-warmup'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'iot-mqtt-ciotc'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/iot/mqtt-ciotc', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'iot-mqtt-ciotc'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b' ]
-
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: 'vcpkg-warmup'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'populate-bucket'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/populate-bucket', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'populate-bucket'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b' ]
-
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: 'vcpkg-warmup'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'speech-api'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/speech/api', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'speech-api'
-        path: '/b'
-    args: ['cmake', '--build', '/b']
-
-  # Remove the images created by this build.
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        set +e
-        gcloud container images delete -q gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}
-        exit 0
-
-  # The previous step may not run if the build fails. Garbage collect any
-  # images created by this script, and/or similar scripts in this repository.
-  # The main idea is to remove images created over 4 weeks ago. Because the
-  # current builds create images with current timestamps, such images are not
-  # likely to be in use. This step should not break the build on error, and it
-  # can start running as soon as the build does.
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    waitFor: [ '-' ]
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        set +e
-        for image in cpp-samples/ci/devtools cpp-samples/cloud-run-hello; do
-          gcloud --project=${PROJECT_ID} container images list-tags gcr.io/${PROJECT_ID}/$${image} \
-              --format='get(digest)' --filter='timestamp.datetime < -P4W' | \
-          xargs printf "gcr.io/${PROJECT_ID}/$${image}@$$1\n"
-        done | \
-        xargs -P 4 -L 32 gcloud container images delete -q --force-delete-tags
-        exit 0
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'cloud-run-hello-world'
+#        path: '/b'
+#    args: [
+#        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
+#        '-S', '/workspace/cloud-run-hello-world', '-B', '/b',
+#    ]
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'cloud-run-hello-world'
+#        path: '/b'
+#    args: [ 'cmake', '--build', '/b' ]
+#
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    waitFor: 'vcpkg-warmup'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'gcs-fast-transfers'
+#        path: '/b'
+#    args: [
+#        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
+#        '-S', '/workspace/gcs-fast-transfers', '-B', '/b',
+#    ]
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'gcs-fast-transfers'
+#        path: '/b'
+#    args: [ 'cmake', '--build', '/b' ]
+#
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    waitFor: 'vcpkg-warmup'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'iot-mqtt-ciotc'
+#        path: '/b'
+#    args: [
+#        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
+#        '-S', '/workspace/iot/mqtt-ciotc', '-B', '/b',
+#    ]
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'iot-mqtt-ciotc'
+#        path: '/b'
+#    args: [ 'cmake', '--build', '/b' ]
+#
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    waitFor: 'vcpkg-warmup'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'populate-bucket'
+#        path: '/b'
+#    args: [
+#        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
+#        '-S', '/workspace/populate-bucket', '-B', '/b',
+#    ]
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'populate-bucket'
+#        path: '/b'
+#    args: [ 'cmake', '--build', '/b' ]
+#
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    waitFor: 'vcpkg-warmup'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'speech-api'
+#        path: '/b'
+#    args: [
+#        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
+#        '-S', '/workspace/speech/api', '-B', '/b',
+#    ]
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'speech-api'
+#        path: '/b'
+#    args: ['cmake', '--build', '/b']
+#
+#  # Remove the images created by this build.
+#  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+#    entrypoint: 'bash'
+#    args:
+#      - '-c'
+#      - |
+#        set +e
+#        gcloud container images delete -q gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}
+#        exit 0
+#
+#  # The previous step may not run if the build fails. Garbage collect any
+#  # images created by this script, and/or similar scripts in this repository.
+#  # The main idea is to remove images created over 4 weeks ago. Because the
+#  # current builds create images with current timestamps, such images are not
+#  # likely to be in use. This step should not break the build on error, and it
+#  # can start running as soon as the build does.
+#  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+#    waitFor: [ '-' ]
+#    entrypoint: 'bash'
+#    args:
+#      - '-c'
+#      - |
+#        set +e
+#        for image in cpp-samples/ci/devtools cpp-samples/cloud-run-hello; do
+#          gcloud --project=${PROJECT_ID} container images list-tags gcr.io/${PROJECT_ID}/$${image} \
+#              --format='get(digest)' --filter='timestamp.datetime < -P4W' | \
+#          xargs printf "gcr.io/${PROJECT_ID}/$${image}@$$1\n"
+#        done | \
+#        xargs -P 4 -L 32 gcloud container images delete -q --force-delete-tags
+#        exit 0
