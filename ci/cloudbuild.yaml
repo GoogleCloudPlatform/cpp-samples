@@ -51,7 +51,7 @@ steps:
             'crc32c',
             'fmt',
             'google-cloud-cpp',
-            'jansson', 'openssl', 'paho-mqtt'
+            'jansson', 'openssl', 'paho-mqtt',
     ]
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
