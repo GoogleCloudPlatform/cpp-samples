@@ -71,26 +71,26 @@ steps:
     volumes:
       - name: 'cloud-run-hello-world'
         path: '/b'
-    args: [ 'cmake', '--build', '/b' ]
+    args: [ 'cmake', '--build', '/b', ]
 
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: 'vcpkg-warmup'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'gcs-fast-transfers'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/gcs-fast-transfers', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
-    volumes:
-      - name: 'gcs-fast-transfers'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b' ]
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    waitFor: 'vcpkg-warmup'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'gcs-fast-transfers'
+#        path: '/b'
+#    args: [
+#        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
+#        '-S', '/workspace/gcs-fast-transfers', '-B', '/b',
+#    ]
+#  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+#    env:
+#      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+#    volumes:
+#      - name: 'gcs-fast-transfers'
+#        path: '/b'
+#    args: [ 'cmake', '--build', '/b' ]
 #
 #  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
 #    waitFor: 'vcpkg-warmup'
