@@ -11,7 +11,6 @@ These samples will only build and run on **Linux**.
    billing, and services.
     1. Open the [Cloud Platform Console](https://console.cloud.google.com/).
     1. In the drop-down menu at the top, select Create a project.
-    1. Click Show advanced options. Under App Engine location, select a United States location.
     1. Give your project a name.
     1. Make a note of the project ID, which might be different from the project name. The project ID is used in commands
        and in configurations.
