@@ -33,7 +33,7 @@ IncludeCategories:
     Priority: 2000
   - Regex: '^<google/'
     Priority: 3000
-  - Regex: '^<[^>]/.*'
+  - Regex: '^<[^>]*/'
     Priority: 4000
   - Regex: '^<[^/>]*>'
     Priority: 5000
