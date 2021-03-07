@@ -22,3 +22,16 @@ DerivePointerAlignment: false
 PointerAlignment: Left
 
 IncludeBlocks: Merge
+IncludeCategories:
+  - Regex: '^\"'
+    Priority: 1000
+  - Regex: '^<google/cloud/'
+    Priority: 1500
+  - Regex: '^<grpc/'
+    Priority: 2000
+  - Regex: '^<google/'
+    Priority: 3000
+  - Regex: '^<[^>]*/'
+    Priority: 4000
+  - Regex: '^<[^/>]*>'
+    Priority: 5000

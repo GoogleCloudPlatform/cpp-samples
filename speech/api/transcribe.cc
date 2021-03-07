@@ -11,14 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include <grpc++/grpc++.h>
-#include <strings.h>
+
+#include "parse_arguments.h"
+#include <google/cloud/speech/v1/cloud_speech.grpc.pb.h>
+#include <grpcpp/grpcpp.h>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
-#include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
-#include "parse_arguments.h"
+#include <strings.h>
 
 using google::cloud::speech::v1::RecognizeRequest;
 using google::cloud::speech::v1::RecognizeResponse;

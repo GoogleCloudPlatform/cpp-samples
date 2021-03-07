@@ -11,15 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include <grpc++/grpc++.h>
-#include <unistd.h>
-#include <fstream>
-#include <iostream>
-#include <iterator>
-#include <string>
-#include "google/cloud/speech/v1/cloud_speech.grpc.pb.h"
-#include "google/longrunning/operations.grpc.pb.h"
+
 #include "parse_arguments.h"
+#include <google/cloud/speech/v1/cloud_speech.grpc.pb.h>
+#include <google/longrunning/operations.grpc.pb.h>
+#include <grpcpp/grpcpp.h>
+#include <iostream>
+#include <string>
+#include <thread>
 
 using google::cloud::speech::v1::LongRunningRecognizeRequest;
 using google::cloud::speech::v1::LongRunningRecognizeResponse;
@@ -65,7 +64,7 @@ int main(int argc, char** argv) {
   get_op_request.set_name(op.name());
   while (!op.done()) {
     std::cout << "." << std::flush;
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     grpc::ClientContext op_context;
     rpc_status =
         long_operations->GetOperation(&op_context, get_op_request, &op);

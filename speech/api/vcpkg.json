@@ -1,0 +1,10 @@
+{
+  "name": "gcp-cpp-samples-speech-api",
+  "version-string": "0.0.1-dev",
+  "port-version": 1,
+  "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
+  "description": "Examples using the Text-to-Speech API",
+  "dependencies": [
+    "google-cloud-cpp"
+  ]
+}

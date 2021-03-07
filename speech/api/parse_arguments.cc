@@ -14,7 +14,6 @@
 
 #include "parse_arguments.h"
 #include <getopt.h>
-#include "google/cloud/speech/v1/cloud_speech.pb.h"
 
 using google::cloud::speech::v1::RecognitionConfig;
 
