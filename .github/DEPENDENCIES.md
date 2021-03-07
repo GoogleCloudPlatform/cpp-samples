@@ -16,7 +16,7 @@ It is possible to keep the samples "working" by pinning all the dependencies to 
 written, this may satisfy the compiler, but does not provide customers with a good experience when they try to use
 the sample or demo in their code.
 
-We could manually revisit all the samples and demos, this is error-prone and tedious.
+We could manually revisit all the samples and demos, but this is error-prone and tedious.
 
 We could run nightly builds that compile everything against "latest" and force us to update as-needed. This creates
 more work than probably we need to, and it makes the builds more flaky than necessary.
