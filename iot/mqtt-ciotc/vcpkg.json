@@ -1,0 +1,12 @@
+{
+  "name": "cpp-samples-iot-mqtt-ciotc",
+  "version-string": "0.0.1-dev",
+  "port-version": 1,
+  "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
+  "description": "Message Queue Telemetry Transport (MQTT) example for Google Cloud Core IoT.",
+  "dependencies": [
+    "jansson",
+    "paho-mqtt",
+    "openssl"
+  ]
+}

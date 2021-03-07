@@ -14,6 +14,9 @@
  *****************************************************************************/
 // [START iot_mqtt_include]
 #define _XOPEN_SOURCE 500  // NOLINT
+#include <paho-mqtt/MQTTClient.h>
+#include <openssl/ec.h>
+#include <openssl/evp.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -21,10 +24,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include "MQTTClient.h"
-#include "jwt.h"
-#include "openssl/ec.h"
-#include "openssl/evp.h"
+#include <jwt.h>
 // [END iot_mqtt_include]
 
 #define TRACE 1 /* Set to 1 to enable tracing */
