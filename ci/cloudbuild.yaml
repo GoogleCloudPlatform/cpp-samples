@@ -31,7 +31,28 @@ steps:
     ]
     timeout: 1800s
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['pull', 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}']
+    args: [ 'pull', 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}' ]
+
+  # Warmup the vcpkg binary cache (in GCS). Most of the time this has no effect, as the cache
+  # is warm from previous builds.  When we update vcpkg, or the compiler, or make any change that
+  # invalidates the cache this will be the slowest step. Once this step completes, the remaining
+  # steps do not use much CPU and can be parallelized. If this step is not here, each step could
+  # try to build a large library, like `gRPC` or `google-cloud-cpp`, resulting in a sad VM running
+  # the build.
+  # Note that this list of packages does not have to be perfect to be useful.
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    id: 'vcpkg-warmup'
+    env:
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+    args: [ '/usr/local/vcpkg/vcpkg', 'install',
+            'boost-beast', 'boost-endian', 'boost-program-options', 'boost-property-tree',
+            'boost-serialization', 'boost-uuid',
+            'cppcodec',
+            'crc32c',
+            'fmt',
+            'google-cloud-cpp',
+            'jansson', 'openssl', 'paho-mqtt'
+    ]
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     env:
@@ -49,17 +70,18 @@ steps:
     volumes:
       - name: 'cloud-run-hello-world'
         path: '/b'
-    args: ['cmake', '--build', '/b']
+    args: [ 'cmake', '--build', '/b' ]
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    waitFor: 'vcpkg-warmup'
     env:
       - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'gcs-fast-transfers'
         path: '/b'
     args: [
-      'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-      '-S', '/workspace/gcs-fast-transfers', '-B', '/b',
+        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
+        '-S', '/workspace/gcs-fast-transfers', '-B', '/b',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     env:
@@ -67,9 +89,29 @@ steps:
     volumes:
       - name: 'gcs-fast-transfers'
         path: '/b'
-    args: ['cmake', '--build', '/b']
+    args: [ 'cmake', '--build', '/b' ]
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    waitFor: 'vcpkg-warmup'
+    env:
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+    volumes:
+      - name: 'iot-mqtt-ciotc'
+        path: '/b'
+    args: [
+        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
+        '-S', '/workspace/iot/mqtt-ciotc', '-B', '/b',
+    ]
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    env:
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+    volumes:
+      - name: 'iot-mqtt-ciotc'
+        path: '/b'
+    args: [ 'cmake', '--build', '/b' ]
+
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    waitFor: 'vcpkg-warmup'
     env:
       - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
@@ -85,9 +127,10 @@ steps:
     volumes:
       - name: 'populate-bucket'
         path: '/b'
-    args: ['cmake', '--build', '/b']
+    args: [ 'cmake', '--build', '/b' ]
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    waitFor: 'vcpkg-warmup'
     env:
       - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
@@ -122,7 +165,7 @@ steps:
   # likely to be in use. This step should not break the build on error, and it
   # can start running as soon as the build does.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    waitFor: ['-']
+    waitFor: [ '-' ]
     entrypoint: 'bash'
     args:
       - '-c'
