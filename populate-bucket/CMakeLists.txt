@@ -25,14 +25,14 @@ project(populate-bucket CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(pubsub_client REQUIRED)
-find_package(storage_client REQUIRED)
+find_package(google_cloud_cpp_pubsub REQUIRED)
+find_package(google_cloud_cpp_storage REQUIRED)
 find_package(Boost 1.66 REQUIRED COMPONENTS program_options)
 find_package(Threads)
 
 add_executable(populate_bucket populate_bucket.cc)
 target_link_libraries(
-  populate_bucket PRIVATE googleapis-c++::pubsub_client storage_client
+  populate_bucket PRIVATE google-cloud-cpp::pubsub google-cloud-cpp::storage
                           Boost::program_options Threads::Threads)
 
 include(GNUInstallDirs)
