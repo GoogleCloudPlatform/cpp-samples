@@ -43,7 +43,7 @@ These samples will only build and run on **Linux**.
 
 1. **Install vcpkg.**
    This project uses [`vcpkg`](https://github.com/microsoft/vcpkg) for dependency management. Clone the vcpkg repository
-   to your `$HOME` directory:
+   to your preferred location. In these instructions we use`$HOME`:
    ```shell
    git clone -C $HOME https://github.com/microsoft/vcpkg.git
    ```
@@ -54,8 +54,10 @@ These samples will only build and run on **Linux**.
    ```
 
 1. **Compile these examples:**
-   Note that building all the dependencies can take up to an hour, depending on the performance of your workstation.
-   These dependencies are cached, a second build be substantially faster.
+   Use the `vcpkg` toolchain file to download and compile dependencies. This file would be in the directory you
+   cloned `vcpkg` into, `$HOME/vcpkg` if you are following the instructions to the letter. Note that building all the
+   dependencies can take up to an hour, depending on the performance of your workstation. These dependencies are cached,
+   so a second build should be substantially faster.
    ```sh
    cd cpp-samples/speech/api
    cmake -S. -B.build -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake
