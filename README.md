@@ -10,11 +10,9 @@ the [googleapis repo](https://github.com/googleapis/googleapis) to see the full 
 These samples will only build and run on **Linux**.
 
 There is a growing collection of [C++ client libraries] for Google Cloud services. These include Cloud Bigtable, Cloud
-Pub/Sub, Cloud Spanner, and Google Cloud Storage.
-
-[C++ client libraries]: https://github.com/googleapis/google-cloud-cpp
-
-Those repos also have code samples for using those libraries.
+Pub/Sub, Cloud Spanner, and Google Cloud Storage. These libraries include
+examples of how to use most functions, the examples in this repository typically
+involve using a combination of services, or a more specific use-case.
 
 ## Contributing changes
 
@@ -24,6 +22,7 @@ Those repos also have code samples for using those libraries.
 
 * See [LICENSE](LICENSE)
 
+[C++ client libraries]: https://github.com/googleapis/google-cloud-cpp
 [style-badge]: https://github.com/GoogleCloudPlatform/cpp-samples/actions/workflows/style.yaml/badge.svg
 [style-link]: https://github.com/GoogleCloudPlatform/cpp-samples/actions/workflows/style.yaml
 [cloud-build-badge]: https://img.shields.io/badge/cloud%20build-TODO-yellowgreen
