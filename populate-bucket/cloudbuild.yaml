@@ -13,14 +13,21 @@
 # limitations under the License.
 
 timeout: 3600s
+options:
+  machineType: 'N1_HIGHCPU_32'
+  diskSizeGb: '512'
+substitutions:
+  _CONTEXT: 'dir:///workspace/'
+
 steps:
   - name: 'gcr.io/kaniko-project/executor:latest'
     args: [
+        # Using a substitution here allows us to call this script from
+        # the top-level directory, as Cloud Build does.
+        "--context=${_CONTEXT}",
+        "--cache-repo=gcr.io/${PROJECT_ID}/cpp-samples/ci/cache",
         "--destination=gcr.io/${PROJECT_ID}/cpp-samples/populate-bucket:${SHORT_SHA}",
         "--cache=true",
         "--cache-ttl=48h"
     ]
     timeout: 3600s
-
-options:
-  machineType: 'N1_HIGHCPU_32'

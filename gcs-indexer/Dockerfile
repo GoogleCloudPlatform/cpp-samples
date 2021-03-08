@@ -23,7 +23,7 @@ FROM base AS devtools
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update && apt install -y curl gzip tar unzip
 WORKDIR /var/tmp/build/vcpkg
-RUN curl -s -L https://github.com/Microsoft/vcpkg/archive/5dc53211caedebf4387d590155ed53ee44161f10.tar.gz | \
+RUN curl -s -L https://github.com/Microsoft/vcpkg/archive/9b9a6680b25872989c8eb0303d670f32e5cfe6a4.tar.gz | \
     tar -xzf - --strip-components=1
 
 # Install the typical development tools, zip + unzip are used by vcpkg to
@@ -65,8 +65,7 @@ WORKDIR /v/source
 
 # Run the CMake configuration step, setting the options to use vcpkg.
 RUN cmake -S/v/source -B/v/binary -GNinja \
-    -DCMAKE_TOOLCHAIN_FILE=/var/tmp/build/vcpkg/scripts/buildsystems/vcpkg.cmake || \
-    cat /v/binary/vcpkg-manifest-install.log
+    -DCMAKE_TOOLCHAIN_FILE=/var/tmp/build/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 RUN cmake --build /v/binary
 RUN strip /v/binary/pubsub_handler
