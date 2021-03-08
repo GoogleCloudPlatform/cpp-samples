@@ -11,7 +11,7 @@ These samples will only build and run on **Linux**.
 
 There is a growing collection of [C++ client libraries] for Google Cloud services. These include Cloud Bigtable, Cloud
 Pub/Sub, Cloud Spanner, and Google Cloud Storage. These libraries include
-examples of how to use most functions, the examples in this repository typically
+examples of how to use most functions. The examples in this repository typically
 involve using a combination of services, or a more specific use-case.
 
 ## Contributing changes
