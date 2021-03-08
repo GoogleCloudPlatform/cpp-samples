@@ -44,9 +44,8 @@ std::vector<std::int64_t> compute_slices(std::int64_t object_size,
   if (thread_slice >= minimum_slice_size) {
     std::fill_n(std::back_inserter(result), thread_count, thread_slice);
     // If the object size is not a multiple of the thread count we may need
-    // to spread any excess bytes across the slices.
-    auto loc = result.rbegin();
-    for (auto e = object_size % thread_count; e != 0; --e, ++loc) ++(*loc);
+    // to add any excess bytes to the last slice.
+    result.back() += object_size % thread_count;
     return result;
   }
   for (; object_size > 0; object_size -= minimum_slice_size) {
