@@ -16,12 +16,16 @@ timeout: 1800s
 options:
   machineType: 'N1_HIGHCPU_8'
   diskSizeGb: '512'
+substitutions:
+  _CONTEXT: 'dir:///workspace/'
 
 steps:
   # Create a container, use Kaniko to cache the temporary results.
   - name: 'gcr.io/kaniko-project/executor:edge'
     args: [
-        "--context=dir:///workspace/",
+        # Using a substitution here allows us to call this script from
+        # the top-level directory, as Cloud Build does.
+        "--context=${_CONTEXT}",
         "--dockerfile=Dockerfile",
         "--cache=true",
         "--cache-repo=gcr.io/${PROJECT_ID}/cpp-samples/ci/cache",
