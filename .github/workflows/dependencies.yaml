@@ -14,4 +14,4 @@ jobs:
     steps:
       # update the version in these places manually when Dependabot changes it here:
       # 1. /ci/devtools.Dockerfile
-      - uses: microsoft/vcpkg@2021.04.30
+      - uses: microsoft/vcpkg@2021.05.12
