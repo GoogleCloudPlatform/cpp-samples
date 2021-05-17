@@ -26,6 +26,6 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
     && apt-get install google-cloud-sdk -y
 
 WORKDIR /usr/local/vcpkg
-RUN curl -sSL "https://github.com/microsoft/vcpkg/archive/2021.04.30.tar.gz" | \
+RUN curl -sSL "https://github.com/microsoft/vcpkg/archive/2021.05.12.tar.gz" | \
     tar --strip-components=1 -zxf - \
     && ./bootstrap-vcpkg.sh
