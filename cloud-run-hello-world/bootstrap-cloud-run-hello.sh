@@ -34,7 +34,6 @@ gcloud services enable run.googleapis.com \
 # Build the Docker Images
 gcloud builds submit \
     "--project=${GOOGLE_CLOUD_PROJECT}" \
-    "--substitutions=SHORT_SHA=$(git rev-parse --short HEAD)" \
     "--config=cloudbuild.yaml"
 
 # Create a service account that will update the index
