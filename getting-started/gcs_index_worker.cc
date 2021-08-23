@@ -21,7 +21,7 @@ namespace gcf = ::google::cloud::functions;
 namespace spanner = ::google::cloud::spanner;
 
 namespace {
-auto get_spanner_database() {
+auto GetSpannerDatabase() {
   auto getenv = [](char const* var) {
     auto const* value = std::getenv(var);
     if (value == nullptr) {
@@ -36,6 +36,6 @@ auto get_spanner_database() {
 }
 }  // namespace
 
-void gcs_indexer(gcf::CloudEvent event) {  // NOLINT
+void GcsIndexer(gcf::CloudEvent /*event*/) {  // NOLINT
   // TODO(coryan) - do interesting stuff....
 }
