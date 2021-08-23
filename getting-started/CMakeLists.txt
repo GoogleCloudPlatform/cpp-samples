@@ -14,6 +14,11 @@
 # limitations under the License.
 # ~~~
 
+cmake_minimum_required(VERSION 3.5)
+project(cpp-samples-getting-started CXX)
+
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 find_package(google_cloud_cpp_spanner REQUIRED)
 find_package(functions_framework_cpp REQUIRED)
 
