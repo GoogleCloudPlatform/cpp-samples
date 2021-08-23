@@ -17,12 +17,13 @@
 cmake_minimum_required(VERSION 3.5)
 project(cpp-samples-getting-started CXX)
 
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(google_cloud_cpp_spanner REQUIRED)
 find_package(functions_framework_cpp REQUIRED)
 
-add_library(functions_framework_cpp_function tutorial_cloud_spanner.cc)
+add_library(functions_framework_cpp_function gcs_index_worker.cc)
 target_link_libraries(
   functions_framework_cpp_function functions-framework-cpp::framework
   google-cloud-cpp::spanner)
