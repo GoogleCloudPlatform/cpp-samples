@@ -1,0 +1,11 @@
+{
+  "name": "gcp-cpp-samples-getting-started",
+  "version-string": "unversioned",
+  "port-version": 1,
+  "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
+  "description": "Running GKE Batch Jobs with C++",
+  "dependencies": [
+    "functions-framework-cpp",
+    "google-cloud-cpp"
+  ]
+}
