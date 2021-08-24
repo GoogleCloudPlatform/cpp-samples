@@ -5,7 +5,7 @@
 ## Motivation
 
 A typical use of C++ in Google Cloud is to perform parallel computations or analysis and store the results in some kind of database.
-In this guide with will build such an application, and deploy it to [Cloud Run],a managed platform to deploy containerized applications.
+In this guide with will build such an application, and deploy it to [Cloud Run], a managed platform to deploy containerized applications.
 
 [Cloud Run]: https://cloud.google.com/run
 [Cloud Storage]: https://cloud.google.com/storage
@@ -19,17 +19,14 @@ Google Cloud Storage (GCS) buckets can contain thousands, millions, and even bil
 GCS can quickly find an object given its name, or list objects with names in a given range, but some applications need
 more advance lookups, such as finding all the objects within a certain size, or with a given object type.
 
-Our application will scan potentially large buckets, and store the full metadata information of each object in a Cloud Spanner instance, where one can use normal SQL statements to 
+Our application will scan potentially large buckets, and store the full metadata information of each object in a [Cloud Spanner] instance, where one can use normal SQL statements to search for objects.
 
 ## Prerequisites
 
-This example assumes that you have an existing GCP (Google Cloud Platform) project. The project must have billing
-enabled, as some of the services used in this example require it. Throughput the example we will use
-`GOOGLE_CLOUD_PROJECT` as an environment variable containing the name of the project.
+This example assumes that you have an existing GCP (Google Cloud Platform) project. The project must have billing enabled, as some of the services used in this example require it. Throughout the example we will use `GOOGLE_CLOUD_PROJECT` as an environment variable containing the name of the project.
 
-> :warning: this guide uses Cloud Spanner, this service is billed by the hour **even if you do you stop using it**.
-> The charges can reaches the **hundreds** or **thousands** of dollars per month if you configure a large Cloud Spanner
-> instance.
+> :warning: this guide uses Cloud Spanner, this service is billed by the hour **even if you stop using it**.
+> The charges can reaches the **hundreds** or **thousands** of dollars per month if you configure a large Cloud Spanner instance.
 > Please remember to delete any Cloud Spanner resources once you no longer need them.
 
 ### Make sure the necessary services are enabled
