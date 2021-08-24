@@ -1,0 +1,11 @@
+[project]
+id = "com.github.googlecloudplatform.cpp-samples.getting-started"
+name = "Getting Started with C++ and Google Cloud Platform"
+version = "0.1.0"
+
+[build]
+exclude = [
+    "/README.md",
+    ".build/",
+    "cmake-out/"
+]

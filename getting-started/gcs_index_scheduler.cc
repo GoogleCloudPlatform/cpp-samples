@@ -13,15 +13,15 @@
 // limitations under the License.
 
 #include <google/cloud/functions/cloud_event.h>
-#include <google/cloud/spanner/client.h>
+#include <google/cloud/pubsub/publisher.h>
 #include <stdexcept>
 #include <string>
 
 namespace gcf = ::google::cloud::functions;
-namespace spanner = ::google::cloud::spanner;
+namespace pubsub = ::google::cloud::pubsub;
 
 namespace {
-auto GetSpannerDatabase() {
+pubsub::Publisher GetPublisher() {
   auto getenv = [](char const* var) {
     auto const* value = std::getenv(var);
     if (value == nullptr) {
@@ -30,12 +30,17 @@ auto GetSpannerDatabase() {
     }
     return std::string(value);
   };
-  return spanner::Database(getenv("GOOGLE_CLOUD_PROJECT"),
-                           getenv("SPANNER_INSTANCE"),
-                           getenv("SPANNER_DATABASE"));
+
+  static auto const publisher = [&] {
+    auto topic =
+        pubsub::Topic(getenv("GOOGLE_CLOUD_PROJECT"), getenv("WORK_TOPIC_ID"));
+    return pubsub::Publisher(
+        pubsub::MakePublisherConnection(std::move(topic), {}));
+  }();
+  return publisher;
 }
 }  // namespace
 
-void GcsIndexWorker(gcf::CloudEvent /*event*/) {  // NOLINT
+void GcsIndexScheduler(gcf::CloudEvent /*event*/) {  // NOLINT
   // TODO(#138) - do interesting stuff....
 }
