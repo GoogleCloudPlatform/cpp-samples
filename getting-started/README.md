@@ -103,13 +103,6 @@ gcloud spanner databases create gcs-index \
 # Output: Creating database...done.
 ```
 
-### Create a Cloud Pub/Sub topic for the work queue
-
-```sh
-gcloud pubsub topics create gcs-indexing-work-items
-# Output: Created topic [projects/..../topics/gcs-indexing-work-items].
-```
-
 ### Create a Cloud Pub/Sub topic for the working requests
 
 ```sh
@@ -140,68 +133,36 @@ cd cpp-samples/getting-started
 pack build \
     --builder gcr.io/buildpacks/builder:latest \
     --env GOOGLE_FUNCTION_SIGNATURE_TYPE=cloudevent \
-    --env GOOGLE_FUNCTION_TARGET=GcsIndexWorker \
+    --env GOOGLE_FUNCTION_TARGET=IndexGcsPrefix \
     --path . \
-    "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/worker"
+    "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix"
 # Output: a large number of informational messages
 #   ... followed by informational messages from the package manager ...
 #   ... followed by informational messages from the build system ...
-# Successfully built image gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/worker
-```
-
-```sh
-pack build \
-    --builder gcr.io/buildpacks/builder:latest \
-    --env GOOGLE_FUNCTION_SIGNATURE_TYPE=cloudevent \
-    --env GOOGLE_FUNCTION_TARGET=GcsIndexScheduler \
-    --path . \
-    "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/scheduler"
-# Output: a large number of informational messages
-#   ... followed by informational messages from the package manager ...
-#   ... followed by informational messages from the build system ...
-#   ... 
-# Successfully built image gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/scheduler
+# Successfully built image gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix
 ```
 
 ### Push the Docker images to Google Container Registry
 
 ```sh
-docker push "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/worker:latest"
-# Output: The push refers to repository [gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/worker]
-#   ... progress information ...
-# latest: digest: sha256.... size: ...
-docker push "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/scheduler:latest"
-# Output: The push refers to repository [gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/scheduler]
+docker push "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest"
+# Output: The push refers to repository [gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix]
 #   ... progress information ...
 # latest: digest: sha256.... size: ...
 ```
 
 ### Deploy the Programs to Cloud Run
 
-> :warning: It is possible your organization has disabled unauthenticated requests to 
-> Cloud Run. If this is the case the rest of this guide will not work, as eventarc
-> only supports unauthenticated connections at this time.
-
 ```sh
-gcloud run deploy gcs-indexing-worker \
-    --image="gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/worker:latest" \
+gcloud run deploy index-gcs-prefix \
+    --image="gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest" \
+    --set-env-vars="SPANNER_INSTANCE=getting-started-cpp,SPANNER_DATABASE=gcs-index,TOPIC_ID=gcs-indexing-requests,GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}" \
     --region="us-central1" \
     --platform="managed" \
     --no-allow-unauthenticated
-# Output: Deploying container to Cloud Run service [gcs-indexing-worker] in project [....] region [us-central1]
-#     Service [gcs-indexing-worker] revision [gcs-indexing-worker-00001-yeg] has been deployed and is serving 100 percent of traffic.
-#     Service URL: https://gcs-indexing-worker-...run.app
-```
-
-```sh
-gcloud run deploy gcs-indexing-scheduler \
-    --image="gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/scheduler:latest" \
-    --region="us-central1" \
-    --platform="managed" \
-    --no-allow-unauthenticated
-# Output: Deploying container to Cloud Run service [gcs-indexing-scheduler] in project [....] region [us-central1]
-#     Service [gcs-indexing-worker] revision [gcs-indexing-scheduler-00001-yeg] has been deployed and is serving 100 percent of traffic.
-#     Service URL: https://gcs-indexing-scheduler-...run.app
+# Output: Deploying container to Cloud Run service [index-gcs-prefix] in project [....] region [us-central1]
+#     Service [gcs-indexing-worker] revision [index-gcs-prefix-00001-yeg] has been deployed and is serving 100 percent of traffic.
+#     Service URL: https://index-gcs-prefix-...run.app
 ```
 
 ### Setup the triggers for your deployed functions
@@ -217,45 +178,35 @@ PROJECT_NUMBER=$(gcloud projects list \
 ```
 
 ```sh
-gcloud beta eventarc triggers create gcs-indexing-worker-trigger \
-    --project="${GOOGLE_CLOUD_PROJECT}" \
+gcloud beta eventarc triggers create index-gcs-prefix-trigger \
     --location="us-central1" \
-    --destination-run-service="gcs-indexing-worker" \
+    --destination-run-service="index-gcs-prefix" \
     --destination-run-region="us-central1" \
-    --transport-topic="gcs-index-work" \
+    --transport-topic="gcs-indexing-requests" \
     --matching-criteria="type=google.cloud.pubsub.topic.v1.messagePublished" \
     --service-account="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
-# Creating trigger [gcs-indexing-worker-trigger] in project [${GOOGLE_CLOUD_PROJECT}], location [us-central1]...done.
-# Publish to Pub/Sub topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-index-work] to receive events in Cloud Run service [gcs-indexing-worker].
-```
-
-```sh
-gcloud beta eventarc triggers create gcs-indexing-scheduler-trigger \
-    --project="${GOOGLE_CLOUD_PROJECT}" \
-    --location="us-central1" \
-    --destination-run-service="gcs-indexing-scheduler" \
-    --destination-run-region="us-central1" \
-    --transport-topic="gcs-index-requests" \
-    --matching-criteria="type=google.cloud.pubsub.topic.v1.messagePublished" \
-    --service-account="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
-# Creating trigger [gcs-indexing-scheduler-trigger] in project [${GOOGLE_CLOUD_PROJECT}], location [us-central1]...done.
-# Publish to Pub/Sub topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-index-requests] to receive events in Cloud Run service [gcs-indexing-scheduler].
+# Creating trigger [index-gcs-prefix-trigger] in project [${GOOGLE_CLOUD_PROJECT}], location [us-central1]...done.
+# Publish to Pub/Sub topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-index-requests] to receive events in Cloud Run service [index-gcs-prefix].
 ```
 
 ### Use `gcloud` to send an indexing request
 
-This will request indexing some public data. The prefix contains less than 300 objects:
+This will request indexing some public data. The prefix contains less than 100 objects:
 
 ```sh
 gcloud pubsub topics publish gcs-indexing-requests \
-    --attribute=bucket=gcp-public-data-landsat,prefix=LC08/001/006
+    --attribute=bucket=gcp-public-data-landsat,prefix=LC08/01/006/001
 # Output: messageIds:
 #     - '....'
 ```
 
 ### Querying the data
 
-<-- TODO(#138) - add some tests here -->
+```sh
+gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
+    --sql="select * from gcs_objects where name like '%.txt' order by size desc limit 10"
+# Output: metadata for the 10 largest objects with names finishing in `.txt`
+```
 
 ## Cleanup
 
@@ -273,20 +224,21 @@ gcloud spanner instances delete getting-started-cpp --quiet
 ### Remove the Cloud Run Deployments
 
 ```sh
-gcloud run services delete gcs-indexing-worker \
+gcloud run services delete index-gcs-prefix \
     --region="us-central1" \
     --platform="managed" \
     --quiet
 # Output:
-#   Deleting [gcs-indexing-worker]...done.
-#   Deleted [gcs-indexing-worker].
-gcloud run services delete gcs-indexing-scheduler \
-    --region="us-central1" \
-    --platform="managed" \
-    --quiet
-# Output:
-#   Deleting [gcs-indexing-scheduler]...done.
-#   Deleted [gcs-indexing-scheduler].
+#   Deleting [index-gcs-prefix]...done.
+#   Deleted [index-gcs-prefix].
+```
+
+### Remove the EventArc triggers
+
+```sh
+gcloud beta eventarc triggers delete index-gcs-prefix-trigger \
+    --location="us-central1"
+# Output: Deleting trigger [index-gcs-prefix-trigger] in project [${GOOGLE_CLOUD_PROJECT}], location [us-central1]...done.
 ```
 
 ### Remove the Cloud Pub/Sub Topics
@@ -294,6 +246,4 @@ gcloud run services delete gcs-indexing-scheduler \
 ```sh
 gcloud pubsub topics delete gcs-indexing-work-items --quiet
 # Output: Deleted topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-indexing-work-items].
-gcloud pubsub topics create gcs-indexing-requests --quiet
-# Output: Deleted topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-indexing-requests].
 ```
