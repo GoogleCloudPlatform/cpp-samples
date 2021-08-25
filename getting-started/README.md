@@ -225,7 +225,8 @@ gcloud beta eventarc triggers create gcs-indexing-worker-trigger \
     --transport-topic="gcs-index-work" \
     --matching-criteria="type=google.cloud.pubsub.topic.v1.messagePublished" \
     --service-account="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
-# Creating trigger [gcs-indexing-worker-trigger] in project [${GOOGLE_CLOUD_PROJECT}], location [us-central1]...done.                                                                                  # Publish to Pub/Sub topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-index-work] to receive events in Cloud Run service [gcs-indexing-worker].
+# Creating trigger [gcs-indexing-worker-trigger] in project [${GOOGLE_CLOUD_PROJECT}], location [us-central1]...done.
+# Publish to Pub/Sub topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-index-work] to receive events in Cloud Run service [gcs-indexing-worker].
 ```
 
 ```sh
@@ -237,7 +238,8 @@ gcloud beta eventarc triggers create gcs-indexing-scheduler-trigger \
     --transport-topic="gcs-index-requests" \
     --matching-criteria="type=google.cloud.pubsub.topic.v1.messagePublished" \
     --service-account="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
-# Creating trigger [gcs-indexing-scheduler-trigger] in project [${GOOGLE_CLOUD_PROJECT}], location [us-central1]...done.                                                                                  # Publish to Pub/Sub topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-index-requests] to receive events in Cloud Run service [gcs-indexing-scheduler].
+# Creating trigger [gcs-indexing-scheduler-trigger] in project [${GOOGLE_CLOUD_PROJECT}], location [us-central1]...done.
+# Publish to Pub/Sub topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-index-requests] to receive events in Cloud Run service [gcs-indexing-scheduler].
 ```
 
 ### Use `gcloud` to send an indexing request
