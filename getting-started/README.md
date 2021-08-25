@@ -27,7 +27,8 @@ Google Cloud Storage (GCS) buckets can contain thousands, millions, and even bil
 GCS can quickly find an object given its name, or list objects with names in a given range, but some applications need
 more advance lookups, such as finding all the objects within a certain size, or with a given object type.
 
-Our application will scan potentially large buckets, and store the full metadata information of each object in a [Cloud Spanner] instance, where one can use normal SQL statements to search for objects.
+In this guide, we will create and deploy an application to scan all the objects in a bucket, and store the full metadata information of each object in a [Cloud Spanner] instance.
+Once the information is in a Cloud Spanner table, where one can use normal SQL statements to search for objects.
 
 ## Prerequisites
 
@@ -48,7 +49,7 @@ If needed, use the [online instructions][docker-install] to download and install
 this tool. This guide assumes that you have configured [sudoless docker]. If
 you do not want to enable sudoless docker, replace all `docker` commands below with `sudo docker`.
 
-Verify the [pack tool][pack-install] is functional on our workstation. These
+Verify the [pack tool][pack-install] is functional on your workstation. These
 instructions were tested with v0.20.0, although they should work with newer
 versions. Some commands may not work with older versions.
 
@@ -241,7 +242,7 @@ gcloud beta eventarc triggers create gcs-indexing-scheduler-trigger \
 
 ### Use `gcloud` to send an indexing request
 
-This will request indexing some public data, the prefix contains less than 300 objects:
+This will request indexing some public data. The prefix contains less than 300 objects:
 
 ```sh
 gcloud pubsub topics publish gcs-indexing-requests \
