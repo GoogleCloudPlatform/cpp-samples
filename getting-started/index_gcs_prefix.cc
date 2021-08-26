@@ -81,6 +81,11 @@ void ThrowIfNotOkay(std::string const& context,
 }  // namespace
 
 void IndexGcsPrefix(gcf::CloudEvent event) {  // NOLINT
+  // We only have 10 seconds to handle this event. If there is a lot of data in
+  // a prefix we will need to stop and issue a new event to continue.
+  auto const deadline =
+      std::chrono::steady_clock::now() + std::chrono::seconds(7);
+
   if (event.data_content_type().value_or("") != "application/json") {
     return LogError("expected application/json data");
   }
@@ -113,9 +118,29 @@ void IndexGcsPrefix(gcf::CloudEvent event) {  // NOLINT
   std::vector<google::cloud::future<google::cloud::Status>> pending;
   for (auto const& entry : client.ListObjectsAndPrefixes(bucket, prefix, start,
                                                          gcs::Delimiter("/"))) {
-    // TODO(#138) - we only have 10 seconds to handle the event, if we are
-    // close to the deadline publish an event to continue elsewhere and break.
     ThrowIfNotOkay("listing bucket " + bucket, entry.status());
+    auto const now = std::chrono::steady_clock::now();
+    if (now > deadline) {
+      struct SplitPoint {
+        std::string operator()(std::string const& s) { return s; }
+        std::string operator()(gcs::ObjectMetadata const& o) {
+          return o.name();
+        }
+      };
+      std::string start = absl::visit(SplitPoint{}, *entry);
+      auto builder = pubsub::MessageBuilder{}
+                         .InsertAttribute("bucket", bucket)
+                         .InsertAttribute("start", std::move(start));
+      if (prefix.has_value()) {
+        builder.InsertAttribute("prefix", prefix.value());
+      }
+      pending.push_back(
+          publisher.Publish(std::move(builder).Build()).then([](auto f) {
+            return f.get().status();
+          }));
+      break;
+    }
+
     if (absl::holds_alternative<std::string>(*entry)) {
       pending.push_back(
           publisher
@@ -137,14 +162,12 @@ void IndexGcsPrefix(gcf::CloudEvent event) {  // NOLINT
   }
   publisher.Flush();
   google::cloud::Status status;
-  int count = 0;
   for (auto& p : pending) {
-    ++count;
     auto publish_status = p.get();
     if (publish_status.ok()) continue;
     status = std::move(publish_status);
   }
   ThrowIfNotOkay("publishing one or more messages", status);
-  std::cout << "DEBUG inserted " << mutation_count << "rows and sent "
+  std::cout << "DEBUG inserted " << mutation_count << " rows and sent "
             << pending.size() << " messages\n";
 }
