@@ -103,7 +103,7 @@ gcloud spanner databases create gcs-index \
 # Output: Creating database...done.
 ```
 
-### Create a Cloud Pub/Sub topic for the working requests
+### Create a Cloud Pub/Sub Topic for Indexing Requests
 
 ```sh
 gcloud pubsub topics create gcs-indexing-requests
