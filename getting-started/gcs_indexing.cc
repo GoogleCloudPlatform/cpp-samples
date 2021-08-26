@@ -141,11 +141,11 @@ auto const& Columns() {
                         [](auto const& o) { return o.cache_control(); }),
 
         field("metadata",
-               [](auto const& o) {
-                 nlohmann::json json{};
-                 for (auto const& [k, v] : o.metadata()) json[k] = v;
-                 return json.dump();
-               }),
+              [](auto const& o) {
+                nlohmann::json json{};
+                for (auto const& [k, v] : o.metadata()) json[k] = v;
+                return json.dump();
+              }),
         custom("owner",
                [](auto const& o) {
                  if (!o.has_owner()) {

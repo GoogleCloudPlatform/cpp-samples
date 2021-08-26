@@ -25,9 +25,8 @@ find_package(google_cloud_cpp_pubsub REQUIRED)
 find_package(google_cloud_cpp_spanner REQUIRED)
 find_package(google_cloud_cpp_storage REQUIRED)
 
-add_library(
-  functions_framework_cpp_function # cmake-format: sortable
-  gcs_indexing.cc gcs_indexing.h index_gcs_prefix.cc)
+add_library(functions_framework_cpp_function # cmake-format: sortable
+            gcs_indexing.cc gcs_indexing.h index_gcs_prefix.cc)
 target_link_libraries(
   functions_framework_cpp_function functions-framework-cpp::framework
   google-cloud-cpp::pubsub google-cloud-cpp::spanner google-cloud-cpp::storage)
