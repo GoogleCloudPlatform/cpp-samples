@@ -26,7 +26,6 @@ void LogError(std::string const& msg);
 
 google::cloud::spanner::Mutation UpdateObjectMetadata(
     google::cloud::storage::ObjectMetadata const& object);
-std::vector<std::string> ColumnNames();
 
 }  // namespace google::cloud::cpp_samples
 

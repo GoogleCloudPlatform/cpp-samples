@@ -113,7 +113,7 @@ void IndexGcsPrefix(gcf::CloudEvent event) {  // NOLINT
   std::vector<google::cloud::future<google::cloud::Status>> pending;
   for (auto const& entry : client.ListObjectsAndPrefixes(bucket, prefix, start,
                                                          gcs::Delimiter("/"))) {
-    // TODO(coryan) - we only have 10 seconds to handle the event, if we are
+    // TODO(#138) - we only have 10 seconds to handle the event, if we are
     // close to the deadline publish an event to continue elsewhere and break.
     ThrowIfNotOkay("listing bucket " + bucket, entry.status());
     if (absl::holds_alternative<std::string>(*entry)) {

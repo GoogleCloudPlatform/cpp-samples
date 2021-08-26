@@ -14,8 +14,11 @@
 
 #include "gcs_indexing.h"
 #include <nlohmann/json.hpp>
+#include <functional>
 #include <iostream>
 #include <map>
+#include <string>
+#include <vector>
 
 namespace google::cloud::cpp_samples {
 
@@ -28,38 +31,6 @@ nlohmann::json LogFormat(std::string const& sev, std::string const& msg) {
 
 void LogError(std::string const& msg) {
   std::cerr << LogFormat("error", msg) << std::endl;
-}
-
-std::string FormatTimestamp(std::chrono::system_clock::time_point tp) {
-  return absl::FormatTime(absl::FromChrono(tp), absl::UTCTimeZone());
-}
-
-using JsonFieldToValue = std::function<spanner::Value(nlohmann::json const& md,
-                                                      std::string const& name)>;
-
-template <typename T>
-JsonFieldToValue ToValue() {
-  return [](nlohmann::json const& json, std::string const& name) {
-    if (!json.contains(name)) return spanner::Value(absl::optional<T>{});
-    return spanner::Value(json[name].get<T>());
-  };
-}
-
-template <>
-JsonFieldToValue ToValue<spanner::Timestamp>() {
-  return [](nlohmann::json const& json, std::string const& name) {
-    if (!json.contains(name)) {
-      return spanner::Value(absl::optional<spanner::Timestamp>{});
-    }
-    absl::Time time;
-    std::string err;
-    auto const& value = json[name].get_ref<std::string const&>();
-    if (!absl::ParseTime(absl::RFC3339_full, value, &time, &err)) {
-      throw std::runtime_error("error parsing timestamp field <" + name + "> " +
-                               err);
-    }
-    return spanner::Value(spanner::MakeTimestamp(time).value());
-  };
 }
 
 using GetField = std::function<spanner::Value(gcs::ObjectMetadata const&)>;
