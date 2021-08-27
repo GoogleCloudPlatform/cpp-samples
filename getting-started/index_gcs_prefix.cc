@@ -13,7 +13,8 @@
 // limitations under the License.
 
 #include "gcs_indexing.h"
-#include <google/cloud/functions/cloud_event.h>
+#include <google/cloud/functions/http_request.h>
+#include <google/cloud/functions/http_response.h>
 #include <google/cloud/pubsub/publisher.h>
 #include <google/cloud/spanner/client.h>
 #include <google/cloud/storage/client.h>
@@ -70,16 +71,17 @@ void ThrowIfNotOkay(std::string const& context,
 
 }  // namespace
 
-void IndexGcsPrefix(gcf::CloudEvent event) {  // NOLINT
-  // We only have 10 seconds to handle this event. If there is a lot of data in
-  // a prefix we will need to stop and issue a new event to continue.
+gcf::HttpResponse IndexGcsPrefix(gcf::HttpRequest request) {  // NOLINT
+  // This example assumes the push subscription is set for 10 minute deadline.
+  // We allow ourselves up to 5 minutes processing this request.
   auto const deadline =
-      std::chrono::steady_clock::now() + std::chrono::seconds(7);
+      std::chrono::steady_clock::now() + std::chrono::minutes(5);
 
-  if (event.data_content_type().value_or("") != "application/json") {
+  auto const ct = request.headers().find("content-type");
+  if (ct == request.headers().end() || ct->second != "application/json") {
     return LogError("expected application/json data");
   }
-  auto const payload = nlohmann::json::parse(event.data().value_or("{}"));
+  auto const payload = nlohmann::json::parse(request.payload());
   if (!payload.contains("message")) {
     return LogError("missing embedded Pub/Sub message");
   }
@@ -109,8 +111,7 @@ void IndexGcsPrefix(gcf::CloudEvent event) {  // NOLINT
   for (auto const& entry : client.ListObjectsAndPrefixes(bucket, prefix, start,
                                                          gcs::Delimiter("/"))) {
     ThrowIfNotOkay("listing bucket " + bucket, entry.status());
-    auto const now = std::chrono::steady_clock::now();
-    if (now > deadline) {
+    if (std::chrono::steady_clock::now() >= deadline) {
       struct SplitPoint {
         std::string operator()(std::string const& s) { return s; }
         std::string operator()(gcs::ObjectMetadata const& o) {
@@ -132,14 +133,15 @@ void IndexGcsPrefix(gcf::CloudEvent event) {  // NOLINT
     }
 
     if (absl::holds_alternative<std::string>(*entry)) {
-      pending.push_back(
-          publisher
-              .Publish(
-                  pubsub::MessageBuilder{}
-                      .InsertAttribute("bucket", bucket)
-                      .InsertAttribute("prefix", absl::get<std::string>(*entry))
-                      .Build())
-              .then([](auto f) { return f.get().status(); }));
+      auto const& p = absl::get<std::string>(*entry);
+      // Do not reschedule the same prefix we are processing.
+      if (prefix.has_value() && prefix.value() == p) continue;
+      pending.push_back(publisher
+                            .Publish(pubsub::MessageBuilder{}
+                                         .InsertAttribute("bucket", bucket)
+                                         .InsertAttribute("prefix", p)
+                                         .Build())
+                            .then([](auto f) { return f.get().status(); }));
     } else {
       auto const& object = absl::get<gcs::ObjectMetadata>(*entry);
       auto update = UpdateObjectMetadata(object);
@@ -160,4 +162,5 @@ void IndexGcsPrefix(gcf::CloudEvent event) {  // NOLINT
   ThrowIfNotOkay("publishing one or more messages", status);
   std::cout << "DEBUG inserted " << mutation_count << " rows and sent "
             << pending.size() << " messages\n";
+  return gcf::HttpResponse{};
 }

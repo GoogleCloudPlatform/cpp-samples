@@ -132,7 +132,7 @@ cd cpp-samples/getting-started
 ```sh
 pack build \
     --builder gcr.io/buildpacks/builder:latest \
-    --env GOOGLE_FUNCTION_SIGNATURE_TYPE=cloudevent \
+    --env GOOGLE_FUNCTION_SIGNATURE_TYPE=http \
     --env GOOGLE_FUNCTION_TARGET=IndexGcsPrefix \
     --path . \
     "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix"
@@ -148,7 +148,7 @@ pack build \
 docker push "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest"
 # Output: The push refers to repository [gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix]
 #   ... progress information ...
-# latest: digest: sha256.... size: ...
+# latest: digest: sha256:<long hex sha> size: <number>
 ```
 
 ### Deploy the Programs to Cloud Run
@@ -165,7 +165,28 @@ gcloud run deploy index-gcs-prefix \
 #     Service URL: https://index-gcs-prefix-...run.app
 ```
 
-### Setup the triggers for your deployed functions
+### Setup the Cloud Pub/Sub subscription
+
+#### Create a Service Account to invoke Cloud Run
+
+Following security best pratices, we recommend creating a service account for
+this demo, with only permission to invoke Cloud Run functions, to minimize the
+permissions granted to each service.
+
+```sh
+gcloud iam service-accounts create getting-started-cpp-push-sa \
+   --display-name "Getting Started with C++: Push Cloud Pub/Sub messages to Cloud Run"
+# Output: Created service account [getting-started-cpp-push-sa].
+```
+
+```sh
+gcloud run services add-iam-policy-binding index-gcs-prefix \
+   --region="us-central1" \
+   --member="serviceAccount:getting-started-cpp-push-sa@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com" \
+   --role="roles/run.invoker"
+# Output: Updated IAM policy for service [index-gcs-prefix].
+#   ... and the details of the complete IAM policy ...
+```
 
 #### Capture the project number
 
@@ -177,16 +198,34 @@ PROJECT_NUMBER=$(gcloud projects list \
 # Output: none
 ```
 
+#### Grant Cloud Pub/Sub permissions to use service accounts in your project
+
 ```sh
-gcloud beta eventarc triggers create index-gcs-prefix-trigger \
-    --location="us-central1" \
-    --destination-run-service="index-gcs-prefix" \
-    --destination-run-region="us-central1" \
-    --transport-topic="gcs-indexing-requests" \
-    --matching-criteria="type=google.cloud.pubsub.topic.v1.messagePublished" \
-    --service-account="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
-# Creating trigger [index-gcs-prefix-trigger] in project [${GOOGLE_CLOUD_PROJECT}], location [us-central1]...done.
-# Publish to Pub/Sub topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-index-requests] to receive events in Cloud Run service [index-gcs-prefix].
+gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT}" \
+    --member=serviceAccount:service-${PROJECT_NUMBER}@gcp-sa-pubsub.iam.gserviceaccount.com \
+    --role=roles/iam.serviceAccountTokenCreator
+# Output: Updated IAM policy for project [${GOOGLE_CLOUD_PROJECT}].
+#    bindings:
+#    ... full list of bindings for your project's IAM policy ...
+```
+
+### Capture the Service URL
+
+```sh
+URL="$(gcloud run services describe index-gcs-prefix \
+    --region="us-central1" --format="value(status.url)")"
+# Output: none
+```
+
+### Create the Cloud Pub/Sub push subscription
+
+```sh
+gcloud pubsub subscriptions create indexing-requests-cloud-run-push \
+    --topic="gcs-indexing-requests" \
+    --push-endpoint="${URL}" \
+    --push-auth-service-account="getting-started-cpp-push-sa@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com" \
+    --ack-deadline=600
+# Output: Created subscription [projects/${GOOGLE_CLOUD_PROJECT}/subscriptions/indexing-requests-cloud-run-push].
 ```
 
 ### Use `gcloud` to send an indexing request
@@ -233,17 +272,24 @@ gcloud run services delete index-gcs-prefix \
 #   Deleted [index-gcs-prefix].
 ```
 
-### Remove the EventArc triggers
+### Remove the Cloud Pub/Sub Subscription
 
 ```sh
-gcloud beta eventarc triggers delete index-gcs-prefix-trigger \
-    --location="us-central1"
-# Output: Deleting trigger [index-gcs-prefix-trigger] in project [${GOOGLE_CLOUD_PROJECT}], location [us-central1]...done.
+gcloud pubsub subscriptions delete indexing-requests-cloud-run-push --quiet
+# Output: Deleted subscription [projects/${GOOGLE_CLOUD_PROJECT}/subscriptions/indexing-requests-cloud-run-push].
 ```
 
-### Remove the Cloud Pub/Sub Topics
+### Remove the Cloud Pub/Sub Topic
 
 ```sh
 gcloud pubsub topics delete gcs-indexing-work-items --quiet
 # Output: Deleted topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-indexing-work-items].
+```
+
+### Remove the Container image
+
+```sh
+gcloud container images delete gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest --quiet
+# Output: Deleted [gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest]
+# Output: Deleted [gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix@sha256:....]
 ```

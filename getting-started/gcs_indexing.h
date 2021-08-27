@@ -15,6 +15,7 @@
 #ifndef CPP_SAMPLES_GETTING_STARTED_GCS_INDEXING_H
 #define CPP_SAMPLES_GETTING_STARTED_GCS_INDEXING_H
 
+#include <google/cloud/functions/http_response.h>
 #include <google/cloud/spanner/mutations.h>
 #include <google/cloud/storage/object_metadata.h>
 #include <string>
@@ -22,7 +23,7 @@
 
 namespace google::cloud::cpp_samples {
 
-void LogError(std::string const& msg);
+google::cloud::functions::HttpResponse LogError(std::string const& msg);
 
 google::cloud::spanner::Mutation UpdateObjectMetadata(
     google::cloud::storage::ObjectMetadata const& object);
