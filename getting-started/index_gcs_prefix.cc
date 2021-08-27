@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "gcs_indexing.h"
-#include <absl/time/time.h>
 #include <google/cloud/functions/cloud_event.h>
 #include <google/cloud/pubsub/publisher.h>
 #include <google/cloud/spanner/client.h>
@@ -32,19 +31,19 @@ namespace spanner = ::google::cloud::spanner;
 using google::cloud::cpp_samples::LogError;
 using google::cloud::cpp_samples::UpdateObjectMetadata;
 
-pubsub::Publisher GetPublisher() {
-  auto getenv = [](char const* var) {
-    auto const* value = std::getenv(var);
-    if (value == nullptr) {
-      throw std::runtime_error("Environment variable " + std::string(var) +
-                               " is not set");
-    }
-    return std::string(value);
-  };
+std::string GetEnv(char const* var) {
+  auto const* value = std::getenv(var);
+  if (value == nullptr) {
+    throw std::runtime_error("Environment variable " + std::string(var) +
+                             " is not set");
+  }
+  return value;
+}
 
+pubsub::Publisher GetPublisher() {
   static auto const publisher = [&] {
     auto topic =
-        pubsub::Topic(getenv("GOOGLE_CLOUD_PROJECT"), getenv("TOPIC_ID"));
+        pubsub::Topic(GetEnv("GOOGLE_CLOUD_PROJECT"), GetEnv("TOPIC_ID"));
     return pubsub::Publisher(
         pubsub::MakePublisherConnection(std::move(topic), {}));
   }();
@@ -52,19 +51,10 @@ pubsub::Publisher GetPublisher() {
 }
 
 spanner::Client GetSpannerClient() {
-  auto getenv = [](char const* var) {
-    auto const* value = std::getenv(var);
-    if (value == nullptr) {
-      throw std::runtime_error("Environment variable " + std::string(var) +
-                               " is not set");
-    }
-    return std::string(value);
-  };
-
   static auto const client = [&] {
-    auto database = spanner::Database(getenv("GOOGLE_CLOUD_PROJECT"),
-                                      getenv("SPANNER_INSTANCE"),
-                                      getenv("SPANNER_DATABASE"));
+    auto database = spanner::Database(GetEnv("GOOGLE_CLOUD_PROJECT"),
+                                      GetEnv("SPANNER_INSTANCE"),
+                                      GetEnv("SPANNER_DATABASE"));
     return spanner::Client(spanner::MakeConnection(std::move(database)));
   }();
   return client;

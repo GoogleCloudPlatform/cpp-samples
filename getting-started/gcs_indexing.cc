@@ -30,7 +30,7 @@ nlohmann::json LogFormat(std::string const& sev, std::string const& msg) {
 }
 
 void LogError(std::string const& msg) {
-  std::cerr << LogFormat("error", msg) << std::endl;
+  std::cerr << LogFormat("error", msg) << "\n";
 }
 
 using GetField = std::function<spanner::Value(gcs::ObjectMetadata const&)>;
