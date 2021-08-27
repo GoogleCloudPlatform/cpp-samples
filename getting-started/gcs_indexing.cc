@@ -22,6 +22,7 @@
 
 namespace google::cloud::cpp_samples {
 
+namespace gcf = ::google::cloud::functions;
 namespace gcs = ::google::cloud::storage;
 namespace spanner = ::google::cloud::spanner;
 
@@ -29,8 +30,11 @@ nlohmann::json LogFormat(std::string const& sev, std::string const& msg) {
   return nlohmann::json{{"severity", sev}, {"message", msg}}.dump();
 }
 
-void LogError(std::string const& msg) {
+gcf::HttpResponse LogError(std::string const& msg) {
   std::cerr << LogFormat("error", msg) << "\n";
+  return gcf::HttpResponse{}
+      .set_result(gcf::HttpResponse::kBadRequest)
+      .set_payload(msg);
 }
 
 using GetField = std::function<spanner::Value(gcs::ObjectMetadata const&)>;
