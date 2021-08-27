@@ -3,9 +3,11 @@
   "version-string": "unversioned",
   "port-version": 1,
   "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
-  "description": "Running GKE Batch Jobs with C++",
+  "description": "Running Scalable Jobs with C++",
   "dependencies": [
     "functions-framework-cpp",
-    "google-cloud-cpp"
+    "google-cloud-cpp",
+    "cppcodec",
+    "nlohmann-json"
   ]
 }

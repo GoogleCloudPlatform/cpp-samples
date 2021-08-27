@@ -20,12 +20,13 @@ project(cpp-samples-getting-started CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(google_cloud_cpp_spanner REQUIRED)
-find_package(google_cloud_cpp_pubsub REQUIRED)
 find_package(functions_framework_cpp REQUIRED)
+find_package(google_cloud_cpp_pubsub REQUIRED)
+find_package(google_cloud_cpp_spanner REQUIRED)
+find_package(google_cloud_cpp_storage REQUIRED)
 
 add_library(functions_framework_cpp_function # cmake-format: sortable
-            gcs_index_scheduler.cc gcs_index_worker.cc)
+            gcs_indexing.cc gcs_indexing.h index_gcs_prefix.cc)
 target_link_libraries(
   functions_framework_cpp_function functions-framework-cpp::framework
-  google-cloud-cpp::pubsub google-cloud-cpp::spanner)
+  google-cloud-cpp::pubsub google-cloud-cpp::spanner google-cloud-cpp::storage)
