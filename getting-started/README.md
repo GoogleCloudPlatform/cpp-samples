@@ -4,11 +4,12 @@
 
 ## Motivation
 
-A typical use of C++ in Google Cloud is to perform parallel computations or analysis and store the results in some kind of database.
+A typical use of C++ in Google Cloud is to perform parallel computations or data analysis. Once completed, the results of this analysis are stored in some kind of database.
 In this guide with will build such an application, and deploy it to [Cloud Run], a managed platform to deploy containerized applications.
 
 [Cloud Run]: https://cloud.google.com/run
 [Cloud Storage]: https://cloud.google.com/storage
+[Cloud Cloud SDK]: https://cloud.google.com/sdk
 [GCS]: https://cloud.google.com/storage
 [Cloud Spanner]: https://cloud.google.com/spanner
 [Container Registry]: https://cloud.google.com/container-registry
@@ -22,13 +23,17 @@ In this guide with will build such an application, and deploy it to [Cloud Run],
 
 ## Overview
 
-For this guide, we will "index" the object metadata in a [Cloud Storage] bucket.
 Google Cloud Storage (GCS) buckets can contain thousands, millions, and even billions of objects.
-GCS can quickly find an object given its name, or list objects with names in a given range, but some applications need
-more advance lookups, such as finding all the objects within a certain size, or with a given object type.
+GCS can quickly find an object given its name, or list objects with names in a given range, but some applications need more advance lookups. For example, one may be interested in finding all the objects within a certain size, or with a given object type.
 
 In this guide, we will create and deploy an application to scan all the objects in a bucket, and store the full metadata information of each object in a [Cloud Spanner] instance.
-Once the information is in a Cloud Spanner table, where one can use normal SQL statements to search for objects.
+Once the information is in a Cloud Spanner table, one can use normal SQL statements to search for objects.
+
+The basic structure of this application is shown below. We will create a *deployment* that *scans* the object metadata in Cloud Storage. To schedule work for this deployment we will use Cloud Pub/Sub as a *job queue*.  Initially the user posts an indexing request to Cloud Pub/Sub, asking to index all the objects with a given "prefix" (often thought of a folder) in a GCS bucket. If a request fails or times out, Cloud Pub/Sub will automatically resend it to a new instance.
+
+If the work can be broken down by breaking the folder into smaller subfolders the indexing job will do so. It will simply post the request to index the subfolder to itself (though it may be handled by a different instance as the job scales up).  As the number of these requests grows, Cloud Run will automatically scale up the indexing deployment. We do not need to worry about scaling up the job, or scaling it down at the end.  In fact, Cloud Run can "scale down to zero", so we do not even need to worry about shutting it down.
+
+![Application Diagram](assets/getting-started-cpp.png)
 
 ## Prerequisites
 
@@ -40,7 +45,7 @@ The project must have billing enabled, as some of the services used in this exam
 
 Verify the [docker tool][docker] is functional on your workstation:
 
-```shell
+```sh
 docker run hello-world
 # Output: Hello from Docker! and then some more informational messages.
 ```
@@ -53,7 +58,7 @@ Verify the [pack tool][pack-install] is functional on your workstation. These
 instructions were tested with v0.20.0, although they should work with newer
 versions. Some commands may not work with older versions.
 
-```shell
+```sh
 pack version
 # Output: a version number, e.g., 0.20.0+git-66a4f32.build-2668
 ```
@@ -66,6 +71,8 @@ Throughout the example we will use `GOOGLE_CLOUD_PROJECT` as an environment vari
 
 ### Configure the Google Cloud CLI to use your project
 
+We will issue a number of commands using the [Google Cloud SDK], a command-line tool to interact with Google Cloud services.  Adding the `--project=${GOOGLE_CLOUD_PROJECT}` to each invocation of this tool quickly becomes tedious, so we start by configuring the default project:
+
 ```sh
 gcloud config set project ${GOOGLE_CLOUD_PROJECT}
 # Output: Updated property [core/project].
@@ -73,7 +80,10 @@ gcloud config set project ${GOOGLE_CLOUD_PROJECT}
 
 ### Make sure the necessary services are enabled
 
+Some services are not enabled by default when you create a Google Cloud Project. So we start by enabling all the services we will need.
+
 ```sh
+gcloud services enable run.googleapis.com
 gcloud services enable cloudbuild.googleapis.com
 gcloud services enable containerregistry.googleapis.com
 gcloud services enable container.googleapis.com
@@ -84,17 +94,52 @@ gcloud services enable spanner.googleapis.com
 #  Operation "operations/...." finished successfully.
 ```
 
+### Get the code for these examples in your workstation
+
+So far, we have not created any C++ code. It is time to compile and deploy our application, as we will need the name and URL of the deployment to wire the remaining resources. First obtain the code:
+
+```sh
+git clone https://github.com/GoogleCloudPlatform/cpp-samples
+# Output: Cloning into 'cpp-samples'...
+#   additional informational messages
+```
+
+### Build Docker images for the sample programs
+
+As mentioned above, we will use buildpacks and the `pack` tool to compile this code. Change your working directory to the code location:
+
+```sh
+cd cpp-samples/getting-started
+# Output: none
+```
+
+Compile the code into a Docker image using the pack tool. This will download and compile all the necessary dependencies, and build them in an isolated environment. This step can take several minutes, up to an hour, depending on the capabilities of your workstation. The dependencies are cached for future builds, so future builds will be faster.  You can continue with other steps while this build runs on a separate window.
+
+```sh
+pack build \
+    --builder gcr.io/buildpacks/builder:latest \
+    "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix"
+# Output: a large number of informational messages
+#   ... followed by informational messages from the package manager ...
+#   ... followed by informational messages from the build system ...
+# Successfully built image gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix
+```
+
 ### Create a Cloud Spanner Instance to host your data
+
+As mentioned above, this guide uses [Cloud Spanner] to store the data. We create the smallest possible instance. If needed we will scale up the instance, but this is economical and enough for running small jobs.
 
 ```sh
 gcloud beta spanner instances create getting-started-cpp \
     --config=regional-us-central1 \
     --processing-units=100 \
-    --description="'Getting Started with C++'"
+    --description="Getting Started with C++"
 # Output: Creating instance...done.
 ```
 
 ### Create the Cloud Spanner Database and Table for your data
+
+A Cloud Spanner instance is just the allocation of compute resources for your databases. Think of them as a virtual set of database servers dedicated to your databases. Initially these servers have no databases or tables associated with them, We need to create a database and table that will host the data for this demo:
 
 ```sh
 gcloud spanner databases create gcs-index \
@@ -105,64 +150,11 @@ gcloud spanner databases create gcs-index \
 
 ### Create a Cloud Pub/Sub Topic for Indexing Requests
 
+Publishers send messages to Cloud Pub/Sub using a **topic**, these are named, persistent resources. We need to create one to configure the application.
+
 ```sh
 gcloud pubsub topics create gcs-indexing-requests
 # Output: Created topic [projects/..../topics/gcs-indexing-requests].
-```
-
-### Get the code for these examples in your workstation
-
-```sh
-git clone https://github.com/GoogleCloudPlatform/cpp-samples
-# Output: Cloning into 'cpp-samples'...
-#   additional informational messages
-```
-
-### Change your working directory
-
-```sh
-cd cpp-samples/getting-started
-# Output: none
-```
-
-### Build Docker images for the sample programs
-
-<!-- TODO(#138) - add caching in GCR to this command -->
-
-```sh
-pack build \
-    --builder gcr.io/buildpacks/builder:latest \
-    --env GOOGLE_FUNCTION_SIGNATURE_TYPE=http \
-    --env GOOGLE_FUNCTION_TARGET=IndexGcsPrefix \
-    --path . \
-    "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix"
-# Output: a large number of informational messages
-#   ... followed by informational messages from the package manager ...
-#   ... followed by informational messages from the build system ...
-# Successfully built image gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix
-```
-
-### Push the Docker images to Google Container Registry
-
-```sh
-docker push "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest"
-# Output: The push refers to repository [gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix]
-#   ... progress information ...
-# latest: digest: sha256:<long hex sha> size: <number>
-```
-
-### Deploy the Programs to Cloud Run
-
-```sh
-gcloud run deploy index-gcs-prefix \
-    --image="gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest" \
-    --set-env-vars="SPANNER_INSTANCE=getting-started-cpp,SPANNER_DATABASE=gcs-index,TOPIC_ID=gcs-indexing-requests,GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}" \
-    --region="us-central1" \
-    --platform="managed" \
-    --no-allow-unauthenticated
-# Output: Deploying container to Cloud Run service [index-gcs-prefix] in project [....] region [us-central1]
-#     Service [gcs-indexing-worker] revision [index-gcs-prefix-00001-yeg] has been deployed and is serving 100 percent of traffic.
-#     Service URL: https://index-gcs-prefix-...run.app
 ```
 
 ### Setup the Cloud Pub/Sub subscription
@@ -209,7 +201,46 @@ gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT}" \
 #    ... full list of bindings for your project's IAM policy ...
 ```
 
+### Push the Docker images to Google Container Registry
+
+> :warning: To continue after this point, you must wait until the `pack build` command has completed.
+
+You need to make the Docker image created by `pack` available to Cloud Run, in this guide we will use [ Container Registry] (GCR) to host the images. If you have never used Container Registry before you may need to configure docker to work with it.
+
+```sh
+gcloud auth configure-docker
+# Output: Adding credentials for all GCR repositories.
+#   Docker configuration file updated.
+```
+
+Then use the `docker` tool to push the image to GCR.
+
+```sh
+docker push "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest"
+# Output: The push refers to repository [gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix]
+#   ... progress information ...
+# latest: digest: sha256:<long hex sha> size: <number>
+```
+
+### Deploy the Programs to Cloud Run
+
+Once the image is uploaded, we can create a Cloud Run deployment to run it.  This starts up an instance of the job. Cloud Run will scale up this needed, and scale down to zero if it is idle for a while:
+
+```sh
+gcloud run deploy index-gcs-prefix \
+    --image="gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest" \
+    --set-env-vars="SPANNER_INSTANCE=getting-started-cpp,SPANNER_DATABASE=gcs-index,TOPIC_ID=gcs-indexing-requests,GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}" \
+    --region="us-central1" \
+    --platform="managed" \
+    --no-allow-unauthenticated
+# Output: Deploying container to Cloud Run service [index-gcs-prefix] in project [....] region [us-central1]
+#     Service [gcs-indexing-worker] revision [index-gcs-prefix-00001-yeg] has been deployed and is serving 100 percent of traffic.
+#     Service URL: https://index-gcs-prefix-...run.app
+```
+
 ### Capture the Service URL
+
+We need the URL of this deployment to finish the Cloud Pub/Sub configuration:
 
 ```sh
 URL="$(gcloud run services describe index-gcs-prefix \
@@ -218,6 +249,8 @@ URL="$(gcloud run services describe index-gcs-prefix \
 ```
 
 ### Create the Cloud Pub/Sub push subscription
+
+Create a push subscription, this sends Cloud Pub/Sub messages as HTTP requests to the Cloud Run deployment. We use the previously created service account to make the HTTP request, and allow up to 10 minutes for the request to complete before Cloud Pub/Sub retries on a different instance.
 
 ```sh
 gcloud pubsub subscriptions create indexing-requests-cloud-run-push \
@@ -241,10 +274,52 @@ gcloud pubsub topics publish gcs-indexing-requests \
 
 ### Querying the data
 
+The data should start appearing in the Cloud Spanner database. We can use the `gcloud` tool to query this data.
+
 ```sh
 gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
     --sql="select * from gcs_objects where name like '%.txt' order by size desc limit 10"
 # Output: metadata for the 10 largest objects with names finishing in `.txt`
+```
+
+## Scaling Up
+
+> :warning: the following steps will incur significant billing costs, if you prefer, skip to the [Cleanup Section](#cleanup)
+
+To scan a larger prefix we will need to scale up the Cloud Spanner instance. We use a `gcloud` command for this:
+
+```sh
+gcloud beta spanner instances update getting-started-cpp --processing-units=3000
+# Output: Updating instance...done.
+```
+
+and then index a prefix with a few thousand objects
+
+```sh
+gcloud pubsub topics publish gcs-indexing-requests \
+    --attribute=bucket=gcp-public-data-landsat,prefix=LC08/01/006
+# Output: messageIds:
+#     - '....'
+```
+
+You can monitor the work queue using the console:
+
+```sh
+google-chrome "https://console.cloud.google.com/cloudpubsub/subscription/detail/indexing-requests-cloud-run-push?project=${GOOGLE_CLOUD_PROJECT}"
+```
+
+Or count the number of indexed objects:
+
+```sh
+gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
+    --sql="select count(*) from gcs_objects"
+# Output: metadata for the 10 largest objects with names finishing in `.txt`
+```
+
+It is also interesting to see the number of instances for the job:
+
+```sh
+google-chrome https://pantheon.corp.google.com/run/detail/us-central1/index-gcs-prefix/metrics?project=${GOOGLE_CLOUD_PROJECT}
 ```
 
 ## Cleanup
