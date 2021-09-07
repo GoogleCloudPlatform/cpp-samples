@@ -9,3 +9,11 @@ exclude = [
     ".build/",
     "cmake-out/"
 ]
+
+[[build.env]]
+name = "GOOGLE_FUNCTION_TARGET"
+value = "IndexGcsPrefix"
+
+[[build.env]]
+name = "GOOGLE_FUNCTION_SIGNATURE_TYPE"
+value = "http"
