@@ -13,6 +13,7 @@ In this guide with will build such an application, and deploy it to [Cloud Run],
 [GCS]: https://cloud.google.com/storage
 [Cloud Spanner]: https://cloud.google.com/spanner
 [Container Registry]: https://cloud.google.com/container-registry
+[Pricing Calculator]: https://cloud.google.com/products/calculator
 [cloud-run-quickstarts]: https://cloud.google.com/run/docs/quickstarts
 [gcp-quickstarts]: https://cloud.google.com/resource-manager/docs/creating-managing-projects
 [buildpacks]: https://buildpacks.io
@@ -66,7 +67,7 @@ pack version
 Throughout the example we will use `GOOGLE_CLOUD_PROJECT` as an environment variable containing the name of the project.
 
 > :warning: this guide uses Cloud Spanner, this service is billed by the hour **even if you stop using it**.
-> The charges can reaches the **hundreds** or **thousands** of dollars per month if you configure a large Cloud Spanner instance.
+> The charges can reaches the **hundreds** or **thousands** of dollars per month if you configure a large Cloud Spanner instance. Consult the [Pricing Calculator] for details.
 > Please remember to delete any Cloud Spanner resources once you no longer need them.
 
 ### Configure the Google Cloud CLI to use your project
@@ -80,7 +81,7 @@ gcloud config set project ${GOOGLE_CLOUD_PROJECT}
 
 ### Make sure the necessary services are enabled
 
-Some services are not enabled by default when you create a Google Cloud Project. So we start by enabling all the services we will need.
+Some services are not enabled by default when you create a Google Cloud Project, so we start by enabling all the services we will need.
 
 ```sh
 gcloud services enable run.googleapis.com
@@ -113,7 +114,7 @@ cd cpp-samples/getting-started
 # Output: none
 ```
 
-Compile the code into a Docker image using the pack tool. This will download and compile all the necessary dependencies, and build them in an isolated environment. This step can take several minutes, up to an hour, depending on the capabilities of your workstation. The dependencies are cached for future builds, so future builds will be faster.  You can continue with other steps while this build runs on a separate window.
+Compile the code into a Docker image using the pack tool. This will download and compile all the necessary dependencies, and build them in an isolated environment. This step can take several minutes, maybe up to an hour, depending on the capabilities of your workstation. The dependencies are cached for future builds, so future builds will be faster.  You can continue with other steps while this build runs in a separate window.
 
 ```sh
 pack build \
@@ -205,7 +206,7 @@ gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT}" \
 
 > :warning: To continue after this point, you must wait until the `pack build` command has completed.
 
-You need to make the Docker image created by `pack` available to Cloud Run, in this guide we will use [ Container Registry] (GCR) to host the images. If you have never used Container Registry before you may need to configure docker to work with it.
+You need to make the Docker image created by `pack` available to Cloud Run, in this guide we will use [Container Registry] (GCR) to host the images. If you have never used Container Registry before you may need to configure docker to work with it.
 
 ```sh
 gcloud auth configure-docker
@@ -250,7 +251,7 @@ URL="$(gcloud run services describe index-gcs-prefix \
 
 ### Create the Cloud Pub/Sub push subscription
 
-Create a push subscription, this sends Cloud Pub/Sub messages as HTTP requests to the Cloud Run deployment. We use the previously created service account to make the HTTP request, and allow up to 10 minutes for the request to complete before Cloud Pub/Sub retries on a different instance.
+Create a push subscription. This sends Cloud Pub/Sub messages as HTTP requests to the Cloud Run deployment. We use the previously created service account to make the HTTP request, and allow up to 10 minutes for the request to complete before Cloud Pub/Sub retries on a different instance.
 
 ```sh
 gcloud pubsub subscriptions create indexing-requests-cloud-run-push \
@@ -284,7 +285,7 @@ gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
 
 ## Scaling Up
 
-> :warning: the following steps will incur significant billing costs, if you prefer, skip to the [Cleanup Section](#cleanup)
+> :warning: the following steps will incur significant billing costs. Use the [Pricing Calculator] to estimate the costs. If you are uncertain as to these costs, skip to the [Cleanup Section](#cleanup).
 
 To scan a larger prefix we will need to scale up the Cloud Spanner instance. We use a `gcloud` command for this:
 
