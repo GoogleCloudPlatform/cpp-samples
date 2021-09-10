@@ -158,28 +158,7 @@ gcloud pubsub topics create gcs-indexing-requests
 # Output: Created topic [projects/..../topics/gcs-indexing-requests].
 ```
 
-### Setup the Cloud Pub/Sub subscription
-
-#### Create a Service Account to invoke Cloud Run
-
-Following security best pratices, we recommend creating a service account for
-this demo, with only permission to invoke Cloud Run functions, to minimize the
-permissions granted to each service.
-
-```sh
-gcloud iam service-accounts create getting-started-cpp-push-sa \
-   --display-name "Getting Started with C++: Push Cloud Pub/Sub messages to Cloud Run"
-# Output: Created service account [getting-started-cpp-push-sa].
-```
-
-```sh
-gcloud run services add-iam-policy-binding index-gcs-prefix \
-   --region="us-central1" \
-   --member="serviceAccount:getting-started-cpp-push-sa@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com" \
-   --role="roles/run.invoker"
-# Output: Updated IAM policy for service [index-gcs-prefix].
-#   ... and the details of the complete IAM policy ...
-```
+### Configure IAM permissions
 
 #### Capture the project number
 
@@ -257,7 +236,7 @@ Create a push subscription. This sends Cloud Pub/Sub messages as HTTP requests t
 gcloud pubsub subscriptions create indexing-requests-cloud-run-push \
     --topic="gcs-indexing-requests" \
     --push-endpoint="${URL}" \
-    --push-auth-service-account="getting-started-cpp-push-sa@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com" \
+    --push-auth-service-account="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
     --ack-deadline=600
 # Output: Created subscription [projects/${GOOGLE_CLOUD_PROJECT}/subscriptions/indexing-requests-cloud-run-push].
 ```
@@ -314,7 +293,9 @@ Or count the number of indexed objects:
 ```sh
 gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
     --sql="select count(*) from gcs_objects"
-# Output: metadata for the 10 largest objects with names finishing in `.txt`
+# Output:
+#    (Unspecified)    --> the count(*) column name
+#    225446           --> the number of rows in the `gcs_objects` table (the actual number may be different)
 ```
 
 It is also interesting to see the number of instances for the job:
@@ -358,8 +339,8 @@ gcloud pubsub subscriptions delete indexing-requests-cloud-run-push --quiet
 ### Remove the Cloud Pub/Sub Topic
 
 ```sh
-gcloud pubsub topics delete gcs-indexing-work-items --quiet
-# Output: Deleted topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-indexing-work-items].
+gcloud pubsub topics delete gcs-indexing-requests --quiet
+# Output: Deleted topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-indexing-requests].
 ```
 
 ### Remove the Container image
