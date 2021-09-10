@@ -126,6 +126,8 @@ pack build \
 # Successfully built image gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix
 ```
 
+> You can use [Container Registry] as a shared cache for buildpacks, both between workstations and for your CI systems. To learn more about this, consult the buildpack documentation for [cache images](https://buildpacks.io/docs/app-developer-guide/using-cache-image/).
+
 ### Create a Cloud Spanner Instance to host your data
 
 As mentioned above, this guide uses [Cloud Spanner] to store the data. We create the smallest possible instance. If needed we will scale up the instance, but this is economical and enough for running small jobs.
