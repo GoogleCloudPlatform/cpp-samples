@@ -1,9 +1,0 @@
-.build/
-cmake-build-debug/
-cmake-build-release/
-doc/html/
-.git/
-.idea/
-README.md
-cmake-out/
-.build/
