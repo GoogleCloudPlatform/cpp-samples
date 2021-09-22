@@ -140,7 +140,7 @@ As mentioned above, this guide uses [Cloud Spanner] to store the data. We create
 > :warning: Creating the Cloud Spanner instance incurs immediate billing costs, even if the instance is not used.
 
 ```sh
-gcloud beta spanneces create getting-started-cpp \
+gcloud beta spanner instances create getting-started-cpp \
     --config=regional-us-central1 \
     --processing-units=100 \
     --description="Getting Started with C++"
@@ -149,7 +149,7 @@ gcloud beta spanneces create getting-started-cpp \
 
 ### Create the Cloud Spanner Database and Table for your data
 
-A Cloud Spanner instance is just the allocation of compute resources for your databases. Think of them as a virtual set of database servers dedicated to your databases. Initially these servers have no databases or tables associated with them. We need to create a database and table that will host the data for this demo:
+A Cloud Spanner instance is just the allocation of compute resources for your databases. Think of them as a virtual set of database servers dedicated to your databases. Initially these servers have no databases or tables associated with the resources. We need to create a database and table that will host the data for this demo:
 
 ```sh
 gcloud spanner databases create gcs-index \
@@ -199,14 +199,12 @@ gcloud builds list --ongoing
 # Output: the list of running jobs
 ```
 
-If your build has completed the list will be empty, if you wait to wait for this build to complete use:
+If your build has completed the list will be empty. If you need to wait for this build to complete (it should take about 15 minutes) use:
 
 ```sh
 gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
 # Output: the output from the build, streamed.
 ```
-
-The build should take about 15 minutes to complete.
 
 ### Deploy the Programs to Cloud Run
 
