@@ -5,11 +5,13 @@
 ## Motivation
 
 A typical use of C++ in Google Cloud is to perform parallel computations or data analysis. Once completed, the results of this analysis are stored in some kind of database.
-In this guide with will build such an application, and deploy it to [Cloud Run], a managed platform to deploy containerized applications.
+In this guide we will build such an application, and deploy it to [Cloud Run], a managed platform to deploy containerized applications.
 
+[Cloud Build]: https://cloud.google.com/build
 [Cloud Run]: https://cloud.google.com/run
 [Cloud Storage]: https://cloud.google.com/storage
 [Cloud Cloud SDK]: https://cloud.google.com/sdk
+[Cloud Shell]: https://cloud.google.com/shell
 [GCS]: https://cloud.google.com/storage
 [Cloud Spanner]: https://cloud.google.com/spanner
 [Container Registry]: https://cloud.google.com/container-registry
@@ -44,6 +46,12 @@ The project must have billing enabled, as some of the services used in this exam
 * the [cloud run quickstarts][cloud-run-quickstarts] to setup Cloud Run in your
   project
 
+Use your workstation, a GCE instance, or the [Cloud Shell] to get a command-line prompt. If needed, login to GCP using:
+
+```sh
+gcloud auth login
+```
+
 Verify the [docker tool][docker] is functional on your workstation:
 
 ```sh
@@ -55,16 +63,11 @@ If needed, use the [online instructions][docker-install] to download and install
 this tool. This guide assumes that you have configured [sudoless docker]. If
 you do not want to enable sudoless docker, replace all `docker` commands below with `sudo docker`.
 
-Verify the [pack tool][pack-install] is functional on your workstation. These
-instructions were tested with v0.20.0, although they should work with newer
-versions. Some commands may not work with older versions.
+Throughout the example we will use `GOOGLE_CLOUD_PROJECT` as an environment variable containing the name of the project.
 
 ```sh
-pack version
-# Output: a version number, e.g., 0.20.0+git-66a4f32.build-2668
+export GOOGLE_CLOUD_PROJECT=[PROJECT ID]
 ```
-
-Throughout the example we will use `GOOGLE_CLOUD_PROJECT` as an environment variable containing the name of the project.
 
 > :warning: this guide uses Cloud Spanner, this service is billed by the hour **even if you stop using it**.
 > The charges can reaches the **hundreds** or **thousands** of dollars per month if you configure a large Cloud Spanner instance. Consult the [Pricing Calculator] for details.
@@ -72,10 +75,10 @@ Throughout the example we will use `GOOGLE_CLOUD_PROJECT` as an environment vari
 
 ### Configure the Google Cloud CLI to use your project
 
-We will issue a number of commands using the [Google Cloud SDK], a command-line tool to interact with Google Cloud services.  Adding the `--project=${GOOGLE_CLOUD_PROJECT}` to each invocation of this tool quickly becomes tedious, so we start by configuring the default project:
+We will issue a number of commands using the [Google Cloud SDK], a command-line tool to interact with Google Cloud services.  Adding the `--project=$GOOGLE_CLOUD_PROJECT` to each invocation of this tool quickly becomes tedious, so we start by configuring the default project:
 
 ```sh
-gcloud config set project ${GOOGLE_CLOUD_PROJECT}
+gcloud config set project $GOOGLE_CLOUD_PROJECT
 # Output: Updated property [core/project].
 ```
 
@@ -114,23 +117,27 @@ cd cpp-samples/getting-started
 # Output: none
 ```
 
-Compile the code into a Docker image using the pack tool. This will download and compile all the necessary dependencies, and build them in an isolated environment. This step can take several minutes, maybe up to an hour, depending on the capabilities of your workstation. The dependencies are cached for future builds, so future builds will be faster.  You can continue with other steps while this build runs in a separate window.
+Compile the code into a Docker image.  Since we are only planning to build this example once, we will use [Cloud Build]. Using [Cloud Build] is simpler, but it does not create a cache of the intermediate build artifacts. Read about [buildpacks] and the pack tool [install guide][pack-install] to run your builds locally and cache intermediate artifacts. You can also use [Container Registry] as a shared cache for buildpacks, both between workstations and for your CI systems. To learn more about this, consult the buildpack documentation for [cache images](https://buildpacks.io/docs/app-developer-guide/using-cache-image/).
+
+You can continue with other steps while this build runs in the background. Optionally, use the links in the output to follow the build process in your web browser.
 
 ```sh
-pack build \
-    --builder gcr.io/buildpacks/builder:latest \
-    "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix"
-# Output: a large number of informational messages
-#   ... followed by informational messages from the package manager ...
-#   ... followed by informational messages from the build system ...
-# Successfully built image gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix
+gcloud builds submit \
+    --async \
+    --machine-type=e2-highcpu-32 \
+    --pack image="gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/index-gcs-prefix"
+# Output:
+#   Creating temporary tarball archive of 10 file(s) totalling 58.1 KiB before compression.
+#   Uploading tarball of [.] to [gs://....tgz]
+#   Created [https://cloudbuild.googleapis.com/v1/projects/....].
+#   Logs are available at [...].
 ```
-
-> You can use [Container Registry] as a shared cache for buildpacks, both between workstations and for your CI systems. To learn more about this, consult the buildpack documentation for [cache images](https://buildpacks.io/docs/app-developer-guide/using-cache-image/).
 
 ### Create a Cloud Spanner Instance to host your data
 
 As mentioned above, this guide uses [Cloud Spanner] to store the data. We create the smallest possible instance. If needed we will scale up the instance, but this is economical and enough for running small jobs.
+
+> :warning: Creating the Cloud Spanner instance incurs immediate billing costs, even if the instance is not used.
 
 ```sh
 gcloud beta spanner instances create getting-started-cpp \
@@ -142,7 +149,7 @@ gcloud beta spanner instances create getting-started-cpp \
 
 ### Create the Cloud Spanner Database and Table for your data
 
-A Cloud Spanner instance is just the allocation of compute resources for your databases. Think of them as a virtual set of database servers dedicated to your databases. Initially these servers have no databases or tables associated with them, We need to create a database and table that will host the data for this demo:
+A Cloud Spanner instance is just the allocation of compute resources for your databases. Think of them as a virtual set of database servers dedicated to your databases. Initially these servers have no databases or tables associated with the resources. We need to create a database and table that will host the data for this demo:
 
 ```sh
 gcloud spanner databases create gcs-index \
@@ -153,7 +160,7 @@ gcloud spanner databases create gcs-index \
 
 ### Create a Cloud Pub/Sub Topic for Indexing Requests
 
-Publishers send messages to Cloud Pub/Sub using a **topic**, these are named, persistent resources. We need to create one to configure the application.
+Publishers send messages to Cloud Pub/Sub using a **topic**. These are named, persistent resources. We need to create one to configure the application.
 
 ```sh
 gcloud pubsub topics create gcs-indexing-requests
@@ -166,7 +173,7 @@ gcloud pubsub topics create gcs-indexing-requests
 
 ```sh
 PROJECT_NUMBER=$(gcloud projects list \
-    --filter="project_id=${GOOGLE_CLOUD_PROJECT}" \
+    --filter="project_id=$GOOGLE_CLOUD_PROJECT" \
     --format="value(project_number)" \
     --limit=1)
 # Output: none
@@ -175,43 +182,40 @@ PROJECT_NUMBER=$(gcloud projects list \
 #### Grant Cloud Pub/Sub permissions to use service accounts in your project
 
 ```sh
-gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT}" \
-    --member=serviceAccount:service-${PROJECT_NUMBER}@gcp-sa-pubsub.iam.gserviceaccount.com \
+gcloud projects add-iam-policy-binding "$GOOGLE_CLOUD_PROJECT" \
+    --member=serviceAccount:service-$PROJECT_NUMBER@gcp-sa-pubsub.iam.gserviceaccount.com \
     --role=roles/iam.serviceAccountTokenCreator
-# Output: Updated IAM policy for project [${GOOGLE_CLOUD_PROJECT}].
+# Output: Updated IAM policy for project [$GOOGLE_CLOUD_PROJECT].
 #    bindings:
 #    ... full list of bindings for your project's IAM policy ...
 ```
 
-### Push the Docker images to Google Container Registry
+### Wait for the build to complete
 
-> :warning: To continue after this point, you must wait until the `pack build` command has completed.
-
-You need to make the Docker image created by `pack` available to Cloud Run, in this guide we will use [Container Registry] (GCR) to host the images. If you have never used Container Registry before you may need to configure docker to work with it.
+Look at the status of your build using:
 
 ```sh
-gcloud auth configure-docker
-# Output: Adding credentials for all GCR repositories.
-#   Docker configuration file updated.
+gcloud builds list --ongoing
+# Output: the list of running jobs
 ```
 
-Then use the `docker` tool to push the image to GCR.
+If your build has completed the list will be empty. If you need to wait for this build to complete (it should take about 15 minutes) use:
 
 ```sh
-docker push "gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest"
-# Output: The push refers to repository [gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix]
-#   ... progress information ...
-# latest: digest: sha256:<long hex sha> size: <number>
+gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
+# Output: the output from the build, streamed.
 ```
 
 ### Deploy the Programs to Cloud Run
 
-Once the image is uploaded, we can create a Cloud Run deployment to run it.  This starts up an instance of the job. Cloud Run will scale up this needed, and scale down to zero if it is idle for a while:
+> :warning: To continue, you must wait until the [Cloud Build] build completed.
+
+Once the image is uploaded, we can create a Cloud Run deployment to run it.  This starts up an instance of the job. Cloud Run will scale this up or down as this needed:
 
 ```sh
 gcloud run deploy index-gcs-prefix \
-    --image="gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest" \
-    --set-env-vars="SPANNER_INSTANCE=getting-started-cpp,SPANNER_DATABASE=gcs-index,TOPIC_ID=gcs-indexing-requests,GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}" \
+    --image="gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/index-gcs-prefix:latest" \
+    --set-env-vars="SPANNER_INSTANCE=getting-started-cpp,SPANNER_DATABASE=gcs-index,TOPIC_ID=gcs-indexing-requests,GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT" \
     --region="us-central1" \
     --platform="managed" \
     --no-allow-unauthenticated
@@ -237,10 +241,10 @@ Create a push subscription. This sends Cloud Pub/Sub messages as HTTP requests t
 ```sh
 gcloud pubsub subscriptions create indexing-requests-cloud-run-push \
     --topic="gcs-indexing-requests" \
-    --push-endpoint="${URL}" \
-    --push-auth-service-account="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --push-endpoint="$URL" \
+    --push-auth-service-account="$PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
     --ack-deadline=600
-# Output: Created subscription [projects/${GOOGLE_CLOUD_PROJECT}/subscriptions/indexing-requests-cloud-run-push].
+# Output: Created subscription [projects/$GOOGLE_CLOUD_PROJECT/subscriptions/indexing-requests-cloud-run-push].
 ```
 
 ### Use `gcloud` to send an indexing request
@@ -264,9 +268,9 @@ gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
 # Output: metadata for the 10 largest objects with names finishing in `.txt`
 ```
 
-## Scaling Up
+## Optional: Scaling Up
 
-> :warning: the following steps will incur significant billing costs. Use the [Pricing Calculator] to estimate the costs. If you are uncertain as to these costs, skip to the [Cleanup Section](#cleanup).
+> :warning: The following steps will incur significant billing costs. Use the [Pricing Calculator] to estimate the costs. If you are uncertain as to these costs, skip to the [Cleanup Section](#cleanup).
 
 To scan a larger prefix we will need to scale up the Cloud Spanner instance. We use a `gcloud` command for this:
 
@@ -287,7 +291,7 @@ gcloud pubsub topics publish gcs-indexing-requests \
 You can monitor the work queue using the console:
 
 ```sh
-google-chrome "https://console.cloud.google.com/cloudpubsub/subscription/detail/indexing-requests-cloud-run-push?project=${GOOGLE_CLOUD_PROJECT}"
+google-chrome "https://console.cloud.google.com/cloudpubsub/subscription/detail/indexing-requests-cloud-run-push?project=$GOOGLE_CLOUD_PROJECT"
 ```
 
 Or count the number of indexed objects:
@@ -303,12 +307,12 @@ gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
 It is also interesting to see the number of instances for the job:
 
 ```sh
-google-chrome https://pantheon.corp.google.com/run/detail/us-central1/index-gcs-prefix/metrics?project=${GOOGLE_CLOUD_PROJECT}
+google-chrome https://pantheon.corp.google.com/run/detail/us-central1/index-gcs-prefix/metrics?project=$GOOGLE_CLOUD_PROJECT
 ```
 
 ## Cleanup
 
-> :warning: do not forget to cleanup your billable resources after going through this "Getting Started" guide.
+> :warning: Do not forget to cleanup your billable resources after going through this "Getting Started" guide.
 
 ### Remove the Cloud Spanner Instance
 
@@ -335,20 +339,20 @@ gcloud run services delete index-gcs-prefix \
 
 ```sh
 gcloud pubsub subscriptions delete indexing-requests-cloud-run-push --quiet
-# Output: Deleted subscription [projects/${GOOGLE_CLOUD_PROJECT}/subscriptions/indexing-requests-cloud-run-push].
+# Output: Deleted subscription [projects/$GOOGLE_CLOUD_PROJECT/subscriptions/indexing-requests-cloud-run-push].
 ```
 
 ### Remove the Cloud Pub/Sub Topic
 
 ```sh
 gcloud pubsub topics delete gcs-indexing-requests --quiet
-# Output: Deleted topic [projects/${GOOGLE_CLOUD_PROJECT}/topics/gcs-indexing-requests].
+# Output: Deleted topic [projects/$GOOGLE_CLOUD_PROJECT/topics/gcs-indexing-requests].
 ```
 
 ### Remove the Container image
 
 ```sh
-gcloud container images delete gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest --quiet
-# Output: Deleted [gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix:latest]
-# Output: Deleted [gcr.io/${GOOGLE_CLOUD_PROJECT}/getting-started-cpp/index-gcs-prefix@sha256:....]
+gcloud container images delete gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/index-gcs-prefix:latest --quiet
+# Output: Deleted [gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/index-gcs-prefix:latest]
+# Output: Deleted [gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/index-gcs-prefix@sha256:....]
 ```
