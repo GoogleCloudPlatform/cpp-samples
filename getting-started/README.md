@@ -1,7 +1,5 @@
 # Getting Started with GCP and C++
 
-> :warning: This is a work-in-progress, we are writing down the guide in small steps, please do not rely on it until completed.
-
 ## Motivation
 
 A typical use of C++ in Google Cloud is to perform parallel computations or data analysis. Once completed, the results of this analysis are stored in some kind of database.
