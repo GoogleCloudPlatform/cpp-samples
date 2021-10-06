@@ -16,7 +16,7 @@
 # [START dockerfile]
 # We chose Alpine to build the image because it has good support for creating
 # statically-linked, small programs.
-ARG DISTRO_VERSION=edge
+ARG DISTRO_VERSION=3.13
 FROM alpine:${DISTRO_VERSION} AS base
 
 # Create separate targets for each phase, this allows us to cache intermediate
