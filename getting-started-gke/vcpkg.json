@@ -1,0 +1,20 @@
+{
+  "name": "gcp-cpp-samples-getting-started-gke",
+  "version-string": "unversioned",
+  "port-version": 1,
+  "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
+  "description": "Running Scalable Jobs with C++ and GKE",
+  "dependencies": [
+    {
+      "name": "google-cloud-cpp",
+      "default-features": false,
+      "features": [
+        "pubsub",
+        "spanner",
+        "storage"
+      ]
+    },
+    "cppcodec",
+    "nlohmann-json"
+  ]
+}
