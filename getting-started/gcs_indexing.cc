@@ -22,20 +22,8 @@
 
 namespace google::cloud::cpp_samples {
 
-namespace gcf = ::google::cloud::functions;
 namespace gcs = ::google::cloud::storage;
 namespace spanner = ::google::cloud::spanner;
-
-nlohmann::json LogFormat(std::string const& sev, std::string const& msg) {
-  return nlohmann::json{{"severity", sev}, {"message", msg}}.dump();
-}
-
-gcf::HttpResponse LogError(std::string const& msg) {
-  std::cerr << LogFormat("error", msg) << "\n";
-  return gcf::HttpResponse{}
-      .set_result(gcf::HttpResponse::kBadRequest)
-      .set_payload(msg);
-}
 
 using GetField = std::function<spanner::Value(gcs::ObjectMetadata const&)>;
 
@@ -163,6 +151,8 @@ auto Names() {
   return names;
 }
 
+std::size_t ColumnCount() { return Columns().size(); }
+
 spanner::Mutation UpdateObjectMetadata(gcs::ObjectMetadata const& object) {
   auto const& columns = Columns();
   std::vector<spanner::Value> values(columns.size());
@@ -174,6 +164,15 @@ spanner::Mutation UpdateObjectMetadata(gcs::ObjectMetadata const& object) {
   return spanner::InsertOrUpdateMutationBuilder("gcs_objects", Names())
       .AddRow(std::move(values))
       .Build();
+}
+
+std::string GetEnv(char const* var) {
+  auto const* value = std::getenv(var);
+  if (value == nullptr) {
+    throw std::runtime_error("Environment variable " + std::string(var) +
+                             " is not set");
+  }
+  return value;
 }
 
 }  // namespace google::cloud::cpp_samples
