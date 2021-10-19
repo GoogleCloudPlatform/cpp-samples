@@ -27,6 +27,5 @@ find_package(google_cloud_cpp_storage REQUIRED)
 add_executable(index_gcs_prefix # cmake-format: sortable
                index_gcs_prefix.cc)
 target_link_libraries(
-  index_gcs_prefix
-  PRIVATE
-  google-cloud-cpp::pubsub google-cloud-cpp::spanner google-cloud-cpp::storage)
+  index_gcs_prefix PRIVATE google-cloud-cpp::pubsub google-cloud-cpp::spanner
+                           google-cloud-cpp::storage)
