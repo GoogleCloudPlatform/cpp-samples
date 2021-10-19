@@ -26,6 +26,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
     && apt-get install google-cloud-sdk -y
 
 WORKDIR /usr/local/vcpkg
-RUN curl -sSL "https://github.com/microsoft/vcpkg/archive/2021.05.12.tar.gz" | \
+# Pin vcpkg to a version including `google-cloud-cpp-v1.32.1`
+RUN curl -sSL "https://github.com/microsoft/vcpkg/archive/b8f91d13f3494cd673776aabdc504f5c736fdba2.tar.gz" | \
     tar --strip-components=1 -zxf - \
     && ./bootstrap-vcpkg.sh
