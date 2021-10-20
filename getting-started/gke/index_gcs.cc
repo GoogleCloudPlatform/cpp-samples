@@ -43,12 +43,11 @@ class MutationBatcher {
   MutationBatcher(spanner::Client client);
 
   future<Status> Push(gcs::ObjectMetadata const& o);
-  void Flush();
 
  private:
-  void FlushIfNeeded(std::unique_lock<std::mutex> const& lk);
-  void Flush(std::unique_lock<std::mutex> const& lk);
-  void ReapBackgroundTasks(std::unique_lock<std::mutex> const& lk);
+  void FlushIfNeeded();
+  void Flush();
+  void ReapBackgroundTasks();
 
   struct Item {
     spanner::Mutation mutation;
@@ -129,14 +128,12 @@ MutationBatcher::MutationBatcher(spanner::Client client)
 future<Status> MutationBatcher::Push(gcs::ObjectMetadata const& o) {
   std::unique_lock lk(mu_);
   // Make room for the new data.
-  FlushIfNeeded(lk);
+  FlushIfNeeded();
   items_.push_back(Item{UpdateObjectMetadata(o), promise<Status>{}});
   return items_.back().done.get_future();
 }
 
-void MutationBatcher::Flush() { Flush(std::unique_lock(mu_)); }
-
-void MutationBatcher::FlushIfNeeded(std::unique_lock<std::mutex> const& lk) {
+void MutationBatcher::FlushIfNeeded() {
   // Spanner limits a commit to 20,000 mutations, where each modified column
   // counts as a separate "mutation".
   auto constexpr kSpannerMutationLimit = 20'000UL;
@@ -144,11 +141,11 @@ void MutationBatcher::FlushIfNeeded(std::unique_lock<std::mutex> const& lk) {
   //   https://cloud.google.com/spanner/docs/bulk-loading
   auto constexpr kEfficientRowLimit = 256UL;
 
-  if (items_.size() >= kEfficientRowLimit) return Flush(lk);
-  if (items_.size() * ColumnCount() >= kSpannerMutationLimit) return Flush(lk);
+  if (items_.size() >= kEfficientRowLimit) return Flush();
+  if (items_.size() * ColumnCount() >= kSpannerMutationLimit) return Flush();
 }
 
-void MutationBatcher::Flush(std::unique_lock<std::mutex> const& lk) {
+void MutationBatcher::Flush() {
   if (items_.empty()) return;
   std::vector<Item> items;
   items.swap(items_);
@@ -162,11 +159,10 @@ void MutationBatcher::Flush(std::unique_lock<std::mutex> const& lk) {
         for (auto& i : items) i.done.set_value(commit_result.status());
       },
       client_, std::move(items)));
-  ReapBackgroundTasks(lk);
+  ReapBackgroundTasks();
 }
 
-void MutationBatcher::ReapBackgroundTasks(
-    std::unique_lock<std::mutex> const& lk) {
+void MutationBatcher::ReapBackgroundTasks() {
   auto constexpr kMaxRunningBackgroundTasks = 128;
   while (background_tasks_.size() >= kMaxRunningBackgroundTasks) {
     background_tasks_.erase(
@@ -279,8 +275,6 @@ void IndexGcsPrefix(pubsub::Message m, pubsub::AckHandler h, gcs::Client client,
             [&](gcs::ObjectMetadata const& o) { return batcher.Push(o); }},
         *entry));
   }
-  // publisher.Flush();
-  // batcher.Flush();
 
   when_all(std::move(pending))
       .then([handler = std::move(h), fun = std::string(__func__), bucket,
