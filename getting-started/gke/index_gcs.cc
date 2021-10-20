@@ -44,10 +44,11 @@ class MutationBatcher {
 
   future<Status> Push(gcs::ObjectMetadata const& o);
 
+  void ReapBackgroundTasks();
+
  private:
   void FlushIfNeeded();
   void Flush();
-  void ReapBackgroundTasks();
 
   struct Item {
     spanner::Mutation mutation;
@@ -61,7 +62,8 @@ class MutationBatcher {
 };
 
 void IndexGcsPrefix(pubsub::Message m, pubsub::AckHandler h, gcs::Client client,
-                    pubsub::Publisher publisher, MutationBatcher& batcher);
+                    pubsub::Publisher publisher,
+                    std::shared_ptr<MutationBatcher> batcher);
 
 }  // namespace
 
@@ -88,7 +90,7 @@ int main(int argc, char* argv[]) try {
   auto session =
       subscriber.Subscribe([g = std::move(gcs_client), p = std::move(publisher),
                             b = std::move(batcher)](auto m, auto h) {
-        IndexGcsPrefix(std::move(m), std::move(h), g, p, *b);
+        IndexGcsPrefix(std::move(m), std::move(h), g, p, b);
       });
   auto status = session.get();
   if (status.ok()) return 0;
@@ -133,6 +135,19 @@ future<Status> MutationBatcher::Push(gcs::ObjectMetadata const& o) {
   return items_.back().done.get_future();
 }
 
+void MutationBatcher::ReapBackgroundTasks() {
+  std::unique_lock lk(mu_);
+  // Remove any tasks that have completed. This would not be needed if
+  // we had a fully asynchronous `AsyncCommit()` function is Cloud Spanner.
+  background_tasks_.erase(
+      std::remove_if(background_tasks_.begin(), background_tasks_.end(),
+                     [](auto& t) {
+                       using namespace std::chrono_literals;
+                       return t.wait_for(10ms) == std::future_status::ready;
+                     }),
+      background_tasks_.end());
+}
+
 void MutationBatcher::FlushIfNeeded() {
   // Spanner limits a commit to 20,000 mutations, where each modified column
   // counts as a separate "mutation".
@@ -159,20 +174,6 @@ void MutationBatcher::Flush() {
         for (auto& i : items) i.done.set_value(commit_result.status());
       },
       client_, std::move(items)));
-  ReapBackgroundTasks();
-}
-
-void MutationBatcher::ReapBackgroundTasks() {
-  auto constexpr kMaxRunningBackgroundTasks = 128;
-  while (background_tasks_.size() >= kMaxRunningBackgroundTasks) {
-    background_tasks_.erase(
-        std::remove_if(background_tasks_.begin(), background_tasks_.end(),
-                       [](auto& t) {
-                         using namespace std::chrono_literals;
-                         return t.wait_for(10ms) == std::future_status::ready;
-                       }),
-        background_tasks_.end());
-  }
 }
 
 template <typename T>
@@ -217,7 +218,8 @@ template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
 void IndexGcsPrefix(pubsub::Message m, pubsub::AckHandler h, gcs::Client client,
-                    pubsub::Publisher publisher, MutationBatcher& batcher) {
+                    pubsub::Publisher publisher,
+                    std::shared_ptr<MutationBatcher> batcher) {
   auto deadline = std::chrono::steady_clock::now() + std::chrono::minutes(5);
   auto const attributes = m.attributes();
   auto i = attributes.find("bucket");
@@ -272,7 +274,7 @@ void IndexGcsPrefix(pubsub::Message m, pubsub::AckHandler h, gcs::Client client,
                                .Build())
                   .then([](auto f) { return f.get().status(); });
             },
-            [&](gcs::ObjectMetadata const& o) { return batcher.Push(o); }},
+            [&](gcs::ObjectMetadata const& o) { return batcher->Push(o); }},
         *entry));
   }
 
@@ -284,6 +286,12 @@ void IndexGcsPrefix(pubsub::Message m, pubsub::AckHandler h, gcs::Client client,
                                          [](auto&& f) { return f.get().ok(); });
         if (success) return std::move(handler).ack();
         std::move(handler).nack();
+      })
+      .then([batcher](auto f) {
+        // Once the operations (including any writes to Cloud Spanner) have
+        // completed we cleanup the background tasks that might have been
+        // created to satisfy the request.
+        batcher->ReapBackgroundTasks();
       });
 }
 
