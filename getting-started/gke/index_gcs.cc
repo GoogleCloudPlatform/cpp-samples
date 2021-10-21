@@ -138,7 +138,7 @@ future<Status> MutationBatcher::Push(gcs::ObjectMetadata const& o) {
 void MutationBatcher::ReapBackgroundTasks() {
   std::unique_lock lk(mu_);
   // Remove any tasks that have completed. This would not be needed if
-  // we had a fully asynchronous `AsyncCommit()` function is Cloud Spanner.
+  // we had a fully asynchronous `AsyncCommit()` function in Cloud Spanner.
   background_tasks_.erase(
       std::remove_if(background_tasks_.begin(), background_tasks_.end(),
                      [](auto& t) {

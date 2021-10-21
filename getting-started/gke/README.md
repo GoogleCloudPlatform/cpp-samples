@@ -1,9 +1,9 @@
 # Getting Started with GKE and C++
 
-> :warning: this guide is work-in-progress. It is know to be incomplete,
+> :warning: this guide is work-in-progress. It is known to be incomplete,
 > and none of the instructions have been validated or tested in any way.
 
-This guide builds upon the general [Getting Started with C++](../README.md) guide.
+This guide builds upon the general [Getting Started with C++] guide.
 It deploys the GCS indexing application to GKE instead of Cloud Run, taking advantage of the
 long-running servers in GKE to improve throughput.
 
@@ -13,6 +13,7 @@ long-running servers in GKE to improve throughput.
  TODO(coryan) - something about how batching multiple mutations is more efficient, but requires long-running servers
 -->
 
+[Getting Started with C++]: ../README.md
 [Cloud Build]: https://cloud.google.com/build
 [Cloud Run]: https://cloud.google.com/run
 [Cloud Storage]: https://cloud.google.com/storage
@@ -32,6 +33,16 @@ long-running servers in GKE to improve throughput.
 
 ## Overview
 
+<!--
+ TODO(coryan) - clean up this text and create a new diagram.
+-->
+
+Our plan is to replace "Cloud Run" with "GKE" in the [Getting Started with C++] application:
+
+![Application Diagram](assets/getting-started-cpp.png)
+
+GKE can still scale up the number of instances as needed.  Unlike Cloud Run, it cannot scale down the number
+of instances to zero.
 
 ## Prerequisites
 
@@ -105,6 +116,16 @@ git clone https://github.com/GoogleCloudPlatform/cpp-samples
 
 ### Build Docker images for the sample programs
 
+```sh
+gcloud builds submit \
+    --machine-type=e2-highcpu-32 \
+    --tag image="gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/gke"
+# Output:
+#   Creating temporary tarball archive of ... file(s) totalling ... KiB before compression.
+#   Uploading tarball of [.] to [gs://....tgz]
+#   Created [https://cloudbuild.googleapis.com/v1/projects/....].
+#   Logs are available at [...].
+```
 
 ### Create a Cloud Spanner Instance to host your data
 
@@ -126,7 +147,7 @@ A Cloud Spanner instance is just the allocation of compute resources for your da
 
 ```sh
 gcloud spanner databases create gcs-index \
-    --ddl-file=gcs_objects.sql \
+    --ddl-file=../gcs_objects.sql \
     --instance=getting-started-cpp
 # Output: Creating database...done.
 ```
@@ -140,28 +161,9 @@ gcloud pubsub topics create gcs-indexing-requests
 # Output: Created topic [projects/..../topics/gcs-indexing-requests].
 ```
 
-### Configure IAM permissions
+### Create the GKE cluster
 
-#### Capture the project number
-
-```sh
-PROJECT_NUMBER=$(gcloud projects list \
-    --filter="project_id=$GOOGLE_CLOUD_PROJECT" \
-    --format="value(project_number)" \
-    --limit=1)
-# Output: none
-```
-
-#### Grant Cloud Pub/Sub permissions to use service accounts in your project
-
-```sh
-gcloud projects add-iam-policy-binding "$GOOGLE_CLOUD_PROJECT" \
-    --member=serviceAccount:service-$PROJECT_NUMBER@gcp-sa-pubsub.iam.gserviceaccount.com \
-    --role=roles/iam.serviceAccountTokenCreator
-# Output: Updated IAM policy for project [$GOOGLE_CLOUD_PROJECT].
-#    bindings:
-#    ... full list of bindings for your project's IAM policy ...
-```
+<!-- TODO(coryan) - add instructions to create GKE cluster -->
 
 ### Wait for the build to complete
 
@@ -181,7 +183,10 @@ gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
 
 ### Deploy the Programs to GKE
 
-TODO(coryan)
+<!-- TODO(coryan) -- show how to deploy to GKE -->
+
+```sh
+```
 
 ### Use `gcloud` to send an indexing request
 
@@ -259,16 +264,11 @@ gcloud spanner instances delete getting-started-cpp --quiet
 # Output: none
 ```
 
-### Remove the Cloud Run Deployments
+### Remove the GKE cluster
+
+<!-- TODO(coryan) - add instructions to remove GKE cluster -->
 
 ```sh
-gcloud run services delete index-gcs-prefix \
-    --region="us-central1" \
-    --platform="managed" \
-    --quiet
-# Output:
-#   Deleting [index-gcs-prefix]...done.
-#   Deleted [index-gcs-prefix].
 ```
 
 ### Remove the Cloud Pub/Sub Subscription
