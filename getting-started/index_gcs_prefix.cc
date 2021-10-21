@@ -29,17 +29,8 @@ namespace gcf = ::google::cloud::functions;
 namespace gcs = ::google::cloud::storage;
 namespace pubsub = ::google::cloud::pubsub;
 namespace spanner = ::google::cloud::spanner;
-using google::cloud::cpp_samples::LogError;
+using google::cloud::cpp_samples::GetEnv;
 using google::cloud::cpp_samples::UpdateObjectMetadata;
-
-std::string GetEnv(char const* var) {
-  auto const* value = std::getenv(var);
-  if (value == nullptr) {
-    throw std::runtime_error("Environment variable " + std::string(var) +
-                             " is not set");
-  }
-  return value;
-}
 
 pubsub::Publisher GetPublisher() {
   static auto const publisher = [&] {
@@ -67,6 +58,17 @@ void ThrowIfNotOkay(std::string const& context,
   std::ostringstream os;
   os << "error while " << context << " status=" << status;
   throw std::runtime_error(std::move(os).str());
+}
+
+nlohmann::json LogFormat(std::string const& sev, std::string const& msg) {
+  return nlohmann::json{{"severity", sev}, {"message", msg}}.dump();
+}
+
+gcf::HttpResponse LogError(std::string const& msg) {
+  std::cerr << LogFormat("error", msg) << "\n";
+  return gcf::HttpResponse{}
+      .set_result(gcf::HttpResponse::kBadRequest)
+      .set_payload(msg);
 }
 
 }  // namespace

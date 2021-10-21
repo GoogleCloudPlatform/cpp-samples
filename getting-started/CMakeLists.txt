@@ -14,7 +14,7 @@
 # limitations under the License.
 # ~~~
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(cpp-samples-getting-started CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -25,8 +25,24 @@ find_package(google_cloud_cpp_pubsub REQUIRED)
 find_package(google_cloud_cpp_spanner REQUIRED)
 find_package(google_cloud_cpp_storage REQUIRED)
 
-add_library(functions_framework_cpp_function # cmake-format: sortable
-            gcs_indexing.cc gcs_indexing.h index_gcs_prefix.cc)
+add_library(gcs_indexing EXCLUDE_FROM_ALL # cmake-format: sortable
+                                          gcs_indexing.cc gcs_indexing.h)
+target_link_libraries(gcs_indexing PUBLIC google-cloud-cpp::spanner
+                                          google-cloud-cpp::storage)
+target_include_directories(gcs_indexing PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_features(gcs_indexing PUBLIC cxx_std_17)
+
+add_library(
+  functions_framework_cpp_function EXCLUDE_FROM_ALL
+  # cmake-format: sortable
+  gcs_indexing.cc gcs_indexing.h index_gcs_prefix.cc)
 target_link_libraries(
-  functions_framework_cpp_function functions-framework-cpp::framework
-  google-cloud-cpp::pubsub google-cloud-cpp::spanner google-cloud-cpp::storage)
+  functions_framework_cpp_function
+  PRIVATE gcs_indexing
+  PUBLIC functions-framework-cpp::framework google-cloud-cpp::pubsub
+         google-cloud-cpp::spanner google-cloud-cpp::storage)
+
+add_executable(gke_index_gcs EXCLUDE_FROM_ALL gke/index_gcs.cc)
+target_link_libraries(
+  gke_index_gcs PRIVATE gcs_indexing google-cloud-cpp::pubsub
+                        google-cloud-cpp::spanner google-cloud-cpp::storage)

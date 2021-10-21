@@ -1,10 +1,19 @@
-# Getting Started with GCP and C++
+# Getting Started with GKE and C++
+
+> :warning: this guide is work-in-progress. It is known to be incomplete,
+> and none of the instructions have been validated or tested in any way.
+
+This guide builds upon the general [Getting Started with C++] guide.
+It deploys the GCS indexing application to GKE instead of Cloud Run, taking advantage of the
+long-running servers in GKE to improve throughput.
 
 ## Motivation
 
-A typical use of C++ in Google Cloud is to perform parallel computations or data analysis. Once completed, the results of this analysis are stored in some kind of database.
-In this guide we will build such an application, and deploy it to [Cloud Run], a managed platform to deploy containerized applications.
+<!--
+ TODO(coryan) - something about how batching multiple mutations is more efficient, but requires long-running servers
+-->
 
+[Getting Started with C++]: ../README.md
 [Cloud Build]: https://cloud.google.com/build
 [Cloud Run]: https://cloud.google.com/run
 [Cloud Storage]: https://cloud.google.com/storage
@@ -24,17 +33,16 @@ In this guide we will build such an application, and deploy it to [Cloud Run], a
 
 ## Overview
 
-Google Cloud Storage (GCS) buckets can contain thousands, millions, and even billions of objects.
-GCS can quickly find an object given its name, or list objects with names in a given range, but some applications need more advance lookups. For example, one may be interested in finding all the objects within a certain size, or with a given object type.
+<!--
+ TODO(coryan) - clean up this text and create a new diagram.
+-->
 
-In this guide, we will create and deploy an application to scan all the objects in a bucket, and store the full metadata information of each object in a [Cloud Spanner] instance.
-Once the information is in a Cloud Spanner table, one can use normal SQL statements to search for objects.
-
-The basic structure of this application is shown below. We will create a *deployment* that *scans* the object metadata in Cloud Storage. To schedule work for this deployment we will use Cloud Pub/Sub as a *job queue*.  Initially the user posts an indexing request to Cloud Pub/Sub, asking to index all the objects with a given "prefix" (often thought of a folder) in a GCS bucket. If a request fails or times out, Cloud Pub/Sub will automatically resend it to a new instance.
-
-If the work can be broken down by breaking the folder into smaller subfolders the indexing job will do so. It will simply post the request to index the subfolder to itself (though it may be handled by a different instance as the job scales up).  As the number of these requests grows, Cloud Run will automatically scale up the indexing deployment. We do not need to worry about scaling up the job, or scaling it down at the end.  In fact, Cloud Run can "scale down to zero", so we do not even need to worry about shutting it down.
+Our plan is to replace "Cloud Run" with "GKE" in the [Getting Started with C++] application:
 
 ![Application Diagram](assets/getting-started-cpp.png)
+
+GKE can still scale up the number of instances as needed.  Unlike Cloud Run, it cannot scale down the number
+of instances to zero.
 
 ## Prerequisites
 
@@ -108,24 +116,12 @@ git clone https://github.com/GoogleCloudPlatform/cpp-samples
 
 ### Build Docker images for the sample programs
 
-As mentioned above, we will use buildpacks and the `pack` tool to compile this code. Change your working directory to the code location:
-
-```sh
-cd cpp-samples/getting-started
-# Output: none
-```
-
-Compile the code into a Docker image.  Since we are only planning to build this example once, we will use [Cloud Build]. Using [Cloud Build] is simpler, but it does not create a cache of the intermediate build artifacts. Read about [buildpacks] and the pack tool [install guide][pack-install] to run your builds locally and cache intermediate artifacts. You can also use [Container Registry] as a shared cache for buildpacks, both between workstations and for your CI systems. To learn more about this, consult the buildpack documentation for [cache images](https://buildpacks.io/docs/app-developer-guide/using-cache-image/).
-
-You can continue with other steps while this build runs in the background. Optionally, use the links in the output to follow the build process in your web browser.
-
 ```sh
 gcloud builds submit \
-    --async \
     --machine-type=e2-highcpu-32 \
-    --pack image="gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/index-gcs-prefix"
+    --tag image="gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/gke"
 # Output:
-#   Creating temporary tarball archive of 10 file(s) totalling 58.1 KiB before compression.
+#   Creating temporary tarball archive of ... file(s) totalling ... KiB before compression.
 #   Uploading tarball of [.] to [gs://....tgz]
 #   Created [https://cloudbuild.googleapis.com/v1/projects/....].
 #   Logs are available at [...].
@@ -151,7 +147,7 @@ A Cloud Spanner instance is just the allocation of compute resources for your da
 
 ```sh
 gcloud spanner databases create gcs-index \
-    --ddl-file=gcs_objects.sql \
+    --ddl-file=../gcs_objects.sql \
     --instance=getting-started-cpp
 # Output: Creating database...done.
 ```
@@ -165,28 +161,9 @@ gcloud pubsub topics create gcs-indexing-requests
 # Output: Created topic [projects/..../topics/gcs-indexing-requests].
 ```
 
-### Configure IAM permissions
+### Create the GKE cluster
 
-#### Capture the project number
-
-```sh
-PROJECT_NUMBER=$(gcloud projects list \
-    --filter="project_id=$GOOGLE_CLOUD_PROJECT" \
-    --format="value(project_number)" \
-    --limit=1)
-# Output: none
-```
-
-#### Grant Cloud Pub/Sub permissions to use service accounts in your project
-
-```sh
-gcloud projects add-iam-policy-binding "$GOOGLE_CLOUD_PROJECT" \
-    --member=serviceAccount:service-$PROJECT_NUMBER@gcp-sa-pubsub.iam.gserviceaccount.com \
-    --role=roles/iam.serviceAccountTokenCreator
-# Output: Updated IAM policy for project [$GOOGLE_CLOUD_PROJECT].
-#    bindings:
-#    ... full list of bindings for your project's IAM policy ...
-```
+<!-- TODO(coryan) - add instructions to create GKE cluster -->
 
 ### Wait for the build to complete
 
@@ -204,45 +181,11 @@ gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
 # Output: the output from the build, streamed.
 ```
 
-### Deploy the Programs to Cloud Run
+### Deploy the Programs to GKE
 
-> :warning: To continue, you must wait until the [Cloud Build] build completed.
-
-Once the image is uploaded, we can create a Cloud Run deployment to run it.  This starts up an instance of the job. Cloud Run will scale this up or down as this needed:
+<!-- TODO(coryan) -- show how to deploy to GKE -->
 
 ```sh
-gcloud run deploy index-gcs-prefix \
-    --image="gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/index-gcs-prefix:latest" \
-    --set-env-vars="SPANNER_INSTANCE=getting-started-cpp,SPANNER_DATABASE=gcs-index,TOPIC_ID=gcs-indexing-requests,GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT" \
-    --region="us-central1" \
-    --platform="managed" \
-    --no-allow-unauthenticated
-# Output: Deploying container to Cloud Run service [index-gcs-prefix] in project [....] region [us-central1]
-#     Service [gcs-indexing-worker] revision [index-gcs-prefix-00001-yeg] has been deployed and is serving 100 percent of traffic.
-#     Service URL: https://index-gcs-prefix-...run.app
-```
-
-### Capture the Service URL
-
-We need the URL of this deployment to finish the Cloud Pub/Sub configuration:
-
-```sh
-URL="$(gcloud run services describe index-gcs-prefix \
-    --region="us-central1" --format="value(status.url)")"
-# Output: none
-```
-
-### Create the Cloud Pub/Sub push subscription
-
-Create a push subscription. This sends Cloud Pub/Sub messages as HTTP requests to the Cloud Run deployment. We use the previously created service account to make the HTTP request, and allow up to 10 minutes for the request to complete before Cloud Pub/Sub retries on a different instance.
-
-```sh
-gcloud pubsub subscriptions create indexing-requests-cloud-run-push \
-    --topic="gcs-indexing-requests" \
-    --push-endpoint="$URL" \
-    --push-auth-service-account="$PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
-    --ack-deadline=600
-# Output: Created subscription [projects/$GOOGLE_CLOUD_PROJECT/subscriptions/indexing-requests-cloud-run-push].
 ```
 
 ### Use `gcloud` to send an indexing request
@@ -308,10 +251,6 @@ It is also interesting to see the number of instances for the job:
 google-chrome https://pantheon.corp.google.com/run/detail/us-central1/index-gcs-prefix/metrics?project=$GOOGLE_CLOUD_PROJECT
 ```
 
-## Next Steps
-
-* Learn about how to deploy similar code [GKE](gke/README.md)
-
 ## Cleanup
 
 > :warning: Do not forget to cleanup your billable resources after going through this "Getting Started" guide.
@@ -325,16 +264,11 @@ gcloud spanner instances delete getting-started-cpp --quiet
 # Output: none
 ```
 
-### Remove the Cloud Run Deployments
+### Remove the GKE cluster
+
+<!-- TODO(coryan) - add instructions to remove GKE cluster -->
 
 ```sh
-gcloud run services delete index-gcs-prefix \
-    --region="us-central1" \
-    --platform="managed" \
-    --quiet
-# Output:
-#   Deleting [index-gcs-prefix]...done.
-#   Deleted [index-gcs-prefix].
 ```
 
 ### Remove the Cloud Pub/Sub Subscription
