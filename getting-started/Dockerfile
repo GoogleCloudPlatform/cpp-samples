@@ -45,17 +45,15 @@ RUN git clone https://github.com/microsoft/vcpkg.git
 RUN /v/vcpkg/bootstrap-vcpkg.sh
 
 COPY vcpkg.json /v/deps/
-RUN /v/vcpkg/vcpkg install --x-manifest-root=/v/deps 
+RUN /v/vcpkg/vcpkg install --x-manifest-root=/v/deps  --clean-after-build
 
 # Run the CMake configuration step.
 COPY . /v/source
 RUN cmake -S/v/source -B/v/binary -GNinja \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_TOOLCHAIN_FILE=/v/vcpkg/scripts/buildsystems/vcpkg.cmake
-
-# Compile the binary and strip it to reduce its size.
-RUN cmake --build /v/binary --target gke_index_gcs
-RUN strip /v/binary/gke_index_gcs
+    -DCMAKE_TOOLCHAIN_FILE=/v/vcpkg/scripts/buildsystems/vcpkg.cmake \
+    && cmake --build /v/binary --target gke_index_gcs \
+    && strip /v/binary/gke_index_gcs
 
 # Create the final deployment image, install the minimal dependencies for the
 # program.
