@@ -41,9 +41,10 @@ RUN apt update && \
 FROM devtools AS build
 
 WORKDIR /v
-RUN git clone https://github.com/microsoft/vcpkg.git
-RUN /v/vcpkg/bootstrap-vcpkg.sh
+RUN git clone https://github.com/microsoft/vcpkg.git \
+    && /v/vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
+WORKDIR /v/vcpkg
 COPY vcpkg.json /v/deps/
 RUN /v/vcpkg/vcpkg install --x-manifest-root=/v/deps  --clean-after-build
 
