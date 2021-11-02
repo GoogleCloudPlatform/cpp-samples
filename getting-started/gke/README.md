@@ -4,8 +4,8 @@
 > and none of the instructions have been validated or tested in any way.
 
 This guide builds upon the general [Getting Started with C++] guide.
-It deploys the GCS indexing application to GKE instead of Cloud Run, taking advantage of the
-long-running servers in GKE to improve throughput.
+It deploys the GCS indexing application to GKE instead of Cloud Run, taking
+advantage of the long-running servers in GKE to improve throughput.
 
 ## Motivation
 
@@ -38,22 +38,26 @@ long-running servers in GKE to improve throughput.
  TODO(coryan) - clean up this text and create a new diagram.
 -->
 
-Our plan is to replace "Cloud Run" with "GKE" in the [Getting Started with C++] application:
+Our plan is to replace "Cloud Run" with "GKE" in the [Getting Started with C++]
+application:
 
 ![Application Diagram](assets/getting-started-cpp.png)
 
-GKE can still scale up the number of instances as needed.  Unlike Cloud Run, it cannot scale down the number
-of instances to zero.
+GKE can still scale up the number of instances as needed.  Unlike Cloud Run, it
+cannot scale down the number of instances to zero.
 
 ## Prerequisites
 
-This example assumes that you have an existing GCP (Google Cloud Platform) project.
-The project must have billing enabled, as some of the services used in this example require it. If needed, consult:
+This example assumes that you have an existing GCP (Google Cloud Platform)
+project. The project must have billing enabled, as some of the services used in
+this example require it. If needed, consult:
+
 * the [GCP quickstarts][gcp-quickstarts] to setup a GCP project
 * the [cloud run quickstarts][cloud-run-quickstarts] to setup Cloud Run in your
   project
 
-Use your workstation, a GCE instance, or the [Cloud Shell] to get a command-line prompt. If needed, login to GCP using:
+Use your workstation, a GCE instance, or the [Cloud Shell] to get a
+command-line prompt. If needed, login to GCP using:
 
 ```sh
 gcloud auth login
@@ -66,23 +70,30 @@ docker run hello-world
 # Output: Hello from Docker! and then some more informational messages.
 ```
 
-If needed, use the [online instructions][docker-install] to download and install
-this tool. This guide assumes that you have configured [sudoless docker]. If
-you do not want to enable sudoless docker, replace all `docker` commands below with `sudo docker`.
+If needed, use the [online instructions][docker-install] to download and
+install this tool. This guide assumes that you have configured
+[sudoless docker]. If you do not want to enable sudoless docker, replace
+all `docker` commands below with `sudo docker`.
 
-Throughout the example we will use `GOOGLE_CLOUD_PROJECT` as an environment variable containing the name of the project.
+Throughout the example we will use `GOOGLE_CLOUD_PROJECT` as an
+environment variable containing the name of the project.
 
 ```sh
 export GOOGLE_CLOUD_PROJECT=[PROJECT ID]
 ```
 
-> :warning: this guide uses Cloud Spanner, this service is billed by the hour **even if you stop using it**.
-> The charges can reaches the **hundreds** or **thousands** of dollars per month if you configure a large Cloud Spanner instance. Consult the [Pricing Calculator] for details.
-> Please remember to delete any Cloud Spanner resources once you no longer need them.
+> :warning: this guide uses Cloud Spanner, this service is billed by the hour
+> **even if you stop using it**. The charges can reaches the **hundreds** or
+> **thousands** of dollars per month if you configure a large Cloud Spanner
+> instance. Consult the [Pricing Calculator] for details. Please remember to
+> delete any Cloud Spanner resources once you no longer need them.
 
 ### Configure the Google Cloud CLI to use your project
 
-We will issue a number of commands using the [Google Cloud SDK], a command-line tool to interact with Google Cloud services.  Adding the `--project=$GOOGLE_CLOUD_PROJECT` to each invocation of this tool quickly becomes tedious, so we start by configuring the default project:
+We will issue a number of commands using the [Google Cloud SDK], a command-line
+tool to interact with Google Cloud services.  Adding the
+`--project=$GOOGLE_CLOUD_PROJECT` to each invocation of this tool quickly
+becomes tedious, so we start by configuring the default project:
 
 ```sh
 gcloud config set project $GOOGLE_CLOUD_PROJECT
@@ -91,7 +102,8 @@ gcloud config set project $GOOGLE_CLOUD_PROJECT
 
 ### Make sure the necessary services are enabled
 
-Some services are not enabled by default when you create a Google Cloud Project, so we start by enabling all the services we will need.
+Some services are not enabled by default when you create a Google Cloud
+Project, so we start by enabling all the services we will need.
 
 ```sh
 gcloud services enable run.googleapis.com
@@ -139,9 +151,12 @@ gcloud builds submit \
 
 ### Create a Cloud Spanner Instance to host your data
 
-As mentioned above, this guide uses [Cloud Spanner] to store the data. We create the smallest possible instance. If needed we will scale up the instance, but this is economical and enough for running small jobs.
+As mentioned above, this guide uses [Cloud Spanner] to store the data. We
+create the smallest possible instance. If needed we will scale up the instance,
+but this is economical and enough for running small jobs.
 
-> :warning: Creating the Cloud Spanner instance incurs immediate billing costs, even if the instance is not used.
+> :warning: Creating the Cloud Spanner instance incurs immediate billing costs,
+> even if the instance is not used.
 
 ```sh
 gcloud beta spanner instances create getting-started-cpp \
@@ -190,7 +205,7 @@ gcloud pubsub subscriptions create --topic=gke-gcs-indexing gke-gcs-indexing
 
 We use preemptible nodes (the `--preemptible` flag) because they have lower
 cost, and the application can safely restart. We also configure the cluster
-to grow as needed, the maximum number of nodes (in this case `64`), should be
+to grow as needed. The maximum number of nodes (in this case `64`) should be
 set based on your available quota or budget. Note that we enable
 [workload identity][workload-identity], the recommended way for GKE-based
 applications to consume services in Google Cloud.
@@ -225,7 +240,8 @@ gcloud container clusters --region=${GOOGLE_CLOUD_REGION} get-credentials cpp-sa
 
 ### Create a service account for the GKE workload
 
-The GKE workload will need a GCP service account to access GCP resources, pick a name and create the account:
+The GKE workload will need a GCP service account to access GCP resources. Pick
+a name and create the account:
 
 ```sh
 readonly SA_ID="gcs-index-worker-sa"
@@ -311,7 +327,8 @@ gcloud builds list --ongoing
 # Output: the list of running jobs
 ```
 
-If your build has completed the list will be empty. If you need to wait for this build to complete (it should take about 15 minutes) use:
+If your build has completed the list will be empty. If you need to wait for
+this build to complete (it should take about 15 minutes) use:
 
 ```sh
 gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
@@ -320,8 +337,9 @@ gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
 
 ### Deploy the Programs to GKE
 
-We can now create a job in GKE. GKE requires its configuration files to be plain YAML, without
-variables or any other expansion, we use a small script to generate this file:
+We can now create a job in GKE. GKE requires its configuration files to be
+plain YAML, without variables or any other expansion. We use a small script to
+generate this file:
 
 ```sh
 gke/print-deployment.py --project=${GOOGLE_CLOUD_PROJECT} | kubectl apply -f -
@@ -330,7 +348,8 @@ gke/print-deployment.py --project=${GOOGLE_CLOUD_PROJECT} | kubectl apply -f -
 
 ### Use `gcloud` to send an indexing request
 
-This will request indexing some public data. The prefix contains less than 100 objects:
+This will request indexing some public data. The prefix contains less than 100
+objects:
 
 ```sh
 gcloud pubsub topics publish gke-gcs-indexing \
@@ -341,7 +360,8 @@ gcloud pubsub topics publish gke-gcs-indexing \
 
 ### Querying the data
 
-The data should start appearing in the Cloud Spanner database. We can use the `gcloud` tool to query this data.
+The data should start appearing in the Cloud Spanner database. We can use the
+`gcloud` tool to query this data.
 
 ```sh
 gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
@@ -351,7 +371,9 @@ gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
 
 ## Optional: Scaling Up
 
-> :warning: The following steps will incur significant billing costs. Use the [Pricing Calculator] to estimate the costs. If you are uncertain as to these costs, skip to the [Cleanup Section](#cleanup).
+> :warning: The following steps will incur significant billing costs. Use the
+> [Pricing Calculator] to estimate the costs. If you are uncertain as to these
+> costs, skip to the [Cleanup Section](#cleanup).
 
 To scan a larger prefix we will need to scale up the GKE deployment:
 
@@ -401,7 +423,8 @@ gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
 
 ## Cleanup
 
-> :warning: Do not forget to cleanup your billable resources after going through this "Getting Started" guide.
+> :warning: Do not forget to cleanup your billable resources after going
+> through this "Getting Started" guide.
 
 ### Remove the Cloud Spanner Instance
 
@@ -414,9 +437,10 @@ gcloud spanner instances delete getting-started-cpp --quiet
 
 ### Remove the GKE cluster
 
-<!-- TODO(coryan) - add instructions to remove GKE cluster -->
-
 ```sh
+gcloud container clusters --region=${GOOGLE_CLOUD_REGION} delete cpp-samples
+# Output: Deleting cluster cpp-samples...done.
+#     Deleted [https://container.googleapis.com/v1/projects/coryan-test/zones/us-central1/clusters/cpp-samples].
 ```
 
 ### Remove the Cloud Pub/Sub Subscription
