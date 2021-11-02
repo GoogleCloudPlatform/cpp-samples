@@ -43,12 +43,14 @@ class MutationBatcher {
   MutationBatcher(spanner::Client client);
 
   future<Status> Push(gcs::ObjectMetadata const& o);
+  // Return the number of mutations processed since the last Flush().
+  std::int64_t Flush();
 
   void ReapBackgroundTasks();
 
  private:
-  void FlushIfNeeded();
-  void Flush();
+  void FlushIfNeeded(std::unique_lock<std::mutex> const&);
+  void Flush(std::unique_lock<std::mutex> const&);
 
   struct Item {
     spanner::Mutation mutation;
@@ -59,11 +61,25 @@ class MutationBatcher {
   std::mutex mu_;
   std::vector<Item> items_;
   std::vector<std::future<void>> background_tasks_;
+  std::int64_t mutation_count_ = 0;
 };
 
 void IndexGcsPrefix(pubsub::Message m, pubsub::AckHandler h, gcs::Client client,
                     pubsub::Publisher publisher,
                     std::shared_ptr<MutationBatcher> batcher);
+
+// Spanner limits a commit to 20,000 mutations, where each modified column
+// counts as a separate "mutation".
+auto constexpr kSpannerMutationLimit = 20'000UL;
+// Spanner recommends changing at most "a few hundred rows" at a time:
+//   https://cloud.google.com/spanner/docs/bulk-loading
+auto constexpr kEfficientRowLimit = 512UL;
+// The Cloud Pub/Sub service can flow control how many messages
+// are delivered to each subscriber.
+auto constexpr kMaxOutstandingMessages = 128;
+// The Cloud Pub/Sub library can be configured to limit the number of
+// messages that are not ack or nacked by the application.
+auto constexpr kMaxConcurrency = 256;
 
 }  // namespace
 
@@ -84,14 +100,28 @@ int main(int argc, char* argv[]) try {
       pubsub::Subscription(GetEnv("GOOGLE_CLOUD_PROJECT"),
                            GetEnv("SUBSCRIPTION_ID")),
       pubsub::SubscriberOptions{}
-          .set_max_outstanding_messages(32)
-          .set_max_concurrency(32)));
+          .set_max_outstanding_messages(kMaxOutstandingMessages)
+          .set_max_concurrency(kMaxConcurrency)));
 
+  std::int64_t last_message_count = 0;
+  std::atomic<std::int64_t> message_count{0};
   auto session =
       subscriber.Subscribe([g = std::move(gcs_client), p = std::move(publisher),
-                            b = std::move(batcher)](auto m, auto h) {
+                            b = batcher, &message_count](auto m, auto h) {
         IndexGcsPrefix(std::move(m), std::move(h), g, p, b);
+        ++message_count;
       });
+  using namespace std::chrono_literals;
+  for (auto s = session.wait_for(10s); s != std::future_status::ready;
+       s = session.wait_for(10s)) {
+    auto const total_messages = message_count.load();
+    auto const messages = total_messages - last_message_count;
+    last_message_count = total_messages;
+    auto const mutations = batcher->Flush();
+    if (mutations == 0 && message_count == 0) continue;  // nothing to report
+    std::cout << __func__ << "() messages=" << messages
+              << ", mutations=" << mutations << std::endl;
+  }
   auto status = session.get();
   if (status.ok()) return 0;
   std::cerr << "Error in subscription: " << status << "\n";
@@ -130,9 +160,17 @@ MutationBatcher::MutationBatcher(spanner::Client client)
 future<Status> MutationBatcher::Push(gcs::ObjectMetadata const& o) {
   std::unique_lock lk(mu_);
   // Make room for the new data.
-  FlushIfNeeded();
+  FlushIfNeeded(lk);
   items_.push_back(Item{UpdateObjectMetadata(o), promise<Status>{}});
   return items_.back().done.get_future();
+}
+
+std::int64_t MutationBatcher::Flush() {
+  std::unique_lock lk(mu_);
+  Flush(lk);
+  std::int64_t n = 0;
+  std::swap(n, mutation_count_);
+  return n;
 }
 
 void MutationBatcher::ReapBackgroundTasks() {
@@ -148,22 +186,16 @@ void MutationBatcher::ReapBackgroundTasks() {
       background_tasks_.end());
 }
 
-void MutationBatcher::FlushIfNeeded() {
-  // Spanner limits a commit to 20,000 mutations, where each modified column
-  // counts as a separate "mutation".
-  auto constexpr kSpannerMutationLimit = 20'000UL;
-  // Spanner recommends changing at most "a few hundred rows" at a time:
-  //   https://cloud.google.com/spanner/docs/bulk-loading
-  auto constexpr kEfficientRowLimit = 256UL;
-
-  if (items_.size() >= kEfficientRowLimit) return Flush();
-  if (items_.size() * ColumnCount() >= kSpannerMutationLimit) return Flush();
+void MutationBatcher::FlushIfNeeded(std::unique_lock<std::mutex> const& lk) {
+  if (items_.size() >= kEfficientRowLimit) return Flush(lk);
+  if (items_.size() * ColumnCount() >= kSpannerMutationLimit) return Flush(lk);
 }
 
-void MutationBatcher::Flush() {
+void MutationBatcher::Flush(std::unique_lock<std::mutex> const&) {
   if (items_.empty()) return;
   std::vector<Item> items;
   items.swap(items_);
+  mutation_count_ += items.size();
   background_tasks_.push_back(std::async(
       std::launch::async,
       [](spanner::Client client, std::vector<Item> items) {
@@ -250,6 +282,8 @@ void IndexGcsPrefix(pubsub::Message m, pubsub::AckHandler h, gcs::Client client,
       auto builder = pubsub::MessageBuilder{}
                          .InsertAttribute("bucket", bucket)
                          .InsertAttribute("start", std::move(start));
+      std::cout << __func__ << "(" << prefix << ") split at " << start
+                << std::endl;
       if (prefix.has_value()) {
         builder.InsertAttribute("prefix", prefix.value());
       }
@@ -282,10 +316,21 @@ void IndexGcsPrefix(pubsub::Message m, pubsub::AckHandler h, gcs::Client client,
       .then([handler = std::move(h), fun = std::string(__func__), bucket,
              prefix](auto f) mutable {
         auto v = f.get();
-        auto const success = std::all_of(v.begin(), v.end(),
-                                         [](auto&& f) { return f.get().ok(); });
+        std::vector<google::cloud::Status> results(v.size());
+        std::transform(v.begin(), v.end(), results.begin(),
+                       [](auto&& g) { return g.get(); });
+        auto const success = std::all_of(results.begin(), results.end(),
+                                         [](auto&& s) { return s.ok(); });
         if (success) return std::move(handler).ack();
         std::move(handler).nack();
+        std::ostringstream os;
+        os << "One or more operations failed, first error ";
+        for (auto const& s : results) {
+          if (s.ok()) continue;
+          os << s;
+          break;
+        }
+        LogError(std::move(os).str());
       })
       .then([batcher](auto f) {
         // Once the operations (including any writes to Cloud Spanner) have
