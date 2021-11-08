@@ -22,7 +22,7 @@ In this guide we will modify the application to:
 * Run in GKE, where applications are long-lived and can assume they remain
   active after handling a message.
 * Connect to Cloud Pub/Sub using [pull subscriptions], which have lower
-  overhead and implement more fine-grained flow control mechanism.
+  overhead and implement a more fine-grained flow control mechanism.
 * Use background threads to aggregate the results from multiple Cloud Pub/Sub
   messages into a single Cloud Spanner transaction.
 
@@ -84,8 +84,8 @@ environment variable containing the name of the project.
 export GOOGLE_CLOUD_PROJECT=[PROJECT ID]
 ```
 
-> :warning: this guide uses Cloud Spanner and GKE, these services are billed by
-> the hour **even if you stop using them**. The charges can reaches the
+> :warning: this guide uses Cloud Spanner and GKE. These services are billed by
+> the hour **even if you stop using them**. The charges can reach the
 > **hundreds** or even **thousands** of dollars per month if you configure a
 > large Cloud Spanner instance or large GKE cluster. Consult the
 > [Pricing Calculator] for details. Please remember to delete any Cloud Spanner
@@ -350,7 +350,7 @@ gcloud beta spanner instances update getting-started-cpp --processing-units=3000
 # Output: Updating instance...done.
 ```
 
-We can now index a prefix with a few million objects of objects, in our tests
+We can now index a prefix with a few million objects of objects. In our tests
 this completed in a little over an hour.
 
 ```sh
