@@ -25,7 +25,7 @@ steps:
         # Using a substitution here allows us to call this script from
         # the top-level directory, as Cloud Build does.
         "--context=${_CONTEXT}",
-        "--cache-repo=gcr.io/${PROJECT_ID}/cpp-samples/ci/cache",
-        "--destination=gcr.io/${PROJECT_ID}/cpp-samples/gke",
+        "--cache-repo=gcr.io/${PROJECT_ID}/getting-started-cpp/ci/cache",
+        "--destination=gcr.io/${PROJECT_ID}/getting-started-cpp/gke",
         "--cache=true"
     ]

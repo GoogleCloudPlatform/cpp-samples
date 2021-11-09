@@ -4,27 +4,42 @@
 > and none of the instructions have been validated or tested in any way.
 
 This guide builds upon the general [Getting Started with C++] guide.
-It deploys the GCS indexing application to GKE instead of Cloud Run, taking
-advantage of the long-running servers in GKE to improve throughput.
+It deploys the GCS indexing application to [GKE] (Google Kubernetes Engine)
+instead of [Cloud Run], taking advantage of the long-running servers in
+GKE to improve throughput.
 
 ## Motivation
 
-<!--
- TODO(coryan) - something about how batching multiple mutations is more efficient, but requires long-running servers
--->
+A common technique to improve throughput in [Cloud Spanner] is to aggregate
+multiple changes into a single transaction, minimizing the synchronization
+and networking overheads. However, applications deployed to Cloud Run
+cannot assume they will remain running after they respond to a request.  This
+makes it difficult to aggregate work from multiple [Pub/Sub][Cloud Pub/Sub]
+messages.
+
+In this guide we will modify the application to:
+
+* Run in GKE, where applications are long-lived and can assume they remain
+  active after handling a message.
+* Connect to Cloud Pub/Sub using [pull subscriptions], which have lower
+  overhead and implement a more fine-grained flow control mechanism.
+* Use background threads to aggregate the results from multiple Cloud Pub/Sub
+  messages into a single Cloud Spanner transaction.
 
 [Getting Started with C++]: ../README.md
 [Cloud Build]: https://cloud.google.com/build
 [Cloud Monitoring]: https://cloud.google.com/monitoring
 [Cloud Run]: https://cloud.google.com/run
+[GKE]: https://cloud.google.com/kubernetes-engine
 [Cloud Storage]: https://cloud.google.com/storage
 [Cloud Cloud SDK]: https://cloud.google.com/sdk
 [Cloud Shell]: https://cloud.google.com/shell
 [GCS]: https://cloud.google.com/storage
 [Cloud Spanner]: https://cloud.google.com/spanner
+[Cloud Pub/Sub]: https://cloud.google.com/pubsub
 [Container Registry]: https://cloud.google.com/container-registry
 [Pricing Calculator]: https://cloud.google.com/products/calculator
-[cloud-run-quickstarts]: https://cloud.google.com/run/docs/quickstarts
+[gke-quickstart]: https://cloud.google.com/kubernetes-engine/docs/quickstart
 [gcp-quickstarts]: https://cloud.google.com/resource-manager/docs/creating-managing-projects
 [buildpacks]: https://buildpacks.io
 [docker]: https://docker.com/
@@ -34,17 +49,17 @@ advantage of the long-running servers in GKE to improve throughput.
 
 ## Overview
 
-<!--
- TODO(coryan) - clean up this text and create a new diagram.
--->
+At a high-level, our plan is to replace "Cloud Run" with "Kubernetes Engine" in the
+[Getting Started with C++] application:
 
-Our plan is to replace "Cloud Run" with "GKE" in the [Getting Started with C++]
-application:
+![Application Diagram](../assets/getting-started-gke.png)
 
-![Application Diagram](assets/getting-started-cpp.png)
-
-GKE can still scale up the number of instances as needed.  Unlike Cloud Run, it
-cannot scale down the number of instances to zero.
+For completeness, the following instructions duplicate some of the steps in the
+previous guide. We will need to issue a number of commands to create the
+GKE cluster, the Cloud Pub/Sub topics and subscriptions, as well as the
+Cloud Spanner instance and database. With this application we will need to
+create a service account (sometimes called "robot" accounts) to run the
+application, and grant this service account the necessary permissions.
 
 ## Prerequisites
 
@@ -53,8 +68,7 @@ project. The project must have billing enabled, as some of the services used in
 this example require it. If needed, consult:
 
 * the [GCP quickstarts][gcp-quickstarts] to setup a GCP project
-* the [cloud run quickstarts][cloud-run-quickstarts] to setup Cloud Run in your
-  project
+* the [GKE quickstart][cloud-gke-quickstart] to setup GKE in your project
 
 Use your workstation, a GCE instance, or the [Cloud Shell] to get a
 command-line prompt. If needed, login to GCP using:
@@ -63,18 +77,6 @@ command-line prompt. If needed, login to GCP using:
 gcloud auth login
 ```
 
-Verify the [docker tool][docker] is functional on your workstation:
-
-```sh
-docker run hello-world
-# Output: Hello from Docker! and then some more informational messages.
-```
-
-If needed, use the [online instructions][docker-install] to download and
-install this tool. This guide assumes that you have configured
-[sudoless docker]. If you do not want to enable sudoless docker, replace
-all `docker` commands below with `sudo docker`.
-
 Throughout the example we will use `GOOGLE_CLOUD_PROJECT` as an
 environment variable containing the name of the project.
 
@@ -82,11 +84,12 @@ environment variable containing the name of the project.
 export GOOGLE_CLOUD_PROJECT=[PROJECT ID]
 ```
 
-> :warning: this guide uses Cloud Spanner, this service is billed by the hour
-> **even if you stop using it**. The charges can reaches the **hundreds** or
-> **thousands** of dollars per month if you configure a large Cloud Spanner
-> instance. Consult the [Pricing Calculator] for details. Please remember to
-> delete any Cloud Spanner resources once you no longer need them.
+> :warning: this guide uses Cloud Spanner and GKE. These services are billed by
+> the hour **even if you stop using them**. The charges can reach the
+> **hundreds** or even **thousands** of dollars per month if you configure a
+> large Cloud Spanner instance or large GKE cluster. Consult the
+> [Pricing Calculator] for details. Please remember to delete any Cloud Spanner
+> and GKE resources once you no longer need them.
 
 ### Configure the Google Cloud CLI to use your project
 
@@ -106,7 +109,6 @@ Some services are not enabled by default when you create a Google Cloud
 Project, so we start by enabling all the services we will need.
 
 ```sh
-gcloud services enable run.googleapis.com
 gcloud services enable cloudbuild.googleapis.com
 gcloud services enable containerregistry.googleapis.com
 gcloud services enable container.googleapis.com
@@ -141,7 +143,7 @@ cd cpp-samples/getting-started
 gcloud builds submit \
     --async \
     --machine-type=e2-highcpu-32 \
-    --tag "gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/gke"
+    --config=gke/cloudbuild.yaml
 # Output:
 #   Creating temporary tarball archive of ... file(s) totalling ... KiB before compression.
 #   Uploading tarball of [.] to [gs://....tgz]
@@ -213,18 +215,17 @@ applications to consume services in Google Cloud.
 [workload-identity]: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
 
 ```sh
-GOOGLE_CLOUD_REGION=us-central1
 gcloud container clusters create cpp-samples \
-      --region="${GOOGLE_CLOUD_REGION}" \
+      --region="us-central1" \
       --preemptible \
       --min-nodes=0 \
       --max-nodes=64 \
       --enable-autoscaling \
-      --workload-pool="${GOOGLE_CLOUD_PROJECT}.svc.id.goog"
+      --workload-pool="$GOOGLE_CLOUD_PROJECT.svc.id.goog"
 # Output: ...
 # Creating cluster cpp-samples in us-central1...done
-# Created [https://container.googleapis.com/v1/projects/${GOOGLE_CLOUD_PROJECT}/zones/us-central1/clusters/cpp-samples].
-# To inspect the contents of your cluster, go to: https://console.cloud.google.com/kubernetes/workload_/gcloud/us-central1/cpp-samples?project=${GOOGLE_CLOUD_PROJECT}
+# Created [https://container.googleapis.com/v1/projects/$GOOGLE_CLOUD_PROJECT/zones/us-central1/clusters/cpp-samples].
+# To inspect the contents of your cluster, go to: https://console.cloud.google.com/kubernetes/workload_/gcloud/us-central1/cpp-samples?project=$GOOGLE_CLOUD_PROJECT
 # kubeconfig entry generated for cpp-samples.
 # NAME         LOCATION     MASTER_VERSION   MASTER_IP      MACHINE_TYPE  NODE_VERSION     NUM_NODES  STATUS
 # cpp-samples  us-central1  ..............   .....          ............  ....             ..          RUNNING
@@ -233,88 +234,43 @@ gcloud container clusters create cpp-samples \
 Once created, we configure the `kubectl` credentials to use this cluster:
 
 ```sh
-gcloud container clusters --region=${GOOGLE_CLOUD_REGION} get-credentials cpp-samples
+gcloud container clusters --region="us-central1" get-credentials cpp-samples
 # Output: Fetching cluster endpoint and auth data.
 #     kubeconfig entry generated for cpp-samples.
 ```
 
-### Create a service account for the GKE workload
-
-The GKE workload will need a GCP service account to access GCP resources. Pick
-a name and create the account:
-
-```sh
-readonly SA_ID="gcs-index-worker-sa"
-readonly SA_NAME="${SA_ID}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
-
-gcloud iam service-accounts create "${SA_ID}" \
-    --description="C++ Samples Service Account"
-# Output: Created service account [gcs-index-worker-sa].
-```
-
-### Grant this SA permissions for Cloud Pub/Sub
-
-```sh
-gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT}" \
-    --member="serviceAccount:${SA_NAME}" \
-    --role="roles/pubsub.subscriber"
-# Output: <IAM policy list (can be very long)>
-gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT}" \
-    --member="serviceAccount:${SA_NAME}" \
-    --role="roles/pubsub.publisher"
-# Output: <IAM policy list (can be very long)>
-```
-
-### Grant this SA permissions to read from any GCS Bucket
-
-```sh
-gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT}" \
-    --member="serviceAccount:${SA_NAME}" \
-    --role="roles/storage.objectViewer"
-# Output: <IAM policy list (can be very long)>
-```
-
-### Grant this SA permissions to write into the Spanner Database
-
-```sh
-gcloud spanner databases add-iam-policy-binding gcs-index \
-    --instance="getting-started-cpp" \
-    "--member=serviceAccount:${SA_NAME}" \
-    "--role=roles/spanner.databaseUser"
-# Output: <IAM policy list (can be very long)>
-```
-
-### Create a k8s namespace for the example resources
-
-```sh
-NAMESPACE=index-buckets
-kubectl create namespace ${NAMESPACE}
-# Output: namespace/index-buckets created
-```
-
 ### Create a GKE service account
 
+GKE recommends configuring a different [workload-identity] for each
+GKE workload, and using this identity to access GCP services. To follow
+these guidelines we start by creating a service account in the Kubernetes
+Cluster. Note that Kubernetes service accounts are distinct from GCP service
+accounts, but can be mapped to them (as we do below).
+
 ```sh
-kubectl create serviceaccount --namespace ${NAMESPACE} worker
+kubectl create serviceaccount worker
 # Output: serviceaccount/worker created
 ```
 
-### Grant the GKE service account permissions to impersonate the GCP Service Account
+### Grant the GKE service account permissions to impersonate the default GCP compute service account
 
 ```sh
+PROJECT_NUMBER=$(gcloud projects list \
+    --filter="project_id=$GOOGLE_CLOUD_PROJECT" \
+    --format="value(project_number)" \
+    --limit=1)
 gcloud iam service-accounts add-iam-policy-binding \
   "--role=roles/iam.workloadIdentityUser" \
-  "--member=serviceAccount:${GOOGLE_CLOUD_PROJECT}.svc.id.goog[${NAMESPACE}/worker]" \
-  "${SA_NAME}"
+  "--member=serviceAccount:$GOOGLE_CLOUD_PROJECT.svc.id.goog[default/worker]" \
+  "$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
 # Output: <IAM policy list>
 ```
 
 ### Map the GKE service account to the GCP service account
 
 ```sh
-kubectl annotate serviceaccount \
-  --namespace ${NAMESPACE} worker \
-  iam.gke.io/gcp-service-account=${SA_NAME}
+kubectl annotate serviceaccount worker \
+  iam.gke.io/gcp-service-account="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
 # Output: serviceaccount/worker annotated
 ```
 
@@ -342,7 +298,7 @@ plain YAML, without variables or any other expansion. We use a small script to
 generate this file:
 
 ```sh
-gke/print-deployment.py --project=${GOOGLE_CLOUD_PROJECT} | kubectl apply -f -
+gke/print-deployment.py --project=$GOOGLE_CLOUD_PROJECT | kubectl apply -f -
 # Output: deployment.apps/worker created
 ```
 
@@ -378,7 +334,7 @@ gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
 To scan a larger prefix we will need to scale up the GKE deployment:
 
 ```sh
-kubectl --namespace ${NAMESPACE} scale deployment/worker --replicas=128
+kubectl scale deployment/worker --replicas=128
 # Output: deployment.apps/worker scaled
 ```
 
@@ -387,20 +343,19 @@ length of the work queue, to [autoscale a deployment][gke-autoscale-on-metrics].
 
 [gke-autoscale-on-metrics]: https://cloud.google.com/kubernetes-engine/docs/tutorials/autoscaling-metrics#pubsub
 
-<!--
 We also need to scale up the Cloud Spanner instance. We use a `gcloud` command for this:
 
 ```sh
 gcloud beta spanner instances update getting-started-cpp --processing-units=3000
 # Output: Updating instance...done.
 ```
- -->
 
-We can now index a prefix with a few thousand objects
+We can now index a prefix with a few million objects of objects. In our tests
+this completed in a little over an hour.
 
 ```sh
 gcloud pubsub topics publish gke-gcs-indexing \
-    --attribute=bucket=gcp-public-data-landsat,prefix=LC08/01/006
+    --attribute=bucket=gcp-public-data-landsat,prefix=LC08/01
 # Output: messageIds:
 #     - '....'
 ```
@@ -418,13 +373,21 @@ gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
     --sql="select count(*) from gcs_objects"
 # Output:
 #    (Unspecified)    --> the count(*) column name
-#    225446           --> the number of rows in the `gcs_objects` table (the actual number may be different)
+#    49027797         --> the number of rows in the `gcs_objects` table (the actual number may be different)
 ```
 
 ## Cleanup
 
 > :warning: Do not forget to cleanup your billable resources after going
 > through this "Getting Started" guide.
+
+### Remove the GKE cluster
+
+```sh
+gcloud container clusters --region=us-central1 delete cpp-samples --quiet
+# Output: Deleting cluster cpp-samples...done.
+#     Deleted [https://container.googleapis.com/v1/projects/coryan-test/zones/us-central1/clusters/cpp-samples].
+```
 
 ### Remove the Cloud Spanner Instance
 
@@ -435,18 +398,10 @@ gcloud spanner instances delete getting-started-cpp --quiet
 # Output: none
 ```
 
-### Remove the GKE cluster
-
-```sh
-gcloud container clusters --region=${GOOGLE_CLOUD_REGION} delete cpp-samples
-# Output: Deleting cluster cpp-samples...done.
-#     Deleted [https://container.googleapis.com/v1/projects/coryan-test/zones/us-central1/clusters/cpp-samples].
-```
-
 ### Remove the Cloud Pub/Sub Subscription
 
 ```sh
-gcloud pubsub subscriptions delete gke-gcs-indexing-requests --quiet
+gcloud pubsub subscriptions delete gke-gcs-indexing --quiet
 # Output: Deleted subscription [projects/$GOOGLE_CLOUD_PROJECT/subscriptions/gke-gcs-indexing].
 ```
 
@@ -463,4 +418,79 @@ gcloud pubsub topics delete gke-gcs-indexing --quiet
 gcloud container images delete gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/gke:latest --quiet
 # Output: Deleted [gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/gke:latest]
 # Output: Deleted [gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/gke@sha256:....]
+```
+
+### Remove the cache for Cloud Build
+
+```sh
+for tag in $(gcloud container images list-tags gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/ci/cache --format="value(tags)" ); do
+  gcloud container images delete gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/ci/cache:${tag} --quiet
+done
+# Output: the output from each delete command
+```
+
+## Appendix: using a custom service account
+
+### Create a service account for the GKE workload
+
+The GKE workload will need a GCP service account to access GCP resources. Pick
+a name and create the account:
+
+```sh
+readonly SA_ID="gcs-index-worker-sa"
+readonly SA_NAME="$SA_ID@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com"
+
+gcloud iam service-accounts create "$SA_ID" \
+    --description="C++ Samples Service Account"
+# Output: Created service account [gcs-index-worker-sa].
+```
+
+### Grant this SA permissions for Cloud Pub/Sub
+
+```sh
+gcloud projects add-iam-policy-binding "$GOOGLE_CLOUD_PROJECT" \
+    --member="serviceAccount:$SA_NAME" \
+    --role="roles/pubsub.subscriber"
+# Output: <IAM policy list (can be very long)>
+gcloud projects add-iam-policy-binding "$GOOGLE_CLOUD_PROJECT" \
+    --member="serviceAccount:$SA_NAME" \
+    --role="roles/pubsub.publisher"
+# Output: <IAM policy list (can be very long)>
+```
+
+### Grant this SA permissions to read from any GCS Bucket
+
+```sh
+gcloud projects add-iam-policy-binding "$GOOGLE_CLOUD_PROJECT" \
+    --member="serviceAccount:$SA_NAME" \
+    --role="roles/storage.objectViewer"
+# Output: <IAM policy list (can be very long)>
+```
+
+### Grant this SA permissions to write into the Spanner Database
+
+```sh
+gcloud spanner databases add-iam-policy-binding gcs-index \
+    --instance="getting-started-cpp" \
+    "--member=serviceAccount:$SA_NAME" \
+    "--role=roles/spanner.databaseUser"
+# Output: <IAM policy list (can be very long)>
+```
+
+### Grant the GKE service account permissions to impersonate the GCP Service Account
+
+```sh
+gcloud iam service-accounts add-iam-policy-binding \
+  "--role=roles/iam.workloadIdentityUser" \
+  "--member=serviceAccount:$GOOGLE_CLOUD_PROJECT.svc.id.goog[default/worker]" \
+  "$SA_NAME"
+# Output: <IAM policy list>
+```
+
+### Map the GKE service account to the GCP service account
+
+```sh
+kubectl annotate serviceaccount worker \
+  iam.gke.io/gcp-service-account=$SA_NAME
+# Output: serviceaccount/worker annotated
 ```

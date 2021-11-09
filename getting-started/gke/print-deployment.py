@@ -23,7 +23,6 @@ template = j2.Template("""apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: worker
-  namespace: {{namespace}}
 spec:
   replicas: 3
   selector:
@@ -37,7 +36,7 @@ spec:
       serviceAccountName: worker
       containers:
       - name: worker-image
-        image: gcr.io/{{project}}/cpp-samples/gke
+        image: gcr.io/{{project}}/getting-started-cpp/gke
         imagePullPolicy: Always
         command: [ '/r/gke_index_gcs' ]
         env:
@@ -63,10 +62,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--project', type=str,
                     default=os.environ.get('GOOGLE_CLOUD_PROJECT'),
                     help='configure the Google Cloud Project')
-parser.add_argument('--namespace', type=str,
-                    default='index-buckets',
-                    help='the GKE namespace')
 args = parser.parse_args()
 
 print(
-    template.render(action='deploy', project=args.project, namespace=args.namespace))
+    template.render(action='deploy', project=args.project))
