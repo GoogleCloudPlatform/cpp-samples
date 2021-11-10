@@ -1,0 +1,13 @@
+{
+  "name": "gcp-cpp-samples-getting-started-update",
+  "version-string": "unversioned",
+  "port-version": 1,
+  "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
+  "description": "Running C++ Background Tasks in Cloud Run",
+  "dependencies": [
+    "functions-framework-cpp",
+    {"name": "google-cloud-cpp", "default-features": false, "features": ["spanner"]},
+    "cppcodec",
+    "nlohmann-json"
+  ]
+}
