@@ -123,6 +123,25 @@ steps:
     env:
       - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
+      - name: 'getting-started-update'
+        path: '/b'
+    args: [
+        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
+        '-S', '/workspace/getting-started/update', '-B', '/b',
+    ]
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    env:
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+    volumes:
+      - name: 'getting-started-update'
+        path: '/b'
+    args: [ 'cmake', '--build', '/b', '--target', 'functions_framework_cpp_function' ]
+
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    waitFor: [ 'vcpkg-warmup' ]
+    env:
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+    volumes:
       - name: 'iot-mqtt-ciotc'
         path: '/b'
     args: [
