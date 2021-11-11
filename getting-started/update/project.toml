@@ -1,0 +1,19 @@
+[project]
+id = "com.github.googlecloudplatform.cpp-samples.getting-started.update"
+name = "Getting Started with C++ and Google Cloud Platform"
+version = "0.1.0"
+
+[build]
+exclude = [
+    "/README.md",
+    ".build/",
+    "cmake-out/"
+]
+
+[[build.env]]
+name = "GOOGLE_FUNCTION_TARGET"
+value = "UpdateGcsIndex"
+
+[[build.env]]
+name = "GOOGLE_FUNCTION_SIGNATURE_TYPE"
+value = "cloudevent"

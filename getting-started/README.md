@@ -310,7 +310,8 @@ google-chrome https://pantheon.corp.google.com/run/detail/us-central1/index-gcs-
 
 ## Next Steps
 
-* Learn about how to deploy similar code [GKE](gke/README.md)
+* Automatically update the index as the [bucket changes](update/README.md).
+* Learn about how to deploy similar code to [GKE](gke/README.md)
 
 ## Cleanup
 

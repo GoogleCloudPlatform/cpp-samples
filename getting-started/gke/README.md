@@ -8,6 +8,10 @@ It deploys the GCS indexing application to [GKE] (Google Kubernetes Engine)
 instead of [Cloud Run], taking advantage of the long-running servers in
 GKE to improve throughput.
 
+The steps in this guide are self-contained.  It is not necessary to go through
+the [Getting Started with C++] guide to go through these steps. It may be
+easier to understand the motivation and the main components if you do so.
+
 ## Motivation
 
 A common technique to improve throughput in [Cloud Spanner] is to aggregate
