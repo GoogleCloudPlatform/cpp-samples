@@ -97,11 +97,12 @@ Some services are not enabled by default when you create a Google Cloud
 Project. We enable all the services we will need in this guide using:
 
 ```sh
-gcloud services enable run.googleapis.com
 gcloud services enable cloudbuild.googleapis.com
 gcloud services enable containerregistry.googleapis.com
 gcloud services enable container.googleapis.com
+gcloud services enable eventarc.googleapis.com
 gcloud services enable pubsub.googleapis.com
+gcloud services enable run.googleapis.com
 gcloud services enable spanner.googleapis.com
 # Output: nothing if the services are already enabled.
 # for services that are not enabled something like this
@@ -188,11 +189,23 @@ gcloud spanner databases create gcs-index \
 
 ### Configurate an Existing Bucket to send Notifications
 
+To use the application we need an existing bucket in your project:
+
+```sh
+BUCKET_NAME=... # The name of an existing bucket in your project
+```
+
+If you have no buckets in your project, use the [GCS guide] to select a name
+and then create the bucket:
+
+```sh
+gsutil mb gs://$BUCKET_NAME
+```
+
 The `gsutil` tool provides a single command to configure buckets to send
 notifications to Cloud Pub/Sub:
 
 ```sh
-BUCKET_NAME=... # The name of an existing bucket in your project
 gsutil notifications create \
     -t projects/$GOOGLE_CLOUD_PROJECT/topics/gcs-updates -f json \
     gs://$BUCKET_NAME/
@@ -202,6 +215,8 @@ gsutil notifications create \
 
 Note that this will create the topic (if needed), and set the right IAM
 permissions enabling GCS to publish on the topic.
+
+[GCS Guide]: https://cloud.google.com/storage/docs/creating-buckets
 
 ### Wait for the build to complete
 
