@@ -1,8 +1,5 @@
 # Getting Started with GCP and C++: background operations
 
-> :warning: this guide is work-in-progress. It is known to be incomplete,
-> and none of the instructions have been validated or tested in any way.
-
 This guide builds upon the general [Getting Started with C++] guide.
 It automatically maintains the [GCS (Google Cloud Storage)][GCS] index
 described in said guide using an application deployed to [Cloud Run].
@@ -10,12 +7,14 @@ described in said guide using an application deployed to [Cloud Run].
 The steps in this guide are self-contained.  It is not necessary to go through
 the [Getting Started with C++] guide to go through these steps. It may be
 easier to understand the motivation and the main components if you do so.
+Note that some commands below may create resources (such as the [Cloud Spanner]
+instance and database) that are already created in the previous guide.
 
 ## Motivation
 
 In the [Getting Started with C++] guide we showed how to build an index for
-GCS buckets. We built this index using a work queue to scan the existing
-GCS objects. But what if the contents of the bucket change dynamically?
+GCS buckets. We built this index using a work queue to scan the contents of
+these buckets. But what if the contents of the bucket change dynamically?
 What if other applications insert new objects? Or delete them? Or update the
 metadata for an existing objects? We would like to extend the example to
 update the index as such changes take place.
