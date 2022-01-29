@@ -2,7 +2,8 @@
 
 These samples demonstrate how to call the [Google Cloud Speech API](https://cloud.google.com/speech/) using C++.
 
-These samples will only build and run on **Linux**.
+We only test these samples on **Linux**.  If you are running [Windows](#Windows) and [macOS](#macOS) please see
+the additional notes for your platform.
 
 ## Build and Run
 
@@ -81,3 +82,32 @@ These samples will only build and run on **Linux**.
    .build/transcribe gs://cloud-samples-tests/speech/brooklyn.flac
    .build/async_transcribe gs://cloud-samples-tests/speech/vr.flac
    ```
+
+## Platform Specific Notes
+
+### macOS
+
+gRPC [requires][grpc-roots-pem-bug] an environment variable to configure the
+trust store for SSL certificates, you can download and configure this using:
+
+```bash
+curl -Lo roots.pem https://pki.google.com/roots.pem
+export GRPC_DEFAULT_SSL_ROOTS_FILE_PATH="$PWD/roots.pem"
+```
+
+### Windows
+
+gRPC [requires][grpc-roots-pem-bug] an environment variable to configure the
+trust store for SSL certificates, you can download and configure this using:
+
+```console
+@powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
+    (new-object System.Net.WebClient).Downloadfile( ^
+        'https://pki.google.com/roots.pem', 'roots.pem')
+set GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=%cd%\roots.pem
+```
+
+[grpc-roots-pem-bug]: https://github.com/grpc/grpc/issues/16571
+[choco-cmake-link]: https://chocolatey.org/packages/cmake
+[homebrew-cmake-link]: https://formulae.brew.sh/formula/cmake
+[cmake-download-link]: https://cmake.org/download/
