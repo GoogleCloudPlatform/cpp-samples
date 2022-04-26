@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # We chose Ubuntu to build the image because we are familiar with it.
-FROM ubuntu:20.04 AS base
+FROM ubuntu:22.04 AS base
 
 # Create separate targets for each phase, this makes the final deployment stage
 # small as it contains only what is needed.
