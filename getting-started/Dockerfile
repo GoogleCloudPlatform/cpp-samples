@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:20.04 AS base
+FROM ubuntu:22.04 AS base
 
 # Create separate targets for each phase, this allows us to cache intermediate
 # stages when using Google Cloud Build, and makes the final deployment stage
