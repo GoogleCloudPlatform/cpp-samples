@@ -16,34 +16,37 @@
 # [START dockerfile]
 # We chose Alpine to build the image because it has good support for creating
 # statically-linked, small programs.
-ARG DISTRO_VERSION=3.13
-FROM alpine:${DISTRO_VERSION} AS base
+FROM alpine:3.15 AS base
 
 # Create separate targets for each phase, this allows us to cache intermediate
 # stages when using Google Cloud Build, and makes the final deployment stage
 # small as it contains only what is needed.
 FROM base AS devtools
 
-# Install the typical development tools and some additions:
-#   - ninja-build is a backend for CMake that often compiles faster than
-#     CMake with GNU Make.
-#   - Install the boost libraries.
+# Install the typical development tools for C++, and
+# the base OS headers and libraries.
 RUN apk update && \
     apk add \
-        boost-dev \
-        boost-static \
         build-base \
         cmake \
+        curl \
         git \
         gcc \
         g++ \
         libc-dev \
-        nghttp2-static \
+        linux-headers \
         ninja \
-        openssl-dev \
-        openssl-libs-static \
+        pkgconfig \
         tar \
-        zlib-static
+        unzip \
+        zip
+
+# Use `vcpkg`, a package manager for C++, to install 
+WORKDIR /usr/local/vcpkg
+ENV VCPKG_FORCE_SYSTEM_BINARIES=1
+RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2022.05.10.tar.gz" | \
+    tar --strip-components=1 -zxf - \
+    && ./bootstrap-vcpkg.sh -disableMetrics
 
 # Copy the source code to /v/source and compile it.
 FROM devtools AS build
@@ -53,9 +56,8 @@ WORKDIR /v/source
 # Run the CMake configuration step, setting the options to create
 # a statically linked C++ program
 RUN cmake -S/v/source -B/v/binary -GNinja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DBoost_USE_STATIC_LIBS=ON \
-    -DCMAKE_EXE_LINKER_FLAGS=-static
+    -DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake \
+    -DCMAKE_BUILD_TYPE=Release
 
 # Compile the binary and strip it to reduce its size.
 RUN cmake --build /v/binary
