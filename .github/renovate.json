@@ -1,5 +1,17 @@
 {
   "extends": [
-    "config:base"
+    "config:base",
+    "schedule:weekdays"
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": [
+        ".*Dockerfile$"
+      ],
+      "matchStrings": [
+        "https://github\\.com/(?<depName>.*?)/archive/(?<currentValue>.*?)\\.tar\\.gz"
+      ],
+      "datasourceTemplate": "github-releases"
+    }
   ]
 }
