@@ -40,11 +40,11 @@ RUN apt update && \
 # Copy the source code to /v/source and compile it.
 FROM devtools AS build
 
-WORKDIR /v
-RUN git clone https://github.com/microsoft/vcpkg.git \
-    && /v/vcpkg/bootstrap-vcpkg.sh -disableMetrics
-
 WORKDIR /v/vcpkg
+RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2022.05.10.tar.gz" | \
+    tar --strip-components=1 -zxf - \
+    && ./bootstrap-vcpkg.sh -disableMetrics
+
 COPY vcpkg.json /v/deps/
 RUN /v/vcpkg/vcpkg install --x-manifest-root=/v/deps  --clean-after-build
 
