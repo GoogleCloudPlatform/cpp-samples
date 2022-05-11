@@ -6,7 +6,6 @@
     "Shows how to deploy a C++ application to Cloud Run."
   ],
   "dependencies": [
-    "boost-program-options",
     "functions-framework-cpp"
   ]
 }
