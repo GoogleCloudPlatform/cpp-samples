@@ -23,16 +23,13 @@ set(PACKAGE_BUGREPORT
 project(cpp-samples-cloud-run-hello-world CXX C)
 
 # Configure the Compiler options, we will be using C++17 features.
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Boost 1.66 REQUIRED COMPONENTS program_options)
+find_package(functions_framework_cpp REQUIRED)
 find_package(Threads)
 
 add_executable(cloud_run_hello cloud_run_hello.cc)
-target_link_libraries(
-  cloud_run_hello PRIVATE Boost::headers Boost::program_options
-                          Threads::Threads)
+target_compile_features(cloud_run_hello PRIVATE cxx_std_17)
+target_link_libraries(cloud_run_hello functions-framework-cpp::framework)
 
 include(GNUInstallDirs)
 install(TARGETS cloud_run_hello RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

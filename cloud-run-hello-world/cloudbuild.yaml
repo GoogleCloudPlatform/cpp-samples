@@ -14,7 +14,7 @@
 
 timeout: 1800s
 options:
-  machineType: 'N1_HIGHCPU_8'
+  machineType: 'N1_HIGHCPU_32'
   diskSizeGb: '512'
 substitutions:
   _CONTEXT: 'dir:///workspace/'
