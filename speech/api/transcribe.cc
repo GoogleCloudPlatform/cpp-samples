@@ -19,7 +19,6 @@
 #include <iostream>
 #include <iterator>
 #include <string>
-#include <strings.h>
 
 using google::cloud::speech::v1::RecognizeRequest;
 using google::cloud::speech::v1::RecognizeResponse;
@@ -29,7 +28,7 @@ static const char kUsage[] =
     "Usage:\n"
     "   transcribe [--bitrate N] audio.(raw|ulaw|flac|amr|awb)\n";
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) try {
   // [START speech_sync_recognize]
   // [START speech_sync_recognize_gcs]
   // Create a Speech Stub connected to the speech service.
@@ -37,26 +36,24 @@ int main(int argc, char** argv) {
   auto channel = grpc::CreateChannel("speech.googleapis.com", creds);
   std::unique_ptr<Speech::Stub> speech(Speech::NewStub(channel));
   // Parse command line arguments.
+  auto const args = ParseArguments(argc, argv);
   RecognizeRequest request;
-  char* file_path = ParseArguments(argc, argv, request.mutable_config());
-  if (nullptr == file_path) {
-    std::cerr << kUsage;
-    return -1;
-  }
+  *request.mutable_config() = args.config;
   // [END speech_sync_recognize_gcs]
   // [END speech_sync_recognize]
-  if (0 == strncasecmp("gs:/", file_path, 4)) {
+  if (args.path.rfind("gs://", 0) == 0) {
     // [START speech_sync_recognize_gcs]
     // Pass the Google Cloud Storage URI to the request.
-    request.mutable_audio()->set_uri(file_path);
+    request.mutable_audio()->set_uri(args.path);
     // [END speech_sync_recognize_gcs]
   } else {
     // [START speech_sync_recognize]
     // Load the audio file from disk into the request.
-    request.mutable_audio()->mutable_content()->assign(
-        std::istreambuf_iterator<char>(
-            std::ifstream(file_path, std::ios::binary).rdbuf()),
-        {});
+    auto content =
+        std::string{std::istreambuf_iterator<char>(
+                        std::ifstream(args.path, std::ios::binary).rdbuf()),
+                    {}};
+    request.mutable_audio()->mutable_content()->assign(std::move(content));
     // [END speech_sync_recognize]
   }
   // [START speech_sync_recognize]
@@ -68,18 +65,20 @@ int main(int argc, char** argv) {
   if (!rpc_status.ok()) {
     // Report the RPC failure.
     std::cerr << rpc_status.error_message() << std::endl;
-    return -1;
+    return 1;
   }
   // Dump the transcript of all the results.
-  for (int r = 0; r < response.results_size(); ++r) {
-    const auto& result = response.results(r);
-    for (int a = 0; a < result.alternatives_size(); ++a) {
-      const auto& alternative = result.alternatives(a);
+  for (auto const& result : response.results()) {
+    for (auto const& alternative : result.alternatives()) {
       std::cout << alternative.confidence() << "\t" << alternative.transcript()
-                << std::endl;
+                << "\n";
     }
   }
   // [END speech_sync_recognize_gcs]
   // [END speech_sync_recognize]
   return 0;
+} catch (std::exception const& ex) {
+  std::cerr << "Standard C++ exception thrown: " << ex.what() << "\n"
+            << kUsage << "\n";
+  return 1;
 }

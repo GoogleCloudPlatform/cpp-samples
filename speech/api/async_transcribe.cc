@@ -29,7 +29,7 @@ static const char kUsage[] =
     "   async_transcribe [--bitrate N] "
     "gs://bucket/audio.(raw|ulaw|flac|amr|awb)\n";
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) try {
   // [START speech_async_recognize_gcs]
   // Create a Speech stub connected to the speech service.
   auto creds = grpc::GoogleDefaultCredentials();
@@ -40,12 +40,11 @@ int main(int argc, char** argv) {
   std::unique_ptr<google::longrunning::Operations::Stub> long_operations(
       google::longrunning::Operations::NewStub(channel));
   // Parse command line arguments.
+  auto args = ParseArguments(argc, argv);
+  auto const file_path = args.path;
   LongRunningRecognizeRequest request;
-  char* file_path = ParseArguments(argc, argv, request.mutable_config());
-  if (nullptr == file_path) {
-    std::cerr << kUsage;
-    return -1;
-  }
+  *request.mutable_config() = args.config;
+
   // Pass the Google Cloud Storage URI to the request.
   request.mutable_audio()->set_uri(file_path);
   // Call LongRunningRecognize().
@@ -70,28 +69,30 @@ int main(int argc, char** argv) {
         long_operations->GetOperation(&op_context, get_op_request, &op);
     if (!rpc_status.ok()) {
       // Report the RPC failure.
-      std::cerr << rpc_status.error_message() << std::endl;
-      return -1;
+      std::cerr << rpc_status.error_message() << "\n";
+      return 1;
     }
   }
   std::cout << std::endl;
   // Unpack the response.
   if (!op.response().Is<LongRunningRecognizeResponse>()) {
     std::cerr << "The operation completed, but did not contain a "
-              << "LongRunningRecognizeResponse.";
-    return -1;
+              << "LongRunningRecognizeResponse.\n";
+    return 1;
   }
   LongRunningRecognizeResponse response;
   op.response().UnpackTo(&response);
   // Dump the transcript of all the results.
-  for (int r = 0; r < response.results_size(); ++r) {
-    const auto& result = response.results(r);
-    for (int a = 0; a < result.alternatives_size(); ++a) {
-      const auto& alternative = result.alternatives(a);
+  for (auto const & result : response.results()) {
+    for (auto const& alternative : result.alternatives()) {
       std::cout << alternative.confidence() << "\t" << alternative.transcript()
-                << std::endl;
+                << "\n";
     }
   }
   // [END speech_async_recognize_gcs]
   return 0;
+} catch(std::exception const& ex) {
+  std::cerr << "Standard C++ exception thrown: " << ex.what() << "\n"
+  << kUsage << "\n";
+  return 1;
 }

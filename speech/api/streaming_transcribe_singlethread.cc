@@ -29,20 +29,18 @@ static const char kUsage[] =
     "   streaming_transcribe_singlethread "
     "[--bitrate N] audio.(raw|ulaw|flac|amr|awb)\n";
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) try {
   // Create a Speech Stub connected to the speech service.
   auto creds = grpc::GoogleDefaultCredentials();
   auto channel = grpc::CreateChannel("speech.googleapis.com", creds);
   std::unique_ptr<Speech::Stub> speech(Speech::NewStub(channel));
   // Parse command line arguments.
+  auto args = ParseArguments(argc, argv);
+
   StreamingRecognizeRequest request;
-  auto* streaming_config = request.mutable_streaming_config();
-  char* file_path =
-      ParseArguments(argc, argv, streaming_config->mutable_config());
-  if (nullptr == file_path) {
-    std::cerr << kUsage;
-    return -1;
-  }
+  auto& streaming_config = *request.mutable_streaming_config();
+  *streaming_config.mutable_config() = args.config;
+
   // Many things are happening at once:
   // 1. Writing the initial request to the stream.
   // 2. Writing chunks of audio content to the stream.
@@ -70,33 +68,29 @@ int main(int argc, char** argv) {
   Tag* tag = nullptr;
   // Block until the creation of the stream is done, we cannot start
   // writing until that happens ...
-  if (cq.Next(reinterpret_cast<void**>(&tag), &ok)) {
-    std::cout << tag->name << " completed." << std::endl;
-    tag->happening_now = false;
-    if (tag != &create_stream) {
-      std::cerr << "Expected create_stream in cq." << std::endl;
-      return -1;
-    }
-    if (!ok) {
-      std::cerr << "Stream closed while creating it." << std::endl;
-      return -1;
-    }
-  } else {
-    std::cerr << "The completion queue unexpectedly shutdown or timedout."
-              << std::endl;
-    return -1;
+  if (!cq.Next(reinterpret_cast<void**>(&tag), &ok)) {
+    throw std::runtime_error(
+        "The completion queue unexpectedly shutdown or timedout.");
+  }
+  std::cout << tag->name << " completed." << std::endl;
+  tag->happening_now = false;
+  if (tag != &create_stream) {
+    throw std::runtime_error("Expected create_stream in cq.");
+  }
+  if (!ok) {
+    throw std::runtime_error("Stream closed while creating it.");
   }
 
   StreamingRecognizeResponse response;
   // Write the first request, containing the config only.
-  streaming_config->set_interim_results(true);
+  streaming_config.set_interim_results(true);
   writing.happening_now = true;
   streamer->Write(request, &writing);
   // Get ready to write audio content.  Open the file, allocate a chunk, and
   // start a timer.  Use the timer to simulate a microphone, where the audio
   // content is arriving in one chunk per second.
-  std::ifstream file_stream(file_path, std::ios::binary);
-  const size_t chunk_size = 64 * 1024;
+  std::ifstream file_stream(args.path, std::ios::binary);
+  auto const chunk_size = 64 * 1024;
   std::vector<char> chunk(chunk_size);
   std::chrono::system_clock::time_point next_write_time_point =
       std::chrono::system_clock::time_point::min();
@@ -111,14 +105,16 @@ int main(int argc, char** argv) {
     auto now = std::chrono::system_clock::now();
     if (now >= next_write_time_point && !writing.happening_now) {
       // Time to write another chunk of the file on the stream.
-      std::streamsize bytes_read =
-          file_stream.rdbuf()->sgetn(&chunk[0], chunk.size());
-      request.clear_streaming_config();
-      request.set_audio_content(&chunk[0], bytes_read);
-      std::cout << "Sending " << bytes_read / 1024 << "k bytes." << std::endl;
-      writing.happening_now = true;
-      streamer->Write(request, &writing);
-      if (bytes_read < chunk.size()) {
+      file_stream.read(chunk.data(), chunk.size());
+      auto const bytes_read = file_stream.gcount();
+      if (bytes_read > 0) {
+        request.clear_streaming_config();
+        request.set_audio_content(chunk.data(), bytes_read);
+        std::cout << "Sending " << bytes_read / 1024 << "k bytes." << std::endl;
+        writing.happening_now = true;
+        streamer->Write(request, &writing);
+      }
+      if (!file_stream) {
         // Done writing.
         writes_completed = true;
         next_write_time_point =  // Never write again.
@@ -133,21 +129,17 @@ int main(int argc, char** argv) {
     switch (cq.AsyncNext(reinterpret_cast<void**>(&tag), &ok,
                          next_write_time_point)) {
       case grpc::CompletionQueue::SHUTDOWN:
-        std::cerr << "The completion queue unexpectedly shutdown." << std::endl;
-        return -1;
+        throw std::runtime_error("The completion queue unexpectedly shutdown.");
       case grpc::CompletionQueue::GOT_EVENT:
         std::cout << tag->name << " completed." << std::endl;
         tag->happening_now = false;
         if (tag == &reading) {
           // Dump the transcript of all the results.
-          for (int r = 0; r < response.results_size(); ++r) {
-            const auto& result = response.results(r);
-            std::cout << "Result stability: " << result.stability()
-                      << std::endl;
-            for (int a = 0; a < result.alternatives_size(); ++a) {
-              const auto& alternative = result.alternatives(a);
+          for (auto const& result : response.results()) {
+            std::cout << "Result stability: " << result.stability() << "\n";
+            for (auto const& alternative : result.alternatives()) {
               std::cout << alternative.confidence() << "\t"
-                        << alternative.transcript() << std::endl;
+                        << alternative.transcript() << "\n";
             }
           }
         }
@@ -173,7 +165,11 @@ int main(int argc, char** argv) {
   if (!status.ok()) {
     // Report the RPC failure.
     std::cerr << status.error_message() << std::endl;
-    return -1;
+    return 1;
   }
   return 0;
+} catch (std::exception const& ex) {
+  std::cerr << "Standard C++ exception thrown: " << ex.what() << "\n"
+            << kUsage << "\n";
+  return 1;
 }

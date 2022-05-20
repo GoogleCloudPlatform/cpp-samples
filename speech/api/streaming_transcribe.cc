@@ -43,13 +43,15 @@ static void MicrophoneThreadMain(
   std::vector<char> chunk(chunk_size);
   while (true) {
     // Read another chunk from the file.
-    std::streamsize bytes_read =
-        file_stream.rdbuf()->sgetn(&chunk[0], chunk.size());
+    file_stream.read(chunk.data(), chunk.size());
+    auto const bytes_read = file_stream.gcount();
     // And write the chunk to the stream.
-    request.set_audio_content(&chunk[0], bytes_read);
-    std::cout << "Sending " << bytes_read / 1024 << "k bytes." << std::endl;
-    streamer->Write(request);
-    if (bytes_read < chunk.size()) {
+    if (bytes_read > 0) {
+      request.set_audio_content(chunk.data(), bytes_read);
+      std::cout << "Sending " << bytes_read / 1024 << "k bytes." << std::endl;
+      streamer->Write(request);
+    }
+    if (!file_stream) {
       // Done reading everything from the file, so done writing to the stream.
       streamer->WritesDone();
       break;
@@ -59,25 +61,25 @@ static void MicrophoneThreadMain(
   }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) try {
   // Create a Speech Stub connected to the speech service.
   auto creds = grpc::GoogleDefaultCredentials();
   auto channel = grpc::CreateChannel("speech.googleapis.com", creds);
   std::unique_ptr<Speech::Stub> speech(Speech::NewStub(channel));
+
   // Parse command line arguments.
+  auto args = ParseArguments(argc, argv);
+  auto const file_path = args.path;
+
   StreamingRecognizeRequest request;
-  auto* streaming_config = request.mutable_streaming_config();
-  char* file_path =
-      ParseArguments(argc, argv, streaming_config->mutable_config());
-  if (nullptr == file_path) {
-    std::cerr << kUsage;
-    return -1;
-  }
+  auto& streaming_config = *request.mutable_streaming_config();
+  *streaming_config.mutable_config() = args.config;
+
   // Begin a stream.
   grpc::ClientContext context;
   auto streamer = speech->StreamingRecognize(&context);
   // Write the first request, containing the config only.
-  streaming_config->set_interim_results(true);
+  streaming_config.set_interim_results(true);
   streamer->Write(request);
   // The microphone thread writes the audio content.
   std::thread microphone_thread(&MicrophoneThreadMain, streamer.get(),
@@ -86,13 +88,11 @@ int main(int argc, char** argv) {
   StreamingRecognizeResponse response;
   while (streamer->Read(&response)) {  // Returns false when no more to read.
     // Dump the transcript of all the results.
-    for (int r = 0; r < response.results_size(); ++r) {
-      const auto& result = response.results(r);
-      std::cout << "Result stability: " << result.stability() << std::endl;
-      for (int a = 0; a < result.alternatives_size(); ++a) {
-        const auto& alternative = result.alternatives(a);
+    for (auto const& result : response.results()) {
+      std::cout << "Result stability: " << result.stability() << "\n";
+      for (auto const& alternative : result.alternatives()) {
         std::cout << alternative.confidence() << "\t"
-                  << alternative.transcript() << std::endl;
+                  << alternative.transcript() << "\n";
       }
     }
   }
@@ -104,5 +104,9 @@ int main(int argc, char** argv) {
     return -1;
   }
   return 0;
+} catch (std::exception const& ex) {
+  std::cerr << "Standard C++ exception thrown: " << ex.what() << "\n"
+            << kUsage << "\n";
+  return 1;
 }
 // [END speech_streaming_recognize]

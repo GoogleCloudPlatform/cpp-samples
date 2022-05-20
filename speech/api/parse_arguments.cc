@@ -13,49 +13,80 @@
 // limitations under the License.
 
 #include "parse_arguments.h"
-#include <getopt.h>
+#include <boost/program_options.hpp>
+#include <algorithm>
+#include <cctype>
+#include <stdexcept>
+#include <string>
 
-using google::cloud::speech::v1::RecognitionConfig;
+using ::google::cloud::speech::v1::RecognitionConfig;
+namespace po = ::boost::program_options;
 
-char* ParseArguments(int argc, char** argv, RecognitionConfig* config) {
-  // Parse the bit rate from the --bitrate command line option.
-  static struct option long_options[] = {
-      {"bitrate", required_argument, nullptr, 'b'}, {nullptr, 0, nullptr, 0}};
-  config->set_language_code("en");
-  config->set_sample_rate_hertz(16000);  // Default sample rate.
-  int opt;
-  int option_index = 0;
-  while ((opt = getopt_long(argc, argv, "b:", long_options, &option_index)) !=
-         -1) {
-    switch (opt) {
-      case 'b':
-        config->set_sample_rate_hertz(atoi(optarg));
-        if (0 == config->sample_rate_hertz()) return nullptr;
-        break;
-      default: /* '?' */
-        return nullptr;
-    }
+ParseResult ParseArguments(int argc, char* argv[]) {
+  po::positional_options_description positional;
+  positional.add("path", 1);
+  po::options_description desc("A Speech-to-Text transcription example");
+  desc.add_options()("help", "produce help message")
+      //
+      ("bitrate", po::value<int>()->default_value(16000),
+       "the sample rate in Hz")
+      //
+      ("language-code", po::value<std::string>()->default_value("en"),
+       "the language code for the audio")
+      //
+      ("path", po::value<std::string>()->required(),
+       "the name of an audio file to transcribe. Prefix the path with gs:// to "
+       "use objects in GCS.");
+  po::variables_map vm;
+  po::store(po::command_line_parser(argc, argv)
+                .options(desc)
+                .positional(positional)
+                .run(),
+            vm);
+  po::notify(vm);
+
+  // Validate the arguments.
+  if (vm.count("path") == 0)
+    throw std::runtime_error("Missing audio filename in the command line");
+  auto const path = vm["path"].as<std::string>();
+  auto const bitrate = vm["bitrate"].as<int>();
+  auto const language_code = vm["language-code"].as<std::string>();
+  // Validate the command-line options.
+  if (bitrate < 0) {
+    throw std::runtime_error(
+        "--bitrate option must be a positive number, value=" +
+        std::to_string(bitrate));
   }
-  if (optind == argc) {
-    // Missing the audio file path.
-    return nullptr;
-  }
-  // Choose the encoding by examining the audio file extension.
-  char* ext = strrchr(argv[optind], '.');
-  if (ext == nullptr || 0 == strcasecmp(ext, ".raw")) {
-    config->set_encoding(RecognitionConfig::LINEAR16);
-  } else if (0 == strcasecmp(ext, ".ulaw")) {
-    config->set_encoding(RecognitionConfig::MULAW);
-  } else if (0 == strcasecmp(ext, ".flac")) {
-    config->set_encoding(RecognitionConfig::FLAC);
-  } else if (0 == strcasecmp(ext, ".amr")) {
-    config->set_encoding(RecognitionConfig::AMR);
-    config->set_sample_rate_hertz(8000);
-  } else if (0 == strcasecmp(ext, ".awb")) {
-    config->set_encoding(RecognitionConfig::AMR_WB);
-    config->set_sample_rate_hertz(16000);
+
+  ParseResult result;
+  result.path = path;
+  result.config.set_language_code(language_code);
+  result.config.set_sample_rate_hertz(bitrate);
+
+  // Use the audio file extension to configure the encoding.
+  auto const ext = [&] {
+    auto e = result.path.rfind('.');
+    if (e == std::string::npos) return std::string{};
+    auto ext = result.path.substr(e);
+    std::transform(ext.begin(), ext.end(), ext.begin(),
+                   [](char c) { return static_cast<char>(std::tolower(c)); });
+    return ext;
+  }();
+
+  if (ext.empty() || ext == ".raw") {
+    result.config.set_encoding(RecognitionConfig::LINEAR16);
+  } else if (ext == ".ulaw") {
+    result.config.set_encoding(RecognitionConfig::MULAW);
+  } else if (ext == ".flac") {
+    result.config.set_encoding(RecognitionConfig::FLAC);
+  } else if (ext == ".amr") {
+    result.config.set_encoding(RecognitionConfig::AMR);
+    result.config.set_sample_rate_hertz(8000);
+  } else if (ext == ".awb") {
+    result.config.set_encoding(RecognitionConfig::AMR_WB);
+    result.config.set_sample_rate_hertz(16000);
   } else {
-    config->set_encoding(RecognitionConfig::LINEAR16);
+    result.config.set_encoding(RecognitionConfig::LINEAR16);
   }
-  return argv[optind];
+  return result;
 }

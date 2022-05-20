@@ -21,21 +21,25 @@ set(PACKAGE_BUGREPORT
     "https://github.com/GoogleCloudPlatform/cpp-samples/issues")
 project(cpp-samples-speech-api CXX)
 
-# Configure the Compiler options, we will be using C++11 features.
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-find_package(google_cloud_cpp_googleapis REQUIRED)
+find_package(google_cloud_cpp_speech REQUIRED)
+find_package(Boost 1.66 REQUIRED COMPONENTS program_options)
 find_package(Threads)
 
 add_library(parse_arguments STATIC parse_arguments.cc parse_arguments.h)
-target_link_libraries(parse_arguments
-                      PUBLIC google-cloud-cpp::cloud_speech_protos)
+target_compile_features(parse_arguments PUBLIC cxx_std_11)
+target_link_libraries(
+  parse_arguments PUBLIC Boost::program_options
+                         google-cloud-cpp::cloud_speech_protos)
+if(MSVC)
+  # The protobuf-generated files have warnings under the default MSVC settings.
+  # We are not interested in these warnings, because we cannot fix them.
+  target_compile_options(parse_arguments PUBLIC "/wd4244" "/wd4251")
+endif()
 
 foreach(target async_transcribe streaming_transcribe
                streaming_transcribe_singlethread transcribe)
   add_executable("${target}" "${target}.cc")
   target_link_libraries(
     "${target}" PRIVATE parse_arguments google-cloud-cpp::cloud_speech_protos
-                        Threads::Threads)
+                        Boost::program_options Threads::Threads)
 endforeach()
