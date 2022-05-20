@@ -40,6 +40,6 @@ foreach(target async_transcribe streaming_transcribe
                streaming_transcribe_singlethread transcribe)
   add_executable("${target}" "${target}.cc")
   target_link_libraries(
-    "${target}" PRIVATE parse_arguments google-cloud-cpp::cloud_speech_protos
+    "${target}" PRIVATE parse_arguments google-cloud-cpp::speech
                         Boost::program_options Threads::Threads)
 endforeach()
