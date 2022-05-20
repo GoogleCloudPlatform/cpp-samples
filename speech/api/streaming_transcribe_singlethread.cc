@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
   // Get ready to write audio content.  Open the file, allocate a chunk, and
   // start a timer.  Use the timer to simulate a microphone, where the audio
   // content is arriving in one chunk per second.
-  std::ifstream file_stream(file_path);
+  std::ifstream file_stream(file_path, std::ios::binary);
   const size_t chunk_size = 64 * 1024;
   std::vector<char> chunk(chunk_size);
   std::chrono::system_clock::time_point next_write_time_point =

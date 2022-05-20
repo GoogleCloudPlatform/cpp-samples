@@ -36,10 +36,10 @@ static const char kUsage[] =
 static void MicrophoneThreadMain(
     grpc::ClientReaderWriterInterface<StreamingRecognizeRequest,
                                       StreamingRecognizeResponse>* streamer,
-    char* file_path) {
+    std::string const& file_path) {
   StreamingRecognizeRequest request;
-  std::ifstream file_stream(file_path);
-  const size_t chunk_size = 64 * 1024;
+  std::ifstream file_stream(file_path, std::ios::binary);
+  auto const chunk_size = 64 * 1024;
   std::vector<char> chunk(chunk_size);
   while (true) {
     // Read another chunk from the file.
