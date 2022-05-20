@@ -51,6 +51,8 @@ steps:
             'crc32c',
             'fmt',
             'google-cloud-cpp',
+            'google-cloud-cpp[core,spanner]',
+            'google-cloud-cpp[core,speech]',
             'jansson', 'openssl', 'paho-mqtt',
     ]
 
