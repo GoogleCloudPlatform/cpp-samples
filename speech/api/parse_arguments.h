@@ -20,7 +20,11 @@
 // Parse the command line arguments, and set the config options accordingly.
 // Returns:
 //   The audio file path, or nullptr if an error occurred.
-char* ParseArguments(int argc, char** argv,
-                     google::cloud::speech::v1::RecognitionConfig* config);
+struct ParseResult {
+  google::cloud::speech::v1::RecognitionConfig config;
+  std::string path;
+};
+
+ParseResult ParseArguments(int argc, char* argv[]);
 
 #endif  // CPP_SAMPLES_SPEECH_API_PARSE_ARGUMENTS_H
