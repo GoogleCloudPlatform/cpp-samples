@@ -21,8 +21,8 @@
 // Returns:
 //   The audio file path, or nullptr if an error occurred.
 struct ParseResult {
-    google::cloud::speech::v1::RecognitionConfig config;
-    std::string path;
+  google::cloud::speech::v1::RecognitionConfig config;
+  std::string path;
 };
 
 ParseResult ParseArguments(int argc, char* argv[]);

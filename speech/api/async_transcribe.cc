@@ -83,7 +83,7 @@ int main(int argc, char** argv) try {
   LongRunningRecognizeResponse response;
   op.response().UnpackTo(&response);
   // Dump the transcript of all the results.
-  for (auto const & result : response.results()) {
+  for (auto const& result : response.results()) {
     for (auto const& alternative : result.alternatives()) {
       std::cout << alternative.confidence() << "\t" << alternative.transcript()
                 << "\n";
@@ -91,8 +91,8 @@ int main(int argc, char** argv) try {
   }
   // [END speech_async_recognize_gcs]
   return 0;
-} catch(std::exception const& ex) {
+} catch (std::exception const& ex) {
   std::cerr << "Standard C++ exception thrown: " << ex.what() << "\n"
-  << kUsage << "\n";
+            << kUsage << "\n";
   return 1;
 }
