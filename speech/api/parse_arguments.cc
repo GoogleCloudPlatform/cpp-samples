@@ -45,13 +45,13 @@ ParseResult ParseArguments(int argc, char* argv[]) {
             vm);
   po::notify(vm);
 
-  // Validate the arguments.
-  if (vm.count("path") == 0)
-    throw std::runtime_error("Missing audio filename in the command line");
   auto const path = vm["path"].as<std::string>();
   auto const bitrate = vm["bitrate"].as<int>();
   auto const language_code = vm["language-code"].as<std::string>();
   // Validate the command-line options.
+  if (path.empty()) {
+    throw std::runtime_error("The audio file path cannot be empty");
+  }
   if (bitrate < 0) {
     throw std::runtime_error(
         "--bitrate option must be a positive number, value=" +
