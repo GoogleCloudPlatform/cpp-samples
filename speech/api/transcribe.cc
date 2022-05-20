@@ -54,8 +54,9 @@ int main(int argc, char** argv) {
     // [START speech_sync_recognize]
     // Load the audio file from disk into the request.
     request.mutable_audio()->mutable_content()->assign(
-        std::istreambuf_iterator<char>(std::ifstream(file_path).rdbuf()),
-        std::istreambuf_iterator<char>());
+        std::istreambuf_iterator<char>(
+            std::ifstream(file_path, std::ios::binary).rdbuf()),
+        {});
     // [END speech_sync_recognize]
   }
   // [START speech_sync_recognize]

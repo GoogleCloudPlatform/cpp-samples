@@ -38,7 +38,7 @@ std::string format_size(std::int64_t size) {
 }
 
 std::pair<std::int64_t, std::string> file_info(std::string const& filename) {
-  std::ifstream is(filename);
+  std::ifstream is(filename, std::ios::binary);
   std::vector<char> buffer(1024 * 1024L);
   std::uint32_t crc32c = 0;
   std::int64_t size = 0;
