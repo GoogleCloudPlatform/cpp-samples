@@ -33,9 +33,11 @@ auto constexpr kUsage = R"""(Usage:
   streaming_transcribe_singlethread [--bitrate N] audio.(raw|ulaw|flac|amr|awb)
 )""";
 
+// Print the responses as they are received.
 g::future<void> ReadTranscript(RecognizeStream& stream) {
   while (true) {
     auto response = co_await stream.Read();
+    // Terminate the loop if the stream is closed or has an error.
     if (!response) co_return;
     for (auto const& result : response->results()) {
       std::cout << "Result stability: " << result.stability() << "\n";
@@ -47,19 +49,25 @@ g::future<void> ReadTranscript(RecognizeStream& stream) {
   }
 }
 
-g::future<void> WriteAudio(RecognizeStream& stream,speech::v1::StreamingRecognizeRequest request, std::string const& path,
-                           g::CompletionQueue cq) {
+// Simulate a microphone thread sending audio to the Cloud Speech API
+g::future<void> WriteAudio(RecognizeStream& stream,
+                           speech::v1::StreamingRecognizeRequest request,
+                           std::string const& path, g::CompletionQueue cq) {
+  // Open the input file and read from it until there is no more data.
   auto file = std::ifstream(path, std::ios::binary);
   while (file) {
+    // Simulate a delay to acquire the audio.
     co_await cq.MakeRelativeTimer(std::chrono::seconds(1));
     auto constexpr kChunkSize = 64 * 1024;
     std::vector<char> chunk(kChunkSize);
     file.read(chunk.data(), chunk.size());
     auto const bytes_read = file.gcount();
+    // If there is any data left on the file, send it to the service
     if (bytes_read > 0) {
-    request.clear_streaming_config();
+      request.clear_streaming_config();
       request.set_audio_content(chunk.data(), bytes_read);
       std::cout << "Sending " << bytes_read / 1024 << "k bytes." << std::endl;
+      // Terminate the loop if there is an error in the stream.
       if (!co_await stream.Write(request, grpc::WriteOptions())) co_return;
     }
   }
@@ -89,13 +97,16 @@ g::future<g::Status> StreamingTranscribe(g::CompletionQueue cq,
     co_return co_await stream->Finish();
   }
 
-  // Start a coroutine to read the responses
+  // Start a coroutine to read the responses.
   auto reader = ReadTranscript(*stream);
+  // Start a coroutine to write the audio data.
   auto writer = WriteAudio(*stream, std::move(request), args.path, cq);
 
+  // Wait until both coroutines finish.
   co_await std::move(writer);
   co_await std::move(reader);
 
+  // Return the final status of the stream.
   co_return co_await stream->Finish();
 }
 
@@ -105,6 +116,8 @@ int main(int argc, char* argv[]) try {
   g::CompletionQueue cq;
   auto runner = std::thread{[](auto cq) { cq.Run(); }, cq};
 
+  // Run a streaming transcription. Note that `.get()` blocks until it
+  // completes.
   auto status = StreamingTranscribe(cq, ParseArguments(argc, argv)).get();
 
   // Shutdown the completion queue
