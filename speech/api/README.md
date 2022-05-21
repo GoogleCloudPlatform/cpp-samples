@@ -74,18 +74,16 @@ the additional notes for your platform.
 
 1. **Run the examples:**
    ```shell
-   .build/transcribe -b 16000 resources/audio.raw
    .build/transcribe --bitrate 16000 resources/audio2.raw
    .build/transcribe resources/audio.flac
    .build/transcribe resources/quit.raw
-   .build/streaming_transcribe -b 16000 resources/audio.raw
    .build/streaming_transcribe --bitrate 16000 resources/audio2.raw
    .build/streaming_transcribe resources/audio.flac
    .build/streaming_transcribe resources/quit.raw
-   .build/streaming_transcribe_singlethread -b 16000 resources/audio.raw
-   .build/streaming_transcribe_singlethread --bitrate 16000 resources/audio2.raw
-   .build/streaming_transcribe_singlethread resources/audio.flac
-   .build/streaming_transcribe_singlethread resources/quit.raw
+   .build/streaming_transcribe_coroutines --bitrate 16000 resources/audio2.raw
+   .build/streaming_transcribe_coroutines resources/audio.flac
+   .build/streaming_transcribe_coroutines resources/quit.raw
+   .build/streaming_transcribe_singlethread ---bitrate 16000 resources/audio.raw
    .build/transcribe gs://cloud-samples-tests/speech/brooklyn.flac
    .build/async_transcribe gs://cloud-samples-tests/speech/vr.flac
    ```
