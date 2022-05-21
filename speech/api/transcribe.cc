@@ -13,31 +13,26 @@
 // limitations under the License.
 
 #include "parse_arguments.h"
-#include <google/cloud/speech/v1/cloud_speech.grpc.pb.h>
-#include <grpcpp/grpcpp.h>
+#include <google/cloud/speech/speech_client.h>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
 
-using google::cloud::speech::v1::RecognizeRequest;
-using google::cloud::speech::v1::RecognizeResponse;
-using google::cloud::speech::v1::Speech;
+namespace speech = ::google::cloud::speech;
 
-static const char kUsage[] =
-    "Usage:\n"
-    "   transcribe [--bitrate N] audio.(raw|ulaw|flac|amr|awb)\n";
+auto constexpr kUsage = R"""(Usage:
+  transcribe [--bitrate N] audio.(raw|ulaw|flac|amr|awb)
+)""";
 
 int main(int argc, char** argv) try {
   // [START speech_sync_recognize]
   // [START speech_sync_recognize_gcs]
-  // Create a Speech Stub connected to the speech service.
-  auto creds = grpc::GoogleDefaultCredentials();
-  auto channel = grpc::CreateChannel("speech.googleapis.com", creds);
-  std::unique_ptr<Speech::Stub> speech(Speech::NewStub(channel));
+  // Create a Speech client with the default configuration
+  auto client = speech::SpeechClient(speech::MakeSpeechConnection());
   // Parse command line arguments.
   auto const args = ParseArguments(argc, argv);
-  RecognizeRequest request;
+  speech::v1::RecognizeRequest request;
   *request.mutable_config() = args.config;
   // [END speech_sync_recognize_gcs]
   // [END speech_sync_recognize]
@@ -59,16 +54,10 @@ int main(int argc, char** argv) try {
   // [START speech_sync_recognize]
   // [START speech_sync_recognize_gcs]
   // Send audio content using Recognize().
-  grpc::ClientContext context;
-  RecognizeResponse response;
-  grpc::Status rpc_status = speech->Recognize(&context, request, &response);
-  if (!rpc_status.ok()) {
-    // Report the RPC failure.
-    std::cerr << rpc_status.error_message() << std::endl;
-    return 1;
-  }
+  auto response = client.Recognize(request);
+  if (!response) throw std::move(response).status();
   // Dump the transcript of all the results.
-  for (auto const& result : response.results()) {
+  for (auto const& result : response->results()) {
     for (auto const& alternative : result.alternatives()) {
       std::cout << alternative.confidence() << "\t" << alternative.transcript()
                 << "\n";
@@ -77,6 +66,9 @@ int main(int argc, char** argv) try {
   // [END speech_sync_recognize_gcs]
   // [END speech_sync_recognize]
   return 0;
+} catch (google::cloud::Status const& s) {
+  std::cerr << "Recognize failed with: " << s << "\n";
+  return 1;
 } catch (std::exception const& ex) {
   std::cerr << "Standard C++ exception thrown: " << ex.what() << "\n"
             << kUsage << "\n";
