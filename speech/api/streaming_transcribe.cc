@@ -73,7 +73,7 @@ int main(int argc, char** argv) try {
   // Begin a stream.
   auto stream =
       client.AsyncStreamingRecognize(google::cloud::ExperimentalTag{});
-  // The stream can fail to start, .get() returns an error in this case.
+  // The stream can fail to start, and `.get()` returns an error in this case.
   if (!stream->Start().get()) throw stream->Finish().get();
   // Write the first request, containing the config only.
   if (!stream->Write(request, grpc::WriteOptions{}).get()) {

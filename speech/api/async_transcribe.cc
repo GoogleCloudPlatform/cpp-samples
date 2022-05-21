@@ -19,10 +19,9 @@
 
 namespace speech = ::google::cloud::speech;
 
-static const char kUsage[] =
-    "Usage:\n"
-    "   async_transcribe [--bitrate N] "
-    "gs://bucket/audio.(raw|ulaw|flac|amr|awb)\n";
+auto constexpr kUsage = R"""(Usage:
+  async_transcribe [--bitrate N] audio.(raw|ulaw|flac|amr|awb)
+)""";
 
 int main(int argc, char** argv) try {
   // [START speech_async_recognize_gcs]
@@ -36,17 +35,10 @@ int main(int argc, char** argv) try {
 
   // Pass the Google Cloud Storage URI to the request.
   request.mutable_audio()->set_uri(file_path);
-  // Call LongRunningRecognize().
-  auto future = client.LongRunningRecognize(request);
-  // Wait for the operation to complete.  Check the status once per second.
-  std::cout << "Waiting for operation to complete ";
-  while (future.wait_for(std::chrono::seconds(1)) ==
-         std::future_status::timeout) {
-    std::cout << '.' << std::flush;
-  }
-  std::cout << "DONE\n";
-  auto response = future.get();
-  // If the is an error just report it:
+  // Call LongRunningRecognize(), and then `.get()` to block until the operation
+  // completes. The client library polls the operation in the background.
+  auto response = client.LongRunningRecognize(request).get();
+  // If the response is an error just report it:
   if (!response) {
     std::cerr << "Error in LongRunningRecognize: " << response.status() << "\n";
     return 1;
