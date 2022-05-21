@@ -54,7 +54,7 @@ steps:
             'jansson', 'openssl', 'paho-mqtt',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    id: 'vcpkg-warmup-functions'
+    id: 'vcpkg-warmup-functions-framework-cpp'
     env:
       - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
@@ -68,7 +68,7 @@ steps:
             'google-cloud-cpp[core,spanner]',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    id: 'vcpkg-warmup-spanner'
+    id: 'vcpkg-warmup-speech'
     env:
       - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
