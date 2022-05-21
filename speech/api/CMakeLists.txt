@@ -26,7 +26,7 @@ find_package(Boost 1.66 REQUIRED COMPONENTS program_options)
 find_package(Threads)
 
 add_library(parse_arguments STATIC parse_arguments.cc parse_arguments.h)
-target_compile_features(parse_arguments PUBLIC cxx_std_11)
+target_compile_features(parse_arguments PUBLIC cxx_std_14)
 target_link_libraries(
   parse_arguments PUBLIC Boost::program_options
                          google-cloud-cpp::cloud_speech_protos)
