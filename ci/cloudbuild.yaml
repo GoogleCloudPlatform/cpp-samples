@@ -41,7 +41,7 @@ steps:
   # build VM suffering from CPU overload (and maybe memory exhaustion).
   # Note that this list of packages does not have to be perfect to be useful.
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    id: 'vcpkg-warmup'
+    id: 'vcpkg-warmup-shared'
     env:
       - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
@@ -50,8 +50,36 @@ steps:
             'cppcodec',
             'crc32c',
             'fmt',
-            'google-cloud-cpp',
+            'grpc',
             'jansson', 'openssl', 'paho-mqtt',
+    ]
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    id: 'vcpkg-warmup-functions-framework-cpp'
+    env:
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+    args: [ '/usr/local/vcpkg/vcpkg', 'install',
+            'functions-framework-cpp',
+    ]
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    id: 'vcpkg-warmup-spanner'
+    env:
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+    args: [ '/usr/local/vcpkg/vcpkg', 'install',
+            'google-cloud-cpp[core,spanner]',
+    ]
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    id: 'vcpkg-warmup-speech'
+    env:
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+    args: [ '/usr/local/vcpkg/vcpkg', 'install',
+            'google-cloud-cpp[core,speech]',
+    ]
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    id: 'vcpkg-warmup'
+    env:
+      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
+    args: [ '/usr/local/vcpkg/vcpkg', 'install',
+            'google-cloud-cpp',
     ]
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
