@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc.
+// Copyright 2012 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ g::future<void> WriteAudio(RecognizeStream& stream,speech::v1::StreamingRecogniz
     request.clear_streaming_config();
       request.set_audio_content(chunk.data(), bytes_read);
       std::cout << "Sending " << bytes_read / 1024 << "k bytes." << std::endl;
-      if (not co_await stream.Write(request, grpc::WriteOptions())) co_return;
+      if (!co_await stream.Write(request, grpc::WriteOptions())) co_return;
     }
   }
   co_await stream.WritesDone();
@@ -81,10 +81,10 @@ g::future<g::Status> StreamingTranscribe(g::CompletionQueue cq,
       client.AsyncStreamingRecognize(google::cloud::ExperimentalTag{});
 
   // The stream can fail to start; `.get()` returns an `false` in this case.
-  if (not co_await stream->Start()) co_return co_await stream->Finish();
+  if (!co_await stream->Start()) co_return co_await stream->Finish();
 
   // Write the first request, containing the config only.
-  if (not co_await stream->Write(request, grpc::WriteOptions{})) {
+  if (!co_await stream->Write(request, grpc::WriteOptions{})) {
     // If the initial write fails, we need to collect the state and return
     co_return co_await stream->Finish();
   }
