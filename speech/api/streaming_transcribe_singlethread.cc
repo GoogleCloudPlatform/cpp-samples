@@ -42,7 +42,7 @@ class Handler : public std::enable_shared_from_this<Handler> {
   g::future<g::Status> Start(speech::SpeechClient& client) {
     // Get ready to write audio content.  Create the stream, and start it.
     stream_ = client.AsyncStreamingRecognize(google::cloud::ExperimentalTag{});
-    // The stream can fail to start, .get() returns an error in this case.
+    // The stream can fail to start; `.get()` returns an `false` in this case.
     if (!stream_->Start().get()) return StartFailure();
     // Write the first request, containing the config only.
     if (!stream_->Write(request_, grpc::WriteOptions{}).get()) {
@@ -50,7 +50,7 @@ class Handler : public std::enable_shared_from_this<Handler> {
       return StartFailure();
     }
     auto self = shared_from_this();
-    // This creates a series of reads, when each read completes successfully a
+    // This creates a series of reads; when each read completes successfully a
     // new one starts.
     stream_->Read().then([self](auto f) { self->OnRead(f.get()); });
     // This creates a series of timer -> write -> timer -> ... steps.
@@ -78,10 +78,8 @@ class Handler : public std::enable_shared_from_this<Handler> {
   void OnFinish(g::Status s) { done_.set_value(s); }
 
   void OnTimer(g::Status s) {
-    // On a timer error the completion queue is not usable
-    // just return.
+    // On a timer error the completion queue is not usable so just return.
     if (!s.ok()) return;
-    // If the file is not usable, close the stream
     auto self = shared_from_this();
     auto constexpr kChunkSize = 64 * 1024;
     std::vector<char> chunk(kChunkSize);
@@ -112,14 +110,15 @@ class Handler : public std::enable_shared_from_this<Handler> {
   }
 
   void OnWrite(bool ok) {
-    auto self = shared_from_this();
     if (!ok) return CloseWriteSide();
+    auto self = shared_from_this();
+    // If the file is not usable, start the process to close the stream.
     if (!file_) {
       stream_->WritesDone().then(
           [self](auto f) { self->OnWritesDone(f.get()); });
       return;
     }
-    // Schedule a new timer to read more data
+    // Schedule a new timer to read more data.
     cq_.MakeRelativeTimer(std::chrono::seconds(1)).then([&](auto f) {
       self->OnTimer(f.get().status());
     });
