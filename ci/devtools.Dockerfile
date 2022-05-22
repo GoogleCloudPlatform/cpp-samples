@@ -26,7 +26,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
     && apt-get install google-cloud-sdk -y
 
 WORKDIR /usr/local/vcpkg
-# Pin vcpkg to the latest released version. Renovatebot sends PRs when there is a new release
+# Pin vcpkg to the latest released version. Renovatebot sends PRs when there is a new release.
 RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2022.05.10.tar.gz" | \
     tar --strip-components=1 -zxf - \
     && ./bootstrap-vcpkg.sh \
