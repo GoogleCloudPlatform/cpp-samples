@@ -26,7 +26,14 @@ the additional notes for your platform.
    [Click here](https://console.cloud.google.com/flows/enableapi?apiid=speech&showconfirmation=true) to visit Cloud
    Platform Console and enable the Speech API.
 
-1. **Download service account credentials**. These samples use service accounts for authentication.
+1. **If needed, override the Billing Project**.
+   If you are using a [user account] for authentication, you need to set the `GOOGLE_CLOUD_CPP_USER_PROJECT`
+   environment variable to the project you created in the previous step. Be aware that you must have
+   `serviceusage.services.use` permission on the project.  Alternatively, use a service account as described next.
+
+[user account]: https://cloud.google.com/docs/authentication#principals 
+
+1. **Download service account credentials**. These samples can use service accounts for authentication.
     1. Visit the [Cloud Console](http://cloud.google.com/console), and navigate to:
        `API Manager > Credentials > Create credentials > Service account key`
     1. Under **Service account**, select `New service account`.
