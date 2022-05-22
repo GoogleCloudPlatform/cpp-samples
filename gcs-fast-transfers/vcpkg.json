@@ -1,6 +1,6 @@
 {
   "name": "cpp-samples-gcs-fast-transfers",
-  "version-string": "0.1.0",
+  "version-string": "unversioned",
   "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
   "description": [
     "Shows how to parallelize downloads with GCS.",

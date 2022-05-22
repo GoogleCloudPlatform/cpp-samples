@@ -15,14 +15,12 @@
 # ~~~
 
 # [START cloudrun_helloworld_makelist]
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.20)
 
 # Define the project name and where to report bugs.
 set(PACKAGE_BUGREPORT
     "https://github.com/GoogleCloudPlatform/cpp-samples/issues")
-project(cpp-samples-cloud-run-hello-world CXX C)
-
-# Configure the Compiler options, we will be using C++17 features.
+project(cpp-samples-cloud-run-hello-world CXX)
 
 find_package(functions_framework_cpp REQUIRED)
 find_package(Threads)

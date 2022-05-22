@@ -14,7 +14,7 @@
 # limitations under the License.
 # ~~~
 
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.20)
 
 # Define the project name and where to report bugs.
 set(PACKAGE_BUGREPORT
