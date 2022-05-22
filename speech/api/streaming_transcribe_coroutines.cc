@@ -49,7 +49,7 @@ g::future<void> ReadTranscript(RecognizeStream& stream) {
   }
 }
 
-// Simulate a microphone thread sending audio to the Cloud Speech API
+// Simulate a microphone thread sending audio to the Cloud Speech API.
 g::future<void> WriteAudio(RecognizeStream& stream,
                            speech::v1::StreamingRecognizeRequest request,
                            std::string const& path, g::CompletionQueue cq) {
@@ -88,7 +88,7 @@ g::future<g::Status> StreamingTranscribe(g::CompletionQueue cq,
   auto stream =
       client.AsyncStreamingRecognize(google::cloud::ExperimentalTag{});
 
-  // The stream can fail to start; `.get()` returns an `false` in this case.
+  // The stream can fail to start; `.get()` returns `false` in this case.
   if (!co_await stream->Start()) co_return co_await stream->Finish();
 
   // Write the first request, containing the config only.
@@ -120,7 +120,7 @@ int main(int argc, char* argv[]) try {
   // completes.
   auto status = StreamingTranscribe(cq, ParseArguments(argc, argv)).get();
 
-  // Shutdown the completion queue
+  // Shutdown the completion queue.
   cq.Shutdown();
   runner.join();
 
