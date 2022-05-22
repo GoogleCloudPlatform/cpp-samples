@@ -14,11 +14,8 @@
 # limitations under the License.
 # ~~~
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.20)
 project(cpp-samples-getting-started CXX)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(functions_framework_cpp REQUIRED)
 find_package(google_cloud_cpp_pubsub REQUIRED)
