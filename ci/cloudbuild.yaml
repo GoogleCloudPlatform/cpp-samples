@@ -16,6 +16,8 @@ timeout: 3600s
 options:
   machineType: 'N1_HIGHCPU_32'
   diskSizeGb: '512'
+  env:
+    - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
 substitutions:
   _VCPKG_BUCKET_PREFIX: 'gs://cloud-cpp-testing-resources-vcpkg-cache/cpp-samples'
 
@@ -42,8 +44,6 @@ steps:
   # Note that this list of packages does not have to be perfect to be useful.
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     id: 'vcpkg-warmup-shared'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
             'boost-beast', 'boost-endian', 'boost-program-options', 'boost-property-tree',
             'boost-serialization', 'boost-uuid',
@@ -55,37 +55,27 @@ steps:
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     id: 'vcpkg-warmup-functions-framework-cpp'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
             'functions-framework-cpp',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     id: 'vcpkg-warmup-spanner'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
             'google-cloud-cpp[core,spanner]',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     id: 'vcpkg-warmup-speech'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
             'google-cloud-cpp[core,speech]',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     id: 'vcpkg-warmup'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
             'google-cloud-cpp',
     ]
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     waitFor: [ 'vcpkg-warmup' ]
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'cloud-run-hello-world'
         path: '/b'
@@ -94,8 +84,6 @@ steps:
         '-S', '/workspace/cloud-run-hello-world', '-B', '/b',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'cloud-run-hello-world'
         path: '/b'
@@ -103,8 +91,6 @@ steps:
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     waitFor: [ 'vcpkg-warmup' ]
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'gcs-fast-transfers'
         path: '/b'
@@ -113,8 +99,6 @@ steps:
         '-S', '/workspace/gcs-fast-transfers', '-B', '/b',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'gcs-fast-transfers'
         path: '/b'
@@ -122,8 +106,6 @@ steps:
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     waitFor: [ 'vcpkg-warmup' ]
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'getting-started'
         path: '/b'
@@ -132,15 +114,11 @@ steps:
         '-S', '/workspace/getting-started', '-B', '/b',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'getting-started'
         path: '/b'
     args: [ 'cmake', '--build', '/b', '--target', 'functions_framework_cpp_function' ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'getting-started'
         path: '/b'
@@ -148,8 +126,6 @@ steps:
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     waitFor: [ 'vcpkg-warmup' ]
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'getting-started-update'
         path: '/b'
@@ -158,8 +134,6 @@ steps:
         '-S', '/workspace/getting-started/update', '-B', '/b',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'getting-started-update'
         path: '/b'
@@ -167,8 +141,6 @@ steps:
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     waitFor: [ 'vcpkg-warmup' ]
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'iot-mqtt-ciotc'
         path: '/b'
@@ -177,8 +149,6 @@ steps:
         '-S', '/workspace/iot/mqtt-ciotc', '-B', '/b',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'iot-mqtt-ciotc'
         path: '/b'
@@ -186,8 +156,6 @@ steps:
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     waitFor: [ 'vcpkg-warmup' ]
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'populate-bucket'
         path: '/b'
@@ -196,8 +164,6 @@ steps:
         '-S', '/workspace/populate-bucket', '-B', '/b',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'populate-bucket'
         path: '/b'
@@ -205,8 +171,6 @@ steps:
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     waitFor: [ 'vcpkg-warmup' ]
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'speech-api'
         path: '/b'
@@ -215,8 +179,6 @@ steps:
         '-S', '/workspace/speech/api', '-B', '/b',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    env:
-      - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
     volumes:
       - name: 'speech-api'
         path: '/b'
