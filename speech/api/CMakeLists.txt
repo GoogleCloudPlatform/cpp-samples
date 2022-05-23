@@ -14,7 +14,7 @@
 # limitations under the License.
 # ~~~
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.20)
 
 # Define the project name and where to report bugs.
 set(PACKAGE_BUGREPORT
@@ -43,3 +43,15 @@ foreach(target async_transcribe streaming_transcribe
     "${target}" PRIVATE parse_arguments google-cloud-cpp::speech
                         Boost::program_options Threads::Threads)
 endforeach()
+
+if(("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+   AND ("${CMAKE_CXX_COMPILER_VERSION}" VERSION_GREATER_EQUAL 11))
+  add_executable(streaming_transcribe_coroutines
+                 streaming_transcribe_coroutines.cc)
+  target_compile_features(streaming_transcribe_coroutines PUBLIC cxx_std_20)
+  target_compile_options(streaming_transcribe_coroutines PUBLIC "-fcoroutines")
+  target_link_libraries(
+    streaming_transcribe_coroutines
+    PRIVATE parse_arguments google-cloud-cpp::speech Boost::program_options
+            Threads::Threads)
+endif()
