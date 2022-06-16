@@ -14,7 +14,7 @@
  *****************************************************************************/
 // [START iot_mqtt_include]
 #define _XOPEN_SOURCE 500  // NOLINT
-#include <paho-mqtt/MQTTClient.h>
+#include <MQTTClient.h>
 #include <openssl/ec.h>
 #include <openssl/evp.h>
 #include <stdbool.h>
