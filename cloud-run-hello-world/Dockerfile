@@ -69,9 +69,14 @@ RUN strip /v/binary/cloud_run_hello
 FROM scratch AS cloud-run-hello
 WORKDIR /r
 
-# Copy the program from the previously created stage and make it the entry point.
+# Copy the program from the previously created stage and the shared libraries it
+# depends on.
 COPY --from=build /v/binary/cloud_run_hello /r
+COPY --from=build /lib/ld-musl-x86_64.so.1 /lib/ld-musl-x86_64.so.1
+COPY --from=build /usr/lib/libstdc++.so.6 /usr/lib/libstdc++.so.6
+COPY --from=build /usr/lib/libgcc_s.so.1 /usr/lib/libgcc_s.so.1
 
+# Make the program the entry point.
 ENTRYPOINT [ "/r/cloud_run_hello" ]
 # [END dockerfile]
 # [END cloudrun_helloworld_dockerfile]
