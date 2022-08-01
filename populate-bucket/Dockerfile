@@ -29,7 +29,7 @@ RUN curl -s -L https://github.com/Microsoft/vcpkg/archive/2022.07.25.tar.gz | \
 # Install the typical development tools, zip + unzip are used by vcpkg to
 # maintain its cache.
 RUN apt update && \
-    apt install -y build-essential cmake git gcc g++ ninja-build unzip zip
+    apt install -y build-essential cmake git gcc g++ python3 ninja-build unzip zip
 RUN apt install -y pkg-config
 RUN ./bootstrap-vcpkg.sh
 
