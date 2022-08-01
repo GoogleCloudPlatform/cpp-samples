@@ -33,6 +33,7 @@ RUN apt update && \
         git \
         ninja-build \
         pkg-config \
+        python3 \
         tar \
         unzip \
         zip
