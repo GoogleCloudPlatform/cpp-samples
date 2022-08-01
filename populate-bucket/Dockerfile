@@ -23,13 +23,13 @@ FROM base AS devtools
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update && apt install -y curl gzip tar unzip
 WORKDIR /var/tmp/build/vcpkg
-RUN curl -s -L https://github.com/Microsoft/vcpkg/archive/2022.06.15.tar.gz | \
+RUN curl -s -L https://github.com/Microsoft/vcpkg/archive/2022.07.25.tar.gz | \
     tar -xzf - --strip-components=1
 
 # Install the typical development tools, zip + unzip are used by vcpkg to
 # maintain its cache.
 RUN apt update && \
-    apt install -y build-essential cmake git gcc g++ ninja-build unzip zip
+    apt install -y build-essential cmake git gcc g++ python3 ninja-build unzip zip
 RUN apt install -y pkg-config
 RUN ./bootstrap-vcpkg.sh
 
