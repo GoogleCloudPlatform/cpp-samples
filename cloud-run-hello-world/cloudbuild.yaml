@@ -21,7 +21,7 @@ substitutions:
 
 steps:
   # Create a container, use Kaniko to cache the temporary results.
-  - name: 'gcr.io/kaniko-project/executor:v1.9.0'
+  - name: 'gcr.io/kaniko-project/executor:v1.9.1'
     args: [
         # Using a substitution here allows us to call this script from
         # the top-level directory, as Cloud Build does.
