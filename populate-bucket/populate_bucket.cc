@@ -201,8 +201,8 @@ void schedule(boost::program_options::variables_map const& vm) {
   auto const topic_id = vm["topic"].as<std::string>();
 
   auto const topic = pubsub::Topic(project_id, topic_id);
-  auto publisher =
-      pubsub::Publisher(pubsub::MakePublisherConnection(topic, {}));
+  auto publisher = pubsub::Publisher(
+      pubsub::MakePublisherConnection(topic, google::cloud::Options{}));
 
   auto make_prefix = [g = std::mt19937_64(std::random_device{}())](
                          long offset) mutable {
@@ -283,13 +283,13 @@ void worker(boost::program_options::variables_map const& vm) {
   auto const subscription = pubsub::Subscription(project_id, subscription_id);
   auto subscriber = pubsub::Subscriber(pubsub::MakeSubscriberConnection(
       subscription,
-      pubsub::SubscriberOptions{}
-          .set_max_outstanding_messages(concurrency)
-          .set_max_outstanding_bytes(concurrency * 1024)
-          .set_max_concurrency(concurrency)
-          .set_max_deadline_time(300s),
-      pubsub::ConnectionOptions{}.set_background_thread_pool_size(
-          concurrency)));
+      google::cloud::Options{}
+          .set<pubsub::MaxOutstandingMessagesOption>(concurrency)
+          .set<pubsub::MaxOutstandingBytesOption>(concurrency * 1024)
+          .set<pubsub::MaxConcurrencyOption>(concurrency)
+          .set<pubsub::MaxDeadlineTimeOption>(300s)
+          .set<google::cloud::GrpcBackgroundThreadPoolSizeOption>(
+              concurrency)));
 
   std::atomic<std::int64_t> latency{0};
   std::atomic<std::int64_t> attempts{0};

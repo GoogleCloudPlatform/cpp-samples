@@ -94,20 +94,20 @@ int main(int argc, char* argv[]) try {
 
   auto publisher = pubsub::Publisher(pubsub::MakePublisherConnection(
       pubsub::Topic(GetEnv("GOOGLE_CLOUD_PROJECT"), GetEnv("TOPIC_ID")),
-      pubsub::PublisherOptions{}));
+      google::cloud::Options{}));
 
   auto subscriber = pubsub::Subscriber(pubsub::MakeSubscriberConnection(
       pubsub::Subscription(GetEnv("GOOGLE_CLOUD_PROJECT"),
                            GetEnv("SUBSCRIPTION_ID")),
-      pubsub::SubscriberOptions{}
-          .set_max_outstanding_messages(kMaxOutstandingMessages)
-          .set_max_concurrency(kMaxConcurrency)));
+      google::cloud::Options{}
+          .set<pubsub::MaxOutstandingMessagesOption>(kMaxOutstandingMessages)
+          .set<pubsub::MaxConcurrencyOption>(kMaxConcurrency)));
 
   std::int64_t last_message_count = 0;
   std::atomic<std::int64_t> message_count{0};
-  auto session =
-      subscriber.Subscribe([g = std::move(gcs_client), p = std::move(publisher),
-                            b = batcher, &message_count](auto m, auto h) {
+  auto session = subscriber.Subscribe(
+      [g = std::move(gcs_client), p = std::move(publisher), b = batcher,
+       &message_count](pubsub::Message m, pubsub::AckHandler h) {
         IndexGcsPrefix(std::move(m), std::move(h), g, p, b);
         ++message_count;
       });
