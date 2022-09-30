@@ -105,7 +105,7 @@ gcf::HttpResponse IndexGcsPrefix(gcf::HttpRequest request) {  // NOLINT
     return gcs::StartOffset(attributes.value("start", ""));
   }();
 
-  auto client = gcs::Client::CreateDefaultClient().value();
+  auto client = gcs::Client();
   auto publisher = GetPublisher();
 
   int mutation_count = 0;
