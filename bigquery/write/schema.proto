@@ -15,7 +15,7 @@
 syntax = "proto2";
 
 message Singers {
-    required int64 singerid = 1;
-    required string firstname = 2;
-    required string lastname = 3;
+  required int64 singerid = 1;
+  required string firstname = 2;
+  required string lastname = 3;
 }
