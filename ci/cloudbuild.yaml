@@ -69,6 +69,11 @@ steps:
             'google-cloud-cpp[core,speech]',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    id: 'vcpkg-warmup-bigquery'
+    args: [ '/usr/local/vcpkg/vcpkg', 'install',
+            'google-cloud-cpp[core,bigquery]',
+    ]
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     id: 'vcpkg-warmup'
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
             'google-cloud-cpp',
@@ -101,6 +106,21 @@ steps:
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     volumes:
       - name: 'gcs-fast-transfers'
+        path: '/b'
+    args: [ 'cmake', '--build', '/b' ]
+
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    waitFor: [ 'vcpkg-warmup' ]
+    volumes:
+      - name: 'bigquery-write'
+        path: '/b'
+    args: [
+        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
+        '-S', '/workspace/bigquery/write', '-B', '/b',
+    ]
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    volumes:
+      - name: 'bigquery-write'
         path: '/b'
     args: [ 'cmake', '--build', '/b' ]
 
