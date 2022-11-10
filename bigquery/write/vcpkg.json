@@ -1,0 +1,14 @@
+{
+  "name": "gcp-cpp-samples-bigquery-write",
+  "version-string": "unversioned",
+  "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
+  "description": "Examples using the BigQuery Write API",
+  "dependencies": [
+    {
+      "name": "google-cloud-cpp",
+      "default-features": false,
+      "features": ["bigquery"]
+    },
+    "boost-program-options"
+  ]
+}
