@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
       // Only the first request needs to include this information.
       request.set_write_stream(
           std::string{"projects/"} + project_id +
-          "/datasets/cpp_samples/tables/hello/streams/_default");
+          "/datasets/cpp_samples/tables/singers/streams/_default");
       Singers::GetDescriptor()->CopyTo(request.mutable_proto_rows()
                                            ->mutable_writer_schema()
                                            ->mutable_proto_descriptor());
