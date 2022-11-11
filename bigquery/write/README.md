@@ -1,8 +1,8 @@
 # Using BigQuery Storage Write
 
 This example shows how to upload some data to BigQuery using the BigQuery Storage API.
-For simplicity, the example uses a hard-coded table table and schema, it also uses
-the default "write stream", and always uploads the same data.
+For simplicity, the example uses a hard-coded dataset, table, and schema. It uses
+the default "write stream" and always uploads the same data.
 
 If you are not familiar with the BigQuery Storage Write API, we recommend you
 first read the [API overview] before starting this guide.
@@ -33,11 +33,10 @@ cmake --build .build
 
 The program will be in `.build/single_threaded_write`.
 
-
 ## Pre-requisites
 
 You are going to need a Google Cloud project to host the BigQuery dataset and table used in this example.
-You will need to install and configure the BigQuery CLI tool. Follow the'
+You will need to install and configure the BigQuery CLI tool. Follow the
 [Google Cloud CLI install][install-sdk] instructions, and then the [quickstart][BigQuery CLI tool] for
 the BigQuery CLI tool.
 
@@ -84,7 +83,6 @@ Remove the table and dataset:
 bq rm -f cpp_samples.singers
 bq rm -f cpp_samples
 ```
-
 
 [API overview]: https://cloud.google.com/bigquery/docs/write-api
 [BigQuery CLI tool]: https://cloud.google.com/bigquery/docs/bq-command-line-tool

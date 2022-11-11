@@ -104,9 +104,8 @@ int main(int argc, char* argv[]) {
 
 bq::storage::v1::ProtoRows MakeSampleRows(int start_id, int count) {
   bq::storage::v1::ProtoRows rows;
-  for (int i = 0; i != count; ++i) {
+  for (int id = start_id; id != start_id + count; ++id) {
     Singers singer;
-    auto const id = start_id + i;
     singer.set_singerid(id);
     singer.set_firstname("first name (" + std::to_string(id) + ")");
     singer.set_lastname("last name (" + std::to_string(id) + ")");

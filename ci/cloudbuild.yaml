@@ -35,12 +35,15 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'pull', 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}' ]
 
-  # Warmup the vcpkg binary cache (in GCS). Most of the time this has no effect, as the cache
-  # is warm from previous builds.  When we update vcpkg, or the compiler, or make any change that
-  # invalidates the cache this will be the slowest step. Once this step completes, the remaining
-  # steps do not use much CPU and can be parallelized. If this step is not here, each step could
-  # try to build a large library, like `gRPC` or `google-cloud-cpp`, that can result in the
-  # build VM suffering from CPU overload (and maybe memory exhaustion).
+  # Warmup the vcpkg binary cache. Most of the time this has no effect, as the
+  # cache is warm from previous builds.  When we update vcpkg, or the compiler,
+  # or make any change that invalidates the cache this will be the slowest
+  # step.
+  #
+  # If these steps are not here, each step could try to build a large library,
+  # like `gRPC` or `google-cloud-cpp`, that can result in the build VM
+  # suffering from CPU overload (and maybe memory exhaustion).
+  #
   # Note that this list of packages does not have to be perfect to be useful.
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     id: 'vcpkg-warmup-shared'
@@ -53,6 +56,9 @@ steps:
             'grpc',
             'jansson', 'openssl', 'paho-mqtt',
     ]
+  # Keep in mind that `google-cloud-cpp[core,speech]` is a separate cache
+  # entry from `google-cloud-cpp[core,spanner]`. We prefer to list them
+  # explicitly here.
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     id: 'vcpkg-warmup-functions-framework-cpp'
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
@@ -73,6 +79,9 @@ steps:
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
             'google-cloud-cpp[core,bigquery]',
     ]
+  # Once the last `warmup-vcpkg*` step completes, the remaining steps do not
+  # use much CPU and can be parallelized. But we should avoid excessive
+  # parallelism before this step.
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     id: 'vcpkg-warmup'
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
