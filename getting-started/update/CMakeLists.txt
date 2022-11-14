@@ -20,10 +20,9 @@ project(cpp-samples-getting-started-update CXX)
 find_package(functions_framework_cpp REQUIRED)
 find_package(google_cloud_cpp_spanner REQUIRED)
 
-add_library(
-  functions_framework_cpp_function EXCLUDE_FROM_ALL # cmake-format: sortable
-                                                    update_gcs_index.cc)
+add_library(functions_framework_cpp_function # cmake-format: sort
+            update_gcs_index.cc)
 target_compile_features(functions_framework_cpp_function PUBLIC cxx_std_17)
 target_link_libraries(
-  functions_framework_cpp_function PUBLIC functions-framework-cpp::framework
-                                          google-cloud-cpp::spanner)
+    functions_framework_cpp_function PUBLIC functions-framework-cpp::framework
+                                            google-cloud-cpp::spanner)

@@ -28,17 +28,17 @@ find_package(eclipse-paho-mqtt-c REQUIRED)
 # libjwt is not available through vcpkg, we use FetchContent instead.
 include(FetchContent)
 FetchContent_Declare(
-  libjwt
-  URL https://github.com/benmcollins/libjwt/archive/b6849cbea22f43bbd2f115c3bab55ad903272c62.tar.gz
+    libjwt
+    URL https://github.com/benmcollins/libjwt/archive/b6849cbea22f43bbd2f115c3bab55ad903272c62.tar.gz
 )
 FetchContent_GetProperties(libjwt)
-if(NOT libjwt_POPULATED)
-  FetchContent_Populate(libjwt)
-  add_subdirectory(${libjwt_SOURCE_DIR} ${libjwt_BINARY_DIR})
-endif()
+if (NOT libjwt_POPULATED)
+    FetchContent_Populate(libjwt)
+    add_subdirectory(${libjwt_SOURCE_DIR} ${libjwt_BINARY_DIR})
+endif ()
 
 add_executable(mqtt_ciotc mqtt_ciotc.c)
 target_link_libraries(
-  mqtt_ciotc PRIVATE jwt jansson::jansson
-                     eclipse-paho-mqtt-c::paho-mqtt3cs-static)
+    mqtt_ciotc PRIVATE jwt jansson::jansson
+                       eclipse-paho-mqtt-c::paho-mqtt3cs-static)
 target_include_directories(mqtt_ciotc PRIVATE "${libjwt_SOURCE_DIR}/include")

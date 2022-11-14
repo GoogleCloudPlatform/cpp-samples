@@ -29,8 +29,8 @@ find_package(Threads)
 add_executable(populate_bucket populate_bucket.cc)
 target_compile_features(populate_bucket PRIVATE cxx_std_17)
 target_link_libraries(
-  populate_bucket PRIVATE google-cloud-cpp::pubsub google-cloud-cpp::storage
-                          Boost::program_options Threads::Threads)
+    populate_bucket PRIVATE google-cloud-cpp::pubsub google-cloud-cpp::storage
+                            Boost::program_options Threads::Threads)
 
 include(GNUInstallDirs)
 install(TARGETS populate_bucket RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

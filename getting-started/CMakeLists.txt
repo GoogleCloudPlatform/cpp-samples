@@ -22,30 +22,29 @@ find_package(google_cloud_cpp_pubsub REQUIRED)
 find_package(google_cloud_cpp_spanner REQUIRED)
 find_package(google_cloud_cpp_storage REQUIRED)
 
-add_library(gcs_indexing EXCLUDE_FROM_ALL # cmake-format: sortable
-                                          gcs_indexing.cc gcs_indexing.h)
+add_library(gcs_indexing # cmake-format: sort
+            gcs_indexing.cc gcs_indexing.h)
 target_link_libraries(gcs_indexing PUBLIC google-cloud-cpp::spanner
                                           google-cloud-cpp::storage)
 target_include_directories(gcs_indexing PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_features(gcs_indexing PUBLIC cxx_std_17)
 
-add_library(
-  functions_framework_cpp_function EXCLUDE_FROM_ALL # cmake-format: sortable
-                                                    index_gcs_prefix.cc)
+add_library(functions_framework_cpp_function # cmake-format: sort
+            index_gcs_prefix.cc)
 target_link_libraries(
-  functions_framework_cpp_function
-  PRIVATE gcs_indexing
-  PUBLIC functions-framework-cpp::framework google-cloud-cpp::pubsub
-         google-cloud-cpp::spanner google-cloud-cpp::storage)
+    functions_framework_cpp_function
+    PRIVATE gcs_indexing
+    PUBLIC functions-framework-cpp::framework google-cloud-cpp::pubsub
+           google-cloud-cpp::spanner google-cloud-cpp::storage)
 target_compile_features(functions_framework_cpp_function PUBLIC cxx_std_17)
 
-add_executable(gke_index_gcs EXCLUDE_FROM_ALL gke/index_gcs.cc)
+add_executable(gke_index_gcs gke/index_gcs.cc)
 target_link_libraries(
-  gke_index_gcs PRIVATE gcs_indexing google-cloud-cpp::pubsub
-                        google-cloud-cpp::spanner google-cloud-cpp::storage)
+    gke_index_gcs PRIVATE gcs_indexing google-cloud-cpp::pubsub
+                          google-cloud-cpp::spanner google-cloud-cpp::storage)
 
-add_library(update_gcs_index EXCLUDE_FROM_ALL # cmake-format: sortable
-                                              update/update_gcs_index.cc)
+add_library(update_gcs_index # cmake-format: sort
+            update/update_gcs_index.cc)
 target_link_libraries(update_gcs_index PUBLIC functions-framework-cpp::framework
                                               google-cloud-cpp::spanner)
 target_compile_features(update_gcs_index PUBLIC cxx_std_17)

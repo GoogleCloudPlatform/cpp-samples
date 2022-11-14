@@ -28,30 +28,32 @@ find_package(Threads)
 add_library(parse_arguments STATIC parse_arguments.cc parse_arguments.h)
 target_compile_features(parse_arguments PUBLIC cxx_std_14)
 target_link_libraries(
-  parse_arguments PUBLIC Boost::program_options
-                         google-cloud-cpp::cloud_speech_protos)
-if(MSVC)
-  # The protobuf-generated files have warnings under the default MSVC settings.
-  # We are not interested in these warnings, because we cannot fix them.
-  target_compile_options(parse_arguments PUBLIC "/wd4244" "/wd4251")
-endif()
+    parse_arguments PUBLIC Boost::program_options
+                           google-cloud-cpp::cloud_speech_protos)
+if (MSVC)
+    # The protobuf-generated files have warnings under the default MSVC
+    # settings. We are not interested in these warnings, because we cannot fix
+    # them.
+    target_compile_options(parse_arguments PUBLIC "/wd4244" "/wd4251")
+endif ()
 
-foreach(target async_transcribe streaming_transcribe
-               streaming_transcribe_singlethread transcribe)
-  add_executable("${target}" "${target}.cc")
-  target_link_libraries(
-    "${target}" PRIVATE parse_arguments google-cloud-cpp::speech
-                        Boost::program_options Threads::Threads)
-endforeach()
+foreach (target async_transcribe streaming_transcribe
+                streaming_transcribe_singlethread transcribe)
+    add_executable("${target}" "${target}.cc")
+    target_link_libraries(
+        "${target}" PRIVATE parse_arguments google-cloud-cpp::speech
+                            Boost::program_options Threads::Threads)
+endforeach ()
 
-if(("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-   AND ("${CMAKE_CXX_COMPILER_VERSION}" VERSION_GREATER_EQUAL 11))
-  add_executable(streaming_transcribe_coroutines
-                 streaming_transcribe_coroutines.cc)
-  target_compile_features(streaming_transcribe_coroutines PUBLIC cxx_std_20)
-  target_compile_options(streaming_transcribe_coroutines PUBLIC "-fcoroutines")
-  target_link_libraries(
-    streaming_transcribe_coroutines
-    PRIVATE parse_arguments google-cloud-cpp::speech Boost::program_options
-            Threads::Threads)
-endif()
+if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+    AND ("${CMAKE_CXX_COMPILER_VERSION}" VERSION_GREATER_EQUAL 11))
+    add_executable(streaming_transcribe_coroutines
+                   streaming_transcribe_coroutines.cc)
+    target_compile_features(streaming_transcribe_coroutines PUBLIC cxx_std_20)
+    target_compile_options(streaming_transcribe_coroutines
+                           PUBLIC "-fcoroutines")
+    target_link_libraries(
+        streaming_transcribe_coroutines
+        PRIVATE parse_arguments google-cloud-cpp::speech Boost::program_options
+                Threads::Threads)
+endif ()
