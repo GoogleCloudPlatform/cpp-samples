@@ -35,14 +35,14 @@ target_link_libraries(gcs_fast_transfers PRIVATE Boost::headers Crc32c::crc32c)
 add_executable(download download.cc)
 target_compile_features(download PRIVATE cxx_std_17)
 target_link_libraries(
-  download PRIVATE gcs_fast_transfers google-cloud-cpp::storage
-                   Boost::program_options fmt::fmt Threads::Threads)
+    download PRIVATE gcs_fast_transfers google-cloud-cpp::storage
+                     Boost::program_options fmt::fmt Threads::Threads)
 
 add_executable(upload upload.cc)
 target_compile_features(download PRIVATE cxx_std_17)
 target_link_libraries(
-  upload PRIVATE gcs_fast_transfers google-cloud-cpp::storage
-                 Boost::program_options fmt::fmt Threads::Threads)
+    upload PRIVATE gcs_fast_transfers google-cloud-cpp::storage
+                   Boost::program_options fmt::fmt Threads::Threads)
 
 include(GNUInstallDirs)
 install(TARGETS download upload RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

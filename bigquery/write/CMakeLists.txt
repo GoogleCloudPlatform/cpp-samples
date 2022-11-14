@@ -27,7 +27,7 @@ find_package(Threads)
 
 protobuf_generate_cpp(SCHEMA_SRCS SCHEMA_HDRS schema.proto)
 
-add_executable("single_threaded_write" single_threaded_write.cc ${SCHEMA_SRCS})
+add_executable("single_threaded_write" ${SCHEMA_SRCS} single_threaded_write.cc)
 target_include_directories(single_threaded_write SYSTEM
                            PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries("single_threaded_write" PRIVATE google-cloud-cpp::bigquery

@@ -91,127 +91,17 @@ steps:
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     waitFor: [ 'vcpkg-warmup' ]
     volumes:
-      - name: 'cloud-run-hello-world'
+      - name: 'top-level'
         path: '/b'
     args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/cloud-run-hello-world', '-B', '/b',
+        'cmake', '-G', 'Ninja', '-S', '/workspace', '-B', '/b',
+        '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
     ]
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
     volumes:
-      - name: 'cloud-run-hello-world'
+      - name: 'top-level'
         path: '/b'
     args: [ 'cmake', '--build', '/b', ]
-
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: [ 'vcpkg-warmup' ]
-    volumes:
-      - name: 'gcs-fast-transfers'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/gcs-fast-transfers', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    volumes:
-      - name: 'gcs-fast-transfers'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b' ]
-
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: [ 'vcpkg-warmup' ]
-    volumes:
-      - name: 'bigquery-write'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/bigquery/write', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    volumes:
-      - name: 'bigquery-write'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b' ]
-
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: [ 'vcpkg-warmup' ]
-    volumes:
-      - name: 'getting-started'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/getting-started', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    volumes:
-      - name: 'getting-started'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b', '--target', 'functions_framework_cpp_function' ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    volumes:
-      - name: 'getting-started'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b', '--target', 'gke_index_gcs' ]
-
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: [ 'vcpkg-warmup' ]
-    volumes:
-      - name: 'getting-started-update'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/getting-started/update', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    volumes:
-      - name: 'getting-started-update'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b', '--target', 'functions_framework_cpp_function' ]
-
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: [ 'vcpkg-warmup' ]
-    volumes:
-      - name: 'iot-mqtt-ciotc'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/iot/mqtt-ciotc', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    volumes:
-      - name: 'iot-mqtt-ciotc'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b' ]
-
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: [ 'vcpkg-warmup' ]
-    volumes:
-      - name: 'populate-bucket'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/populate-bucket', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    volumes:
-      - name: 'populate-bucket'
-        path: '/b'
-    args: [ 'cmake', '--build', '/b' ]
-
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    waitFor: [ 'vcpkg-warmup' ]
-    volumes:
-      - name: 'speech-api'
-        path: '/b'
-    args: [
-        'cmake', '-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake',
-        '-S', '/workspace/speech/api', '-B', '/b',
-    ]
-  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    volumes:
-      - name: 'speech-api'
-        path: '/b'
-    args: ['cmake', '--build', '/b']
 
   # Remove the images created by this build.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
