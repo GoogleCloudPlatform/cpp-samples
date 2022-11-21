@@ -16,12 +16,7 @@
 # [START dockerfile]
 # We chose Alpine to build the image because it has good support for creating
 # statically-linked, small programs.
-FROM alpine:3.16 AS base
-
-# Create separate targets for each phase, this allows us to cache intermediate
-# stages when using Google Cloud Build, and makes the final deployment stage
-# small as it contains only what is needed.
-FROM base AS devtools
+FROM alpine:3.17 AS build
 
 # Install the typical development tools for C++, and
 # the base OS headers and libraries.
@@ -49,7 +44,6 @@ RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2022.11.14.tar.gz" | \
     && ./bootstrap-vcpkg.sh -disableMetrics
 
 # Copy the source code to /v/source and compile it.
-FROM devtools AS build
 COPY . /v/source
 WORKDIR /v/source
 
