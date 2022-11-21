@@ -16,7 +16,7 @@
 # [START dockerfile]
 # We chose Alpine to build the image because it has good support for creating
 # statically-linked, small programs.
-FROM alpine:3.16 AS base
+FROM alpine:3.17 AS base
 
 # Create separate targets for each phase, this allows us to cache intermediate
 # stages when using Google Cloud Build, and makes the final deployment stage
