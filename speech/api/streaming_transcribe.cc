@@ -71,8 +71,7 @@ int main(int argc, char** argv) try {
   *streaming_config.mutable_config() = args.config;
 
   // Begin a stream.
-  auto stream =
-      client.AsyncStreamingRecognize(google::cloud::ExperimentalTag{});
+  auto stream = client.AsyncStreamingRecognize();
   // The stream can fail to start, and `.get()` returns an error in this case.
   if (!stream->Start().get()) throw stream->Finish().get();
   // Write the first request, containing the config only.

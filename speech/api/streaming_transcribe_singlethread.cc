@@ -42,7 +42,7 @@ class Handler : public std::enable_shared_from_this<Handler> {
 
   g::future<g::Status> Start(speech::SpeechClient& client) {
     // Get ready to write audio content.  Create the stream, and start it.
-    stream_ = client.AsyncStreamingRecognize(google::cloud::ExperimentalTag{});
+    stream_ = client.AsyncStreamingRecognize();
     // The stream can fail to start; `.get()` returns `false` in this case.
     if (!stream_->Start().get()) return StartFailure();
     // Write the first request, containing the config only.
