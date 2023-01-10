@@ -85,8 +85,7 @@ g::future<g::Status> StreamingTranscribe(g::CompletionQueue cq,
   *streaming_config.mutable_config() = std::move(args.config);
 
   // Get ready to write audio content.  Create the stream, and start it.
-  auto stream =
-      client.AsyncStreamingRecognize(google::cloud::ExperimentalTag{});
+  auto stream = client.AsyncStreamingRecognize();
 
   // The stream can fail to start; `.get()` returns `false` in this case.
   if (!co_await stream->Start()) co_return co_await stream->Finish();

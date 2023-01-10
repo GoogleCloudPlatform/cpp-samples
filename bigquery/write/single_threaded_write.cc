@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
   auto const project_id = std::string{argv[1]};
   auto client = bq::BigQueryWriteClient(bq::MakeBigQueryWriteConnection());
 
-  auto stream = client.AsyncAppendRows(google::cloud::ExperimentalTag{});
+  auto stream = client.AsyncAppendRows();
   auto handle_broken_stream = [&stream](char const* where) {
     auto status = stream->Finish().get();
     std::cerr << "Unexpected streaming RPC error in " << where << ": " << status
