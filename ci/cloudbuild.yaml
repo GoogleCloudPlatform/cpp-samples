@@ -79,6 +79,11 @@ steps:
     args: [ '/usr/local/vcpkg/vcpkg', 'install',
             'google-cloud-cpp[core,bigquery]',
     ]
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    id: 'vcpkg-warmup-storage'
+    args: [ '/usr/local/vcpkg/vcpkg', 'install',
+            'google-cloud-cpp[core,storage]',
+    ]
   # Once the last `warmup-vcpkg*` step completes, the remaining steps do not
   # use much CPU and can be parallelized. But we should avoid excessive
   # parallelism before this step.

@@ -32,3 +32,8 @@ RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2023.01.09.tar.gz" | \
     && ./bootstrap-vcpkg.sh \
     && /usr/local/vcpkg/vcpkg fetch cmake \
     && /usr/local/vcpkg/vcpkg fetch ninja
+
+ARG ARCH=amd64
+RUN curl -o /usr/bin/bazelisk -sSL "https://github.com/bazelbuild/bazelisk/releases/download/v1.15.0/bazelisk-linux-${ARCH}" && \
+    chmod +x /usr/bin/bazelisk && \
+    ln -s /usr/bin/bazelisk /usr/bin/bazel

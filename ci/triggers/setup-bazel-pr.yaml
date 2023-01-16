@@ -1,0 +1,11 @@
+description: Test Setup Instructions with Bazel
+filename: ci/cloudbuild-setup-bazel.yaml
+github:
+  name: cpp-samples
+  owner: GoogleCloudPlatform
+  pullRequest:
+    branch: ^main$
+    commentControl: COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY
+name: cpp-samples-setup-bazel-pr
+substitutions:
+  _TRIGGER_TYPE: pr

@@ -1,0 +1,11 @@
+description: Pull Request
+filename: ci/cloudbuild.yaml
+github:
+  name: cpp-samples
+  owner: GoogleCloudPlatform
+  pullRequest:
+    branch: ^main$
+    commentControl: COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY
+name: cpp-samples-pr
+substitutions:
+  _TRIGGER_TYPE: pr

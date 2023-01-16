@@ -1,0 +1,50 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+timeout: 3600s
+options:
+  machineType: 'N1_HIGHCPU_32'
+  diskSizeGb: '512'
+substitutions:
+  _CACHE_BUCKET: 'cloud-cpp-testing-resources-bazel-cache'
+
+steps:
+  # Create a container will all the development tools
+  - name: 'gcr.io/kaniko-project/executor:v1.9.1'
+    args: [
+        "--context=dir:///workspace/",
+        "--dockerfile=ci/devtools.Dockerfile",
+        "--cache=true",
+        "--cache-repo=gcr.io/${PROJECT_ID}/cpp-samples/ci/cache",
+        "--destination=gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}",
+    ]
+    timeout: 1800s
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'pull', 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}' ]
+
+  - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
+    env: [
+      'BAZEL_REMOTE_CACHE=https://storage.googleapis.com/${_CACHE_BUCKET}/cpp-samples/setup-bazel',
+    ]
+    args: [ '/workspace/ci/builds/setup-bazel.sh' ]  
+
+  # Remove the images created by this build.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set +e
+        gcloud container images delete -q gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}
+        exit 0
