@@ -32,7 +32,7 @@ void HelloWorld(std::string const& bucket_name) {
 }
 // [END cpp_hello_world]
 
-int main(int argc, char *argv[]) try {
+int main(int argc, char* argv[]) try {
   if (argc != 2) {
     std::cerr << "Usage: hello_world <bucket-name>\n";
     return 1;
@@ -40,9 +40,9 @@ int main(int argc, char *argv[]) try {
   HelloWorld(argv[1]);
 
 } catch (google::cloud::Status const& status) {
-    std::cerr << "google::cloud::Status thrown: " << status << "\n";
-    return 1;
+  std::cerr << "google::cloud::Status thrown: " << status << "\n";
+  return 1;
 } catch (std::exception const& ex) {
-    std::cerr << "Standard exception thrown: " << ex.what() << "\n";
-    return 1;
+  std::cerr << "Standard exception thrown: " << ex.what() << "\n";
+  return 1;
 }
