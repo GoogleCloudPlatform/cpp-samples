@@ -28,6 +28,7 @@ set(samples
     getting-started/update
     iot/mqtt-ciotc
     populate-bucket
+    setup
     speech/api)
 
 add_custom_target(verify-samples ALL)
