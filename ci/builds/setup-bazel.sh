@@ -31,6 +31,9 @@ if [[ -n "${BAZEL_REMOTE_CACHE:-}" ]]; then
     args+=("--experimental_guard_against_concurrent_changes")
 fi
 
+# Make some attempts to download dependencies. This is a common source of
+# flakes, and worth doing for less spurious failures. If they all fail we just
+# let the `bazel build` invocation below try its luck.
 for i in 1 2 3; do
   if env -C /workspace/setup bazel fetch ...; then
     break
