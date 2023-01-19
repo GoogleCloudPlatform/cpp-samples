@@ -22,4 +22,4 @@ cc_binary(
     srcs = ["hello_world.cc"],
     deps = ["@google_cloud_cpp//:storage"],
 )
-# [START cpp_setup_bazel_use]
+# [END cpp_setup_bazel_use]

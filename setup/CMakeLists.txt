@@ -27,4 +27,4 @@ target_compile_features(hello_world PUBLIC cxx_std_14)
 
 # [START cpp_setup_cmake_use_package]
 target_link_libraries(hello_world PUBLIC google-cloud-cpp::storage)
-# [END cpp_setup_cmake_require_package]
+# [END cpp_setup_cmake_use_package]
