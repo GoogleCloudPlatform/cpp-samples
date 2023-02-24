@@ -27,7 +27,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
 
 WORKDIR /usr/local/vcpkg
 # Pin vcpkg to the latest released version. Renovatebot sends PRs when there is a new release.
-RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2023.01.09.tar.gz" | \
+RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2023.02.24.tar.gz" | \
     tar --strip-components=1 -zxf - \
     && ./bootstrap-vcpkg.sh \
     && /usr/local/vcpkg/vcpkg fetch cmake \
