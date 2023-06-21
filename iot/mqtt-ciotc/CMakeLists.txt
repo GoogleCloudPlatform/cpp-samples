@@ -40,5 +40,6 @@ endif ()
 add_executable(mqtt_ciotc mqtt_ciotc.c)
 target_link_libraries(
     mqtt_ciotc PRIVATE jwt jansson::jansson
-                       eclipse-paho-mqtt-c::paho-mqtt3cs-static)
+                       eclipse-paho-mqtt-c::paho-mqtt3cs-static
+                       unofficial::UUID::uuid)
 target_include_directories(mqtt_ciotc PRIVATE "${libjwt_SOURCE_DIR}/include")
