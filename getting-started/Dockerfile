@@ -42,7 +42,7 @@ RUN apt update && \
 FROM devtools AS build
 
 WORKDIR /v/vcpkg
-RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2023.06.20.tar.gz" | \
+RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2023.07.21.tar.gz" | \
     tar --strip-components=1 -zxf - \
     && ./bootstrap-vcpkg.sh -disableMetrics
 
