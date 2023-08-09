@@ -15,7 +15,7 @@ jobs:
         run: pip install cmakelang==0.6.13
       - uses: actions/checkout@v3
       - name: clang-format
-        run: git ls-files -z | grep -zE '\.(cc|h)$' | xargs -P 2 -n 50 -0 clang-format-10 -i
+        run: git ls-files -z | grep -zE '\.(cc|h)$' | xargs -P 2 -n 50 -0 clang-format -i
       - name: cmake-format
         run: >
           git ls-files -z | grep -zE '((^|/)CMakeLists\.txt|\.cmake)$' |
