@@ -152,6 +152,11 @@ class Handler : public std::enable_shared_from_this<Handler> {
 };
 
 int main(int argc, char** argv) try {
+  // Parse arguments before creating the thread. If this throws after
+  // the thread is created, the catch wil never get run and the program 
+  // will call `std::abort()`.
+  auto arguments = ParseArguments(argc, argv);
+
   // Create a CompletionQueue to demux the I/O and other asynchronous
   // operations, and dedicate a thread to it.
   g::CompletionQueue cq;
@@ -162,7 +167,7 @@ int main(int argc, char** argv) try {
       g::Options{}.set<g::GrpcCompletionQueueOption>(cq)));
 
   // Create a handler for the stream and run it until closed.
-  auto handler = Handler::Create(cq, ParseArguments(argc, argv));
+  auto handler = Handler::Create(cq, arguments);
   auto status = handler->Start(client).get();
 
   // Shutdown the completion queue
