@@ -120,7 +120,7 @@ class Handler : public std::enable_shared_from_this<Handler> {
       return;
     }
     // Schedule a new timer to read more data.
-    cq_.MakeRelativeTimer(std::chrono::seconds(1)).then([&](auto f) {
+    cq_.MakeRelativeTimer(std::chrono::seconds(1)).then([self](auto f) {
       self->OnTimer(f.get().status());
     });
   }
