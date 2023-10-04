@@ -114,6 +114,7 @@ int main(int argc, char* argv[]) try {
   // operations, and dedicate a thread to it.
   g::CompletionQueue cq;
   auto runner = std::thread{[](auto cq) { cq.Run(); }, cq};
+  std::shared_ptr<void> auto_shutdown(nullptr, [&](void*) { cq.Shutdown(); runner.join(); });
 
   // Run a streaming transcription. Note that `.get()` blocks until it
   // completes.
