@@ -30,7 +30,7 @@ using RecognizeStream = ::google::cloud::AsyncStreamingReadWriteRpc<
     speech::v1::StreamingRecognizeResponse>;
 
 auto constexpr kUsage = R"""(Usage:
-  streaming_transcribe_singlethread [--bitrate N] audio.(raw|ulaw|flac|amr|awb)
+  streaming_transcribe_coroutines [--bitrate N] audio.(raw|ulaw|flac|amr|awb)
 )""";
 
 // Print the responses as they are received.
