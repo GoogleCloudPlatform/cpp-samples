@@ -156,8 +156,11 @@ int main(int argc, char** argv) try {
   // operations, and dedicate a thread to it.
   g::CompletionQueue cq;
   auto runner = std::thread{[](auto cq) { cq.Run(); }, cq};
-  std::shared_ptr<void> auto_shutdown(nullptr, [&](void*) { cq.Shutdown(); runner.join(); });
-
+  std::shared_ptr<void> auto_shutdown(nullptr, [&](void*) {
+    cq.Shutdown();
+    runner.join();
+  });
+  
   // Create a Speech client with the default configuration.
   auto client = speech::SpeechClient(speech::MakeSpeechConnection(
       g::Options{}.set<g::GrpcCompletionQueueOption>(cq)));
