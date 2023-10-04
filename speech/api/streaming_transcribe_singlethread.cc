@@ -153,7 +153,7 @@ class Handler : public std::enable_shared_from_this<Handler> {
 
 int main(int argc, char** argv) try {
   // Parse arguments before creating the thread. If this throws after
-  // the thread is created, the catch wil never get run and the program 
+  // the thread is created, the catch will never get run and the program
   // will call `std::abort()`.
   auto arguments = ParseArguments(argc, argv);
 
