@@ -30,7 +30,7 @@ using RecognizeStream = ::google::cloud::AsyncStreamingReadWriteRpc<
     speech::v1::StreamingRecognizeResponse>;
 
 auto constexpr kUsage = R"""(Usage:
-  streaming_transcribe_singlethread [--bitrate N] audio.(raw|ulaw|flac|amr|awb)
+  streaming_transcribe_coroutines [--bitrate N] audio.(raw|ulaw|flac|amr|awb)
 )""";
 
 // Print the responses as they are received.
@@ -114,14 +114,15 @@ int main(int argc, char* argv[]) try {
   // operations, and dedicate a thread to it.
   g::CompletionQueue cq;
   auto runner = std::thread{[](auto cq) { cq.Run(); }, cq};
+  // Shutdown the completion queue and join the thread.
+  std::shared_ptr<void> auto_shutdown(nullptr, [&](void*) {
+    cq.Shutdown();
+    runner.join();
+  });
 
   // Run a streaming transcription. Note that `.get()` blocks until it
   // completes.
   auto status = StreamingTranscribe(cq, ParseArguments(argc, argv)).get();
-
-  // Shutdown the completion queue.
-  cq.Shutdown();
-  runner.join();
 
   if (!status.ok()) {
     std::cerr << "Error in transcribe stream: " << status << "\n";

@@ -156,6 +156,11 @@ int main(int argc, char** argv) try {
   // operations, and dedicate a thread to it.
   g::CompletionQueue cq;
   auto runner = std::thread{[](auto cq) { cq.Run(); }, cq};
+  // Shutdown the completion queue and join the thread.
+  std::shared_ptr<void> auto_shutdown(nullptr, [&](void*) {
+    cq.Shutdown();
+    runner.join();
+  });
 
   // Create a Speech client with the default configuration.
   auto client = speech::SpeechClient(speech::MakeSpeechConnection(
@@ -164,10 +169,6 @@ int main(int argc, char** argv) try {
   // Create a handler for the stream and run it until closed.
   auto handler = Handler::Create(cq, ParseArguments(argc, argv));
   auto status = handler->Start(client).get();
-
-  // Shutdown the completion queue
-  cq.Shutdown();
-  runner.join();
 
   if (!status.ok()) {
     std::cerr << "Error in transcribe stream: " << status << "\n";
