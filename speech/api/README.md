@@ -24,7 +24,13 @@ the additional notes for your platform.
 
 1. **Enable APIs for your project**.
    [Click here](https://console.cloud.google.com/flows/enableapi?apiid=speech&showconfirmation=true) to visit Cloud
-   Platform Console and enable the Speech API.
+   Platform Console and enable the Speech API via the UI.
+
+   Or use the CLI:
+   
+   ```
+   gcloud services enable speech.googleapis.com
+   ```
 
 1. **If needed, override the Billing Project**.
    If you are using a [user account] for authentication, you need to set the `GOOGLE_CLOUD_CPP_USER_PROJECT`
@@ -83,7 +89,7 @@ the additional notes for your platform.
    .build/streaming_transcribe_coroutines --bitrate 16000 resources/audio2.raw
    .build/streaming_transcribe_coroutines resources/audio.flac
    .build/streaming_transcribe_coroutines resources/quit.raw
-   .build/streaming_transcribe_singlethread ---bitrate 16000 resources/audio.raw
+   .build/streaming_transcribe_singlethread --bitrate 16000 resources/audio.raw
    .build/transcribe gs://cloud-samples-tests/speech/brooklyn.flac
    .build/async_transcribe gs://cloud-samples-tests/speech/vr.flac
    ```
