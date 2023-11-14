@@ -6,3 +6,6 @@
 cmake-build-debug/
 .build/
 .vscode/
+
+# Bazel related directories
+*bazel-*

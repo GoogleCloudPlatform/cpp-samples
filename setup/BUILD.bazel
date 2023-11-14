@@ -20,6 +20,7 @@ licenses(["notice"])  # Apache 2.0
 cc_binary(
     name = "hello_world",
     srcs = ["hello_world.cc"],
-    deps = ["@google_cloud_cpp//:storage"],
+    deps = ["@google_cloud_cpp//:storage",
+            "@google_cloud_cpp//:opentelemetry"],
 )
 # [END cpp_setup_bazel_use]

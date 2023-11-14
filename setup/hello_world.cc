@@ -13,6 +13,7 @@
 // limitations under the License.
 
 // [START cpp_hello_world]
+#include "google/cloud/opentelemetry_options.h"
 #include "google/cloud/storage/client.h"
 #include <iostream>
 #include <stdexcept>
@@ -20,7 +21,10 @@
 
 void HelloWorld(std::string const& bucket_name) {
   namespace gcs = ::google::cloud::storage;
-  auto client = gcs::Client();
+  namespace gc = ::google::cloud;
+
+  auto client =
+      gcs::Client(gc::Options{}.set<gc::OpenTelemetryTracingOption>(true));
 
   auto const object_name = std::string{"hello-world.txt"};
   auto metadata = client.InsertObject(bucket_name, object_name, "Hello World!");
