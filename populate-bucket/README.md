@@ -22,7 +22,7 @@ work item once.
 ## Prerequisites
 
 This example assumes that you have an existing GCP (Google Cloud Platform) project. The project must have billing
-enabled, as some of the services used in this example require it. Throughput the example we will use
+enabled, as some of the services used in this example require it. Throughout the example, we will use
 `GOOGLE_CLOUD_PROJECT` as an environment variable containing the name of the project.
 
 ### Make sure the necessary services are enabled
