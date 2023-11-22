@@ -30,7 +30,6 @@ int main(int argc, char* argv[]) try {
   }
   std::string const project_id = argv[1];
   std::string const topic_id = argv[2];
-  
   auto project = gc::Project(project_id);
 
   //! [START pubsub_publish_otel_tracing]
