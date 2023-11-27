@@ -18,8 +18,8 @@
 #include "google/cloud/status.h"
 #include <iostream>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 // Create a few namespace aliases to make the code easier to read.
 namespace gc = ::google::cloud;
@@ -47,8 +47,7 @@ int main(int argc, char* argv[]) try {
                   .then([](gc::future<gc::StatusOr<std::string>> f) {
                     auto id = f.get();
                     if (!id) {
-                      std::cout << "Error in publish: " << id.status()
-                                << "\n";
+                      std::cout << "Error in publish: " << id.status() << "\n";
                       return;
                     }
                     std::cout << "Sent message with id: (" << *id << ")\n";
