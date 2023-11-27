@@ -8,7 +8,6 @@
       "name": "google-cloud-cpp",
       "features": [
         "pubsub",
-        "trace",
         "opentelemetry"
       ]
     }

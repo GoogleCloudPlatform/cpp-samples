@@ -15,8 +15,11 @@
 #include "google/cloud/opentelemetry/configure_basic_tracing.h"
 #include "google/cloud/opentelemetry_options.h"
 #include "google/cloud/pubsub/publisher.h"
+#include "google/cloud/status.h"
 #include <iostream>
-#include <string_view>
+#include <string>
+#include <vector>
+#include <utility>
 
 // Create a few namespace aliases to make the code easier to read.
 namespace gc = ::google::cloud;
@@ -42,13 +45,13 @@ int main(int argc, char* argv[]) try {
   for (int i = 0; i < 5; i++) {
     auto id = publisher.Publish(pubsub::MessageBuilder().SetData("Hi!").Build())
                   .then([](gc::future<gc::StatusOr<std::string>> f) {
-                    auto status = f.get();
-                    if (!status) {
-                      std::cout << "Error in publish: " << status.status()
+                    auto id = f.get();
+                    if (!id) {
+                      std::cout << "Error in publish: " << id.status()
                                 << "\n";
                       return;
                     }
-                    std::cout << "Sent message with id: (" << *status << ")\n";
+                    std::cout << "Sent message with id: (" << *id << ")\n";
                   });
     ids.push_back(std::move(id));
   }

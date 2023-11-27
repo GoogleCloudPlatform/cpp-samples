@@ -1,12 +1,24 @@
 # Enabling Open Telemetry for the Pub/Sub library with Cloud Trace
 
-## Overview
+## Background
 
-In v2.16, we GA'd [OpenTelemetry tracing](https://github.com/googleapis/google-cloud-cpp/blob/v2.16.0/CHANGELOG.md#v2160---2023-10). This provides basic instrumentation for all the google-cloud-cpp libraries. 
+In v2.16, we GA'd [OpenTelemetry tracing](https://github.com/googleapis/google-cloud-cpp/releases/tag/v2.16.0). This provides basic instrumentation for all the google-cloud-cpp libraries. 
 
 In v2.19 release[^1], we added instrumentation for the Google Cloud Pub/Sub C++ library on the Publish side. This example provides a basic tracing application that exports spans to Cloud Trace.
 
-[^1]: The [telemetry data](https://github.com/googleapis/google-cloud-cpp/blob/main/doc/public-api.md#telemetry-data) emitted by the google-cloud-cpp library does not follow any versioning guarentees and is subject to change without notice in later versions.
+[^1]: The [telemetry data](https://github.com/googleapis/google-cloud-cpp/blob/main/doc/public-api.md#telemetry-data) emitted by the google-cloud-cpp library does not follow any versioning guarantees and is subject to change without notice in later versions.
+
+## Overview
+
+The quickstart installs a Cloud Trace exporter. The application creates a Pub/Sub client with tracing enabled that publishes 5 messages and sends the collected traces to Cloud Trace.
+
+### Example traces
+
+To find the traces, navigate to the Cloud Trace UI.
+
+![Screenshot of the Cloud Trace UI after running this quickstart.](assets/quickstart.png)
+
+For an overview of the Cloud Trace UI, see: [View traces overview].
 
 ## Prerequisites
 
@@ -39,33 +51,6 @@ Or use the CLI:
 gcloud services enable trace.googleapis.com 
 gcloud services enable pubsub.googleapis.com 
 ```
-
-### 4. If needed, override the Billing Project
-
-If you are using a [user account] for authentication, you need to set the `GOOGLE_CLOUD_CPP_USER_PROJECT`
-environment variable to the project you created in the previous step. Be aware that you must have
-`serviceusage.services.use` permission on the project.  Alternatively, use a service account as described next.
-
-[user account]: https://cloud.google.com/docs/authentication#principals 
-
-#### Download service account credentials
- 
-These samples can use service accounts for authentication.
-
- 1. Visit the [Cloud Console](http://cloud.google.com/console), and navigate to:
-    `API Manager > Credentials > Create credentials > Service account key`
- 2. Under **Service account**, select `New service account`.
- 3. Under **Service account name**, enter a service account name of your choosing. For example, `transcriber`.
- 4. Under **Role**, select `Project > Owner`.
- 5. Under **Key type**, leave `JSON` selected.
- 6. Click **Create** to create a new service account, and download the json credentials file.
- 7. Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your downloaded service account
-    credentials:
-    ```
-    export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/credentials-key.json
-    ```
-See the [Cloud Platform Auth Guide](https://cloud.google.com/docs/authentication#developer_workflow) for more
-information.
 
 ### 5. Create the Cloud Pub/Sub topic
 
@@ -136,6 +121,12 @@ bazel build //:quickstart
 bazel run //:quickstart --override_repository=google_cloud_cpp=$HOME/your-path-to-the-repo/google-cloud-cpp -- [project-name] [topic-id] 
 ```
 
+## Cleanup
+
+```shell
+gcloud pubsub topics delete "--project=${GOOGLE_CLOUD_PROJECT}" ${GOOGLE_CLOUD_TOPIC}
+```
+
 ## Platform Specific Notes
 
 ### macOS
@@ -164,3 +155,4 @@ set GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=%cd%\roots.pem
 [choco-cmake-link]: https://chocolatey.org/packages/cmake
 [homebrew-cmake-link]: https://formulae.brew.sh/formula/cmake
 [cmake-download-link]: https://cmake.org/download/
+[view traces overview]: https://cloud.google.com/trace/docs/trace-overview

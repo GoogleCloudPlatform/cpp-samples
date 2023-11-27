@@ -23,11 +23,9 @@ project(pubsub-open-telemetry CXX)
 
 find_package(google_cloud_cpp_pubsub CONFIG REQUIRED)
 find_package(google_cloud_cpp_opentelemetry CONFIG REQUIRED)
-find_package(google_cloud_cpp_trace CONFIG REQUIRED)
 
 add_executable(quickstart quickstart.cc)
-target_compile_features(quickstart PRIVATE cxx_std_20)
+target_compile_features(quickstart PRIVATE cxx_std_14)
 target_link_libraries(
-    quickstart PRIVATE google-cloud-cpp::pubsub google-cloud-cpp::opentelemetry
-                       google-cloud-cpp::trace)
+    quickstart PRIVATE google-cloud-cpp::pubsub google-cloud-cpp::opentelemetry)
 
