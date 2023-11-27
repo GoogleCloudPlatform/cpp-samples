@@ -31,5 +31,3 @@ target_link_libraries(
     quickstart PRIVATE google-cloud-cpp::pubsub google-cloud-cpp::opentelemetry
                        google-cloud-cpp::trace)
 
-include(GNUInstallDirs)
-install(TARGETS quickstart RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
