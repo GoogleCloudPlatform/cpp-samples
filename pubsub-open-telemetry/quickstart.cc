@@ -36,7 +36,21 @@ int main(int argc, char* argv[]) try {
   auto project = gc::Project(project_id);
 
   //! [START pubsub_publish_otel_tracing]
+  // This example uses a simple wrapper to export (upload) OTel tracing data
+  // to Google Cloud Trace. More complex applications may use different authentication,
+  // or configure their own OTel exporter.
   auto configuration = otel::ConfigureBasicTracing(project);
+
+  auto publisher = pubsub::Publisher(pubsub::MakePublisherConnection(
+      pubsub::Topic(project_id, topic_id),
+      // Configure this publisher to enable OTel tracing. Some applications may chose
+      // to disable tracing in some publishers, or to dynamically enable this option based
+      // on their own configuration.
+      gc::Options{}.set<gc::OpenTelemetryTracingOption>(true)));
+
+    // After this point use the Cloud Pub/Sub C++ client library as usual.
+    // In this example we will send a few messages and configure a callback
+    // action for each one.
   auto publisher = pubsub::Publisher(pubsub::MakePublisherConnection(
       pubsub::Topic(project_id, topic_id),
       gc::Options{}.set<gc::OpenTelemetryTracingOption>(true)));
