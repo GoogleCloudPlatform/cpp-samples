@@ -51,10 +51,6 @@ int main(int argc, char* argv[]) try {
   // After this point, use the Cloud Pub/Sub C++ client library as usual.
   // In this example, we will send a few messages and configure a callback
   // action for each one.
-  auto publisher = pubsub::Publisher(pubsub::MakePublisherConnection(
-      pubsub::Topic(project_id, topic_id),
-      gc::Options{}.set<gc::OpenTelemetryTracingOption>(true)));
-
   std::vector<gc::future<void>> ids;
   for (int i = 0; i < 5; i++) {
     auto id = publisher.Publish(pubsub::MessageBuilder().SetData("Hi!").Build())
