@@ -18,9 +18,9 @@ workspace(name = "pubsub-open-telemetery")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 http_archive(
     name = "google_cloud_cpp",
-    sha256 = "7ca7f583b60d2aa1274411fed3b9fb3887119b2e84244bb3fc69ea1db819e4e5",
-    strip_prefix = "google-cloud-cpp-2.16.0",
-    url = "https://github.com/googleapis/google-cloud-cpp/archive/v2.16.0.tar.gz",
+    sha256 = "374efd3d85144f373cc8efcaea30712c0b1afacfc35574e2f4fd512360fd3d01",
+    strip_prefix = "google-cloud-cpp-2.18.0",
+    url = "https://github.com/googleapis/google-cloud-cpp/archive/v2.18.0.tar.gz",
 )
 
 load("@google_cloud_cpp//bazel:google_cloud_cpp_deps.bzl", "google_cloud_cpp_deps")
