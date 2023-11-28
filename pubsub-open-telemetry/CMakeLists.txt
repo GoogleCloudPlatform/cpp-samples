@@ -26,6 +26,5 @@ find_package(google_cloud_cpp_opentelemetry CONFIG REQUIRED)
 
 add_executable(quickstart quickstart.cc)
 target_compile_features(quickstart PRIVATE cxx_std_14)
-target_link_libraries(quickstart PRIVATE google-cloud-cpp::pubsub 
+target_link_libraries(quickstart PRIVATE google-cloud-cpp::pubsub
                                          google-cloud-cpp::opentelemetry)
-
