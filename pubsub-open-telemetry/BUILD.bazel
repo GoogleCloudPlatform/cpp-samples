@@ -16,6 +16,27 @@ package(default_visibility = ["//visibility:private"])
 
 licenses(["notice"])  # Apache 2.0
 
+cc_library(
+    name = "parse_args",
+    hdrs = ["parse_args.h"],
+    srcs = ["parse_args.cc"],
+    deps = [
+         "@boost//:program_options",
+         "@google_cloud_cpp//:pubsub",
+         "@google_cloud_cpp//:opentelemetry",
+    ],
+)
+
+cc_binary(
+    name = "publisher",
+    srcs = ["publisher.cc"],
+      deps = [
+        "@google_cloud_cpp//:opentelemetry",
+        "@google_cloud_cpp//:pubsub",
+       ":parse_args",
+    ],
+)
+
 cc_binary(
     name = "quickstart",
     srcs = ["quickstart.cc"],

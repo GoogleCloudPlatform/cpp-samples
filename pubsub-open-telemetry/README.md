@@ -10,15 +10,32 @@ In v2.19 release[^1], we added instrumentation for the Google Cloud Pub/Sub C++ 
 
 ## Overview
 
-The quickstart installs a Cloud Trace exporter. The application creates a Pub/Sub client with tracing enabled that publishes 5 messages and sends the collected traces to Cloud Trace.
+### Quickstart
+The quickstart creates a tracing enabled Pub/Sub Publisher client that publishes 5 messages and sends the collected traces to Cloud Trace.
 
-### Example traces
+#### Example traces
 
 To find the traces, navigate to the Cloud Trace UI.
 
 ![Screenshot of the Cloud Trace UI after running this quickstart.](assets/quickstart.png)
 
 For an overview of the Cloud Trace UI, see: [View traces overview].
+
+### Publisher
+
+The publisher application lets the user configure a tracing enabled Pub/Sub Publisher client to see how different configuration settings change the produced telemetry data. 
+
+#### Example traces 
+
+To find the traces, navigate to the Cloud Trace UI.
+
+##### Publish trace
+
+![Screenshot of the publish span in the Cloud Trace UI running publisher.](assets/publish_span.png)
+
+##### Create trace
+
+![Screenshot of the create span in the Cloud Trace UI running publisher.](assets/create_span.png)
 
 ## Prerequisites
 
@@ -90,8 +107,58 @@ cmake --build .build
 
 ### 4. Run the examples
 
+#### Run the quickstart
+
 ```shell
 .build/quickstart [project-name] [topic-id]
+```
+
+#### Run basic publisher examples
+```shell
+.build/publisher [project-name] [topic-id]
+.build/publisher [project-name] [topic-id] -n 1000
+.build/publisher [project-name] [topic-id] --message-size 0
+.build/publisher [project-name] [topic-id] --tracing-rate 0.01 -n 10
+```
+
+#### Flow control example
+```shell
+.build/publisher [project-name] [topic-id] -n 5 --max-pending-messages 2 --publisher-action reject
+.build/publisher [project-name] [topic-id] -n 5 --max-pending-messages 2 --publisher-action block
+.build/publisher [project-name] [topic-id] -n 5 --max-pending-messages 2 --publisher-action ignore
+.build/publisher [project-name] [topic-id] -n 5 --message-size 10 --max-batch-bytes  60 --publisher-action block
+```
+
+#### Batching example
+```shell
+.build/publisher [project-name] [topic-id] -n 5 --max-batch-messages 2 --max-hold-time 100
+.build/publisher [project-name] [topic-id] -n 5 --message-size 10 --max-batch-bytes 60  --max-hold-time 1000
+```
+
+#### To see all options
+
+```shell 
+❯ .build/publisher --help
+Usage: .build/publisher <project-id> <topic-id>
+A simple publisher application with Open Telemetery enabled:
+  -h [ --help ]                   produce help message
+  --project-id arg                the name of the Google Cloud project
+  --topic-id arg                  the name of the Google Cloud topic
+  --tracing-rate arg (=1)         otel::BasicTracingRateOption value
+  --max-queue-size arg (=0)       If set to 0, uses the default tracing 
+                                  configuration.
+  -n [ --message-count ] arg (=1) the number of messages to publish
+  --message-size arg (=1)         the desired message payload size
+  --enable-ordering-keys arg (=0) If set to true, the messages will be sent 
+                                  with ordering keys. There will be 3 possible 
+                                  ordering keys and they will be set randomly
+  --max-pending-messages arg      pubsub::MaxPendingMessagesOption value
+  --max-pending-bytes arg         pubsub::MaxPendingBytesOption value
+  --publisher-action arg          pubsub::FullPublisherAction value 
+                                  (block|ignore|reject)
+  --max-hold-time arg             pubsub::MaxHoldTimeOption value in us
+  --max-batch-bytes arg           pubsub::MaxBatchBytesOption value
+  --max-batch-messages arg        pubsub::MaxBatchMessagesOption value
 ```
 
 ## Build and run using Bazel
@@ -111,8 +178,17 @@ bazel build //:quickstart
 
 ### 3. Run these examples
 
+#### Run the quickstart
 ```shell
- bazel run //:quickstart [project-name] [topic-id]
+bazel run //:quickstart [project-name] [topic-id]
+```
+
+#### Run basic publisher examples
+```shell
+bazel run //:publisher [project-name] [topic-id]
+bazel run //:publisher -- [project-name] [topic-id] -n 1000
+bazel run //:publisher -- [project-name] [topic-id] --message_size 0
+bazel run //:publisher -- [project-name] [topic-id] --tracing-rate 0.01 -n 10
 ```
 
 #### Run with a local version of google-cloud-cpp

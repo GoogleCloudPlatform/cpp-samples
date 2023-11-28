@@ -35,3 +35,14 @@ load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 grpc_deps()
 load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")
 grpc_extra_deps()
+
+# Boost
+http_archive(
+    name = "com_github_nelhage_rules_boost",
+    url = "https://github.com/nelhage/rules_boost/archive/57be00c2e5f30bc8698be2453b3f278909e8eb2f.tar.gz",
+    strip_prefix = "rules_boost-57be00c2e5f30bc8698be2453b3f278909e8eb2f",
+    sha256 = "3faec27d6ad2d176ee7674298e549263fceb62198ec55a4821a402c20a9a70b8"
+)
+
+load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
+boost_deps()
