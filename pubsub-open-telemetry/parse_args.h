@@ -30,7 +30,7 @@ struct ParseResult {
   // Optional with defaults set.
   int message_count;
   int message_size;
-  int max_queue_size; 
+  int max_queue_size;
 
   gc::Options otel_options;
   gc::Options publisher_options;

@@ -122,7 +122,6 @@ ParseResult ParseArguments(int argc, char* argv[]) {
       gc::Options{}.set<gc::otel::BasicTracingRateOption>(tracing_rate);
   result.publisher_options =
       gc::Options{}.set<gc::OpenTelemetryTracingOption>(true);
-  std::cout << static_cast<bool>(result.publisher_options.get<gc::OpenTelemetryTracingOption>()) << "\n";
   if (vm.count("max-pending-messages")) {
     auto const max_pending_messages =
         vm["max-pending-messages"].as<std::size_t>();
