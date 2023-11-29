@@ -49,10 +49,10 @@ int main(int argc, char* argv[]) try {
 
   std::cout << "Using project `" << args.project_id << "` and topic `"
             << args.topic_id << "`\n";
-
+  std::unique_ptr<otel::BasicTracingConfiguration>  configuration; 
   if (args.max_queue_size == 0) {
-    auto configuration = otel::ConfigureBasicTracing(
-        gc::Project(args.project_id), args.otel_options);
+     configuration = std::move(otel::ConfigureBasicTracing(
+        gc::Project(args.project_id), args.otel_options));
   } else {
     auto exporter = otel::MakeTraceExporter(gc::Project(args.project_id));
     opentelemetry::sdk::trace::BatchSpanProcessorOptions span_options;
