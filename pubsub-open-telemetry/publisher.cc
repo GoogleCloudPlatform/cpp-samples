@@ -49,21 +49,15 @@ int main(int argc, char* argv[]) try {
 
   std::cout << "Using project `" << args.project_id << "` and topic `"
             << args.topic_id << "`\n";
-  std::unique_ptr<otel::BasicTracingConfiguration>  configuration; 
-  if (args.max_queue_size == 0) {
-     configuration = otel::ConfigureBasicTracing(
-        gc::Project(args.project_id), args.otel_options);
-  } else {
-    auto exporter = otel::MakeTraceExporter(gc::Project(args.project_id));
-    opentelemetry::sdk::trace::BatchSpanProcessorOptions span_options;
-    span_options.max_queue_size = args.max_queue_size;
-    auto processor =
-        opentelemetry::sdk::trace::BatchSpanProcessorFactory::Create(
-            std::move(exporter), span_options);
-    auto provider = opentelemetry::sdk::trace::TracerProviderFactory::Create(
-        std::move(processor));
-    opentelemetry::trace::Provider::SetTracerProvider(std::move(provider));
-  }
+  auto exporter = otel::MakeTraceExporter(gc::Project(args.project_id));
+  opentelemetry::sdk::trace::BatchSpanProcessorOptions span_options;
+  span_options.max_queue_size = args.max_queue_size;
+  auto processor =
+      opentelemetry::sdk::trace::BatchSpanProcessorFactory::Create(
+          std::move(exporter), span_options);
+  auto provider = opentelemetry::sdk::trace::TracerProviderFactory::Create(
+      std::move(processor));
+  opentelemetry::trace::Provider::SetTracerProvider(std::move(provider));
 
   auto publisher = pubsub::Publisher(pubsub::MakePublisherConnection(
       pubsub::Topic(args.project_id, args.topic_id), args.publisher_options));

@@ -44,8 +44,8 @@ ParseResult ParseArguments(int argc, char* argv[]) {
       ("tracing-rate", po::value<double>()->default_value(1.0),
        "otel::BasicTracingRateOption value")
       // Processor options
-      ("max-queue-size", po::value<int>()->default_value(0),
-       "If set to 0, uses the default tracing configuration.")
+      ("max-queue-size", po::value<int>()->default_value(2048),
+       "set the max queue size for open telemetery")
       // Message options
       ("message-count,n", po::value<int>()->default_value(1),
        "the number of messages to publish")
