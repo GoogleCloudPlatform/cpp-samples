@@ -52,9 +52,8 @@ int main(int argc, char* argv[]) try {
   auto exporter = otel::MakeTraceExporter(gc::Project(args.project_id));
   opentelemetry::sdk::trace::BatchSpanProcessorOptions span_options;
   span_options.max_queue_size = args.max_queue_size;
-  auto processor =
-      opentelemetry::sdk::trace::BatchSpanProcessorFactory::Create(
-          std::move(exporter), span_options);
+  auto processor = opentelemetry::sdk::trace::BatchSpanProcessorFactory::Create(
+      std::move(exporter), span_options);
   auto provider = opentelemetry::sdk::trace::TracerProviderFactory::Create(
       std::move(processor));
   opentelemetry::trace::Provider::SetTracerProvider(std::move(provider));
