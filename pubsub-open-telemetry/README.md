@@ -138,7 +138,7 @@ cmake --build .build
 #### To see all options
 
 ```shell 
-❯ .build/publisher --help
+.build/publisher --help
 Usage: .build/publisher <project-id> <topic-id>
 A simple publisher application with Open Telemetery enabled:
   -h [ --help ]                   produce help message
