@@ -20,7 +20,7 @@ substitutions:
   _CONTEXT: 'dir:///workspace/'
 
 steps:
-  - name: 'gcr.io/kaniko-project/executor:v1.18.0'
+  - name: 'gcr.io/kaniko-project/executor:v1.19.0'
     args: [
         # Using a substitution here allows us to call this script from
         # the top-level directory, as Cloud Build does.
