@@ -64,23 +64,22 @@ int main(int argc, char* argv[]) try {
   std::cout << "Publishing " << std::to_string(args.message_count)
             << " message(s) with payload size "
             << std::to_string(args.message_size) << "...\n";
-  std::vector<gc::future<void>> ids;
+  std::vector<gc::future<std::string>> ids;
   for (int i = 0; i < args.message_count; i++) {
     auto id = publisher
                   .Publish(pubsub::MessageBuilder()
                                .SetData(GeneratePayload(args.message_size))
                                .Build())
                   .then([](gc::future<gc::StatusOr<std::string>> f) {
-                    auto id = f.get();
-                    if (!id) {
-                      std::cout << "Error in publish: " << id.status() << "\n";
-                      return;
-                    }
-                    std::cout << "Sent message with id: (" << *id << ")\n";
+                    return f.get().value();
                   });
     ids.push_back(std::move(id));
   }
-  for (auto& id : ids) id.get();
+  for (auto& id : ids) try {
+      std::cout << "Sent message with id: " << id.get() << "\n";
+   } catch(std::exception const& ex) {
+     std::cout << "Error in publish: " << ex.what() << "\n";
+   } 
 
   return 0;
 } catch (google::cloud::Status const& status) {
