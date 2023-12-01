@@ -76,10 +76,10 @@ int main(int argc, char* argv[]) try {
     ids.push_back(std::move(id));
   }
   for (auto& id : ids) try {
-      std::cout << "Sent message with id: " << id.get() << "\n";
-   } catch(std::exception const& ex) {
-     std::cout << "Error in publish: " << ex.what() << "\n";
-   } 
+    std::cout << "Sent message with id: " << id.get() << "\n";
+  } catch(std::exception const& ex) {
+    std::cout << "Error in publish: " << ex.what() << "\n";
+  } 
 
   return 0;
 } catch (google::cloud::Status const& status) {
