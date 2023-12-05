@@ -21,8 +21,8 @@ export GOOGLE_CLOUD_PROJECT=...
 ```
 
 This script will enable the necessary APIs, build a Docker image using Cloud
-Build, create a service account for the Cloud Run deployment, and then create
-a Cloud Run deployment using the Docker image referenced earlier.
+Build, create a service account for the Cloud Run deployment, and then create a
+Cloud Run deployment using the Docker image referenced earlier.
 
 ```bash
 cd google/cloud/examples/cloud_run_hello
