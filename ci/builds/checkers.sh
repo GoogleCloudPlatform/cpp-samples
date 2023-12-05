@@ -23,31 +23,31 @@ set -euo pipefail
 #   sed_edit -e 's/foo/bar/g' -e 's,baz,blah,' hello.txt
 #
 function sed_edit() {
-	local expressions=()
-	local files=()
-	while [[ $# -gt 0 ]]; do
-		case "$1" in
-		-e)
-			test $# -gt 1 || return 1
-			expressions+=("-e" "$2")
-			shift 2
-			;;
-		*)
-			files+=("$1")
-			shift
-			;;
-		esac
-	done
-	local tmp
-	tmp="$(mktemp /tmp/checkers.XXXXXX.tmp)"
-	for file in "${files[@]}"; do
-		sed "${expressions[@]}" "${file}" >"${tmp}"
-		if ! cmp -s "${file}" "${tmp}"; then
-			chmod --reference="${file}" "${tmp}"
-			cp -f "${tmp}" "${file}"
-		fi
-	done
-	rm -f "${tmp}"
+  local expressions=()
+  local files=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -e)
+        test $# -gt 1 || return 1
+        expressions+=("-e" "$2")
+        shift 2
+        ;;
+      *)
+        files+=("$1")
+        shift
+        ;;
+    esac
+  done
+  local tmp
+  tmp="$(mktemp /tmp/checkers.XXXXXX.tmp)"
+  for file in "${files[@]}"; do
+    sed "${expressions[@]}" "${file}" >"${tmp}"
+    if ! cmp -s "${file}" "${tmp}"; then
+      chmod --reference="${file}" "${tmp}"
+      cp -f "${tmp}" "${file}"
+    fi
+  done
+  rm -f "${tmp}"
 }
 export -f sed_edit
 
@@ -57,11 +57,11 @@ export -f sed_edit
 # only the files that have changed in a development branch, set
 # `GOOGLE_CLOUD_CPP_FAST_CHECKERS=1`.
 git_files() {
-	if [ -z "${GOOGLE_CLOUD_CPP_FAST_CHECKERS-}" ]; then
-		git ls-files "${@}"
-	else
-		git diff main --name-only --diff-filter=d "${@}"
-	fi
+  if [ -z "${GOOGLE_CLOUD_CPP_FAST_CHECKERS-}" ]; then
+    git ls-files "${@}"
+  else
+    git diff main --name-only --diff-filter=d "${@}"
+  fi
 }
 
 # This controls the output format from bash's `time` command, which we use
@@ -77,42 +77,42 @@ enable -n printf
 # `[D]` character class makes this file not contain the target text itself.
 printf "%-50s" "Running whitespace fixes:" >&2
 time {
-	# Removes trailing whitespace on lines
-	expressions=("-e" "'s/[[:blank:]]\+$//'")
-	# Removes trailing blank lines (see http://sed.sourceforge.net/sed1line.txt)
-	expressions+=("-e" "':x;/^\n*$/{\$d;N;bx;}'")
-	# Adds a trailing newline if one doesn't already exist
-	expressions+=("-e" "'\$a\'")
-	git_files -z | grep -zv 'googleapis.patch$' |
-		grep -zv '\.gz$' |
-		grep -zv '\.pb$' |
-		grep -zv '\.png$' |
-		grep -zv '\.raw$' |
-		grep -zv '\.flac$' |
-		(xargs -r -0 grep -ZPL "\b[D]O NOT EDIT\b" || true) |
-		xargs -r -P "$(nproc)" -n 50 -0 bash -c "sed_edit ${expressions[*]} \"\$0\" \"\$@\""
+  # Removes trailing whitespace on lines
+  expressions=("-e" "'s/[[:blank:]]\+$//'")
+  # Removes trailing blank lines (see http://sed.sourceforge.net/sed1line.txt)
+  expressions+=("-e" "':x;/^\n*$/{\$d;N;bx;}'")
+  # Adds a trailing newline if one doesn't already exist
+  expressions+=("-e" "'\$a\'")
+  git_files -z | grep -zv 'googleapis.patch$' |
+    grep -zv '\.gz$' |
+    grep -zv '\.pb$' |
+    grep -zv '\.png$' |
+    grep -zv '\.raw$' |
+    grep -zv '\.flac$' |
+    (xargs -r -0 grep -ZPL "\b[D]O NOT EDIT\b" || true) |
+    xargs -r -P "$(nproc)" -n 50 -0 bash -c "sed_edit ${expressions[*]} \"\$0\" \"\$@\""
 }
 
 # Apply shfmt to format all shell scripts
 printf "%-50s" "Running shfmt:" >&2
 time {
-	git_files -z -- '*.sh' | xargs -r -P "$(nproc)" -n 50 -0 shfmt -w
+  git_files -z -- '*.sh' | xargs -r -P "$(nproc)" -n 50 -0 shfmt -w
 }
 
 # Apply buildifier to fix the BUILD and .bzl formatting rules.
 #    https://github.com/bazelbuild/buildtools/tree/master/buildifier
 printf "%-50s" "Running buildifier:" >&2
 time {
-	git_files -z -- '*.BUILD' '*.bzl' '*.bazel' |
-		xargs -r -P "$(nproc)" -n 50 -0 buildifier -mode=fix
+  git_files -z -- '*.BUILD' '*.bzl' '*.bazel' |
+    xargs -r -P "$(nproc)" -n 50 -0 buildifier -mode=fix
 }
 
 # The version of clang-format is important, different versions have slightly
 # different formatting output (sigh).
 printf "%-50s" "Running clang-format:" >&2
 time {
-	git_files -z -- '*.h' '*.cc' '*.proto' |
-		xargs -r -P "$(nproc)" -n 50 -0 clang-format -i
+  git_files -z -- '*.h' '*.cc' '*.proto' |
+    xargs -r -P "$(nproc)" -n 50 -0 clang-format -i
 }
 
 # Creating a virtual environment and installing the correct programs locally
@@ -120,30 +120,30 @@ printf "%-50s" "Installing Python packages:" >&2
 VENV_NAME="env"
 # List of packages to install
 PACKAGES=(
-	mdformat
-	cmake-format
+  mdformat
+  cmake-format
 )
 time {
-	# Check if the virtual environment already exists.
-	if [[ ! -d "$VENV_NAME" ]]; then
-		python3 -m venv "$VENV_NAME"
-	fi
-	source "$VENV_NAME/bin/activate"
+  # Check if the virtual environment already exists.
+  if [[ ! -d "$VENV_NAME" ]]; then
+    python3 -m venv "$VENV_NAME"
+  fi
+  source "$VENV_NAME/bin/activate"
 
-	# Install packages, skipping existing ones
-	for package in "${PACKAGES[@]}"; do
-		if [[ ! $(pip list | grep "^$package") ]]; then
-			pip install "$package"
-		fi
-	done
+  # Install packages, skipping existing ones
+  for package in "${PACKAGES[@]}"; do
+    if [[ ! $(pip list | grep "^$package") ]]; then
+      pip install "$package"
+    fi
+  done
 }
 
 # Apply cmake_format to all the CMake list files.
 #     https://github.com/cheshirekow/cmake_format
 printf "%-50s" "Running cmake-format:" >&2
 time {
-	git_files -z -- 'CMakeLists.txt' '**/CMakeLists.txt' '*.cmake' |
-		xargs -r -P "$(nproc)" -n 50 -0 cmake-format -i
+  git_files -z -- 'CMakeLists.txt' '**/CMakeLists.txt' '*.cmake' |
+    xargs -r -P "$(nproc)" -n 50 -0 cmake-format -i
 }
 
 # Format markdown (.md) files.
@@ -153,9 +153,9 @@ time {
 # pass to reset the group/other permissions to something more reasonable.
 printf "%-50s" "Running markdown formatter:" >&2
 time {
-	# See `.mdformat.toml` for the configuration parameters.
-	git_files -z -- '*.md' | xargs -r -P "$(nproc)" -n 50 -0 mdformat
-	git_files -z -- '*.md' | xargs -r -0 chmod go=u-w
+  # See `.mdformat.toml` for the configuration parameters.
+  git_files -z -- '*.md' | xargs -r -P "$(nproc)" -n 50 -0 mdformat
+  git_files -z -- '*.md' | xargs -r -0 chmod go=u-w
 }
 
 # Deactivate virtual environment
