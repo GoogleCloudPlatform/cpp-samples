@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "google/cloud/pubsub/publisher.h"
+#include "google/cloud/opentelemetry/trace_exporter.h"
 #include "parse_args.h"
 #include "publisher_helper.h"
-#include "google/cloud/opentelemetry/trace_exporter.h"
-#include "google/cloud/pubsub/publisher.h"
 #include <opentelemetry/sdk/trace/batch_span_processor_factory.h>
 #include <opentelemetry/sdk/trace/batch_span_processor_options.h>
 #include <opentelemetry/sdk/trace/processor.h>
@@ -27,7 +27,7 @@
 namespace gc = ::google::cloud;
 namespace otel = gc::otel;
 
-void ConfigureCloudTrace(ParseResult const& args) {     
+void ConfigureCloudTrace(ParseResult const& args) {
   auto exporter = otel::MakeTraceExporter(gc::Project(args.project_id));
   opentelemetry::sdk::trace::BatchSpanProcessorOptions span_options;
   span_options.max_queue_size = args.max_queue_size;
@@ -36,7 +36,7 @@ void ConfigureCloudTrace(ParseResult const& args) {
   auto provider = opentelemetry::sdk::trace::TracerProviderFactory::Create(
       std::move(processor));
   opentelemetry::trace::Provider::SetTracerProvider(std::move(provider));
-} 
+}
 
 int main(int argc, char* argv[]) try {
   auto args = ParseArguments(argc, argv);

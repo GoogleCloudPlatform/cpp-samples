@@ -14,7 +14,7 @@
 
 #include "publisher_helper.h"
 #include <iostream>
-#include <string> 
+#include <string>
 
 namespace gc = ::google::cloud;
 

@@ -33,13 +33,11 @@ target_link_libraries(
 
 add_library(publisher_helper STATIC publisher_helper.cc publisher_helper.h)
 target_compile_features(publisher_helper PUBLIC cxx_std_14)
-target_link_libraries(
-    publisher_helper PUBLIC parse_args)
+target_link_libraries(publisher_helper PUBLIC parse_args)
 
 add_executable(publisher publisher.cc)
 target_compile_features(publisher PRIVATE cxx_std_14)
-target_link_libraries(
-    publisher PRIVATE publisher_helper parse_args)
+target_link_libraries(publisher PRIVATE publisher_helper parse_args)
 
 add_executable(quickstart quickstart.cc)
 target_compile_features(quickstart PRIVATE cxx_std_14)
