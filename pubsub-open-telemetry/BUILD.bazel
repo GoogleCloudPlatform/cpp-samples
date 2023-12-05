@@ -21,31 +21,31 @@ cc_library(
     srcs = ["parse_args.cc"],
     hdrs = ["parse_args.h"],
     deps = [
-         "@boost//:program_options",
-         "@google_cloud_cpp//:pubsub",
-         "@google_cloud_cpp//:opentelemetry",
+        "@boost//:program_options",
+        "@google_cloud_cpp//:opentelemetry",
+        "@google_cloud_cpp//:pubsub",
     ],
 )
 
 cc_library(
     name = "publisher_helper",
-    hdrs = ["publisher_helper.h"],
     srcs = ["publisher_helper.cc"],
+    hdrs = ["publisher_helper.h"],
     deps = [
         ":parse_args",
-        "@google_cloud_cpp//:pubsub",
         "@google_cloud_cpp//:opentelemetry",
+        "@google_cloud_cpp//:pubsub",
     ],
 )
 
 cc_binary(
     name = "publisher",
     srcs = ["publisher.cc"],
-      deps = [
+    deps = [
+        ":parse_args",
+        ":publisher_helper",
         "@google_cloud_cpp//:opentelemetry",
         "@google_cloud_cpp//:pubsub",
-       ":parse_args",
-       ":publisher_helper",
     ],
 )
 
