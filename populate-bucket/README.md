@@ -2,28 +2,36 @@
 
 ## Motivation
 
-From time to time the Cloud C++ team needs to generate buckets with millions or hundreds of millions of objects to test
-our libraries or applications. We often generate synthetic data for these tests. Like many C++ developers, we are
-impatient, and we want our synthetic data to be generated as quickly as possible so we can start with the rest of our
-work. This directory contains an example using C++, CPS (Google Cloud Pub/Sub), and GKE (Google Kubernetes Engine) to
-populate a GCS (Google Cloud Storage) bucket with millions or hundreds of millions of objects.
+From time to time the Cloud C++ team needs to generate buckets with millions or
+hundreds of millions of objects to test our libraries or applications. We often
+generate synthetic data for these tests. Like many C++ developers, we are
+impatient, and we want our synthetic data to be generated as quickly as possible
+so we can start with the rest of our work. This directory contains an example
+using C++, CPS (Google Cloud Pub/Sub), and GKE (Google Kubernetes Engine) to
+populate a GCS (Google Cloud Storage) bucket with millions or hundreds of
+millions of objects.
 
 ## Overview
 
-The basic idea is to break the work into a small number of work items, such as, "create 1,000 objects with this prefix".
-We will use a command-line tool to publish these work items to a CPS topic, where they can be reliably delivered to any
-number of workers that will execute the work items. We will use GKE to run the workers, as GKE can automatically scale
-the cluster based on demand, and as it will restart the workers if needed after a failure. 
+The basic idea is to break the work into a small number of work items, such as,
+"create 1,000 objects with this prefix". We will use a command-line tool to
+publish these work items to a CPS topic, where they can be reliably delivered to
+any number of workers that will execute the work items. We will use GKE to run
+the workers, as GKE can automatically scale the cluster based on demand, and as
+it will restart the workers if needed after a failure.
 
-Because CPS offers "at least once" semantics, and because the workers may be restarted by GKE, it is important to make
-these work items idempotent, that is, executing the work item times produces the same objects in GCS as executing the
+Because CPS offers "at least once" semantics, and because the workers may be
+restarted by GKE, it is important to make these work items idempotent, that is,
+executing the work item times produces the same objects in GCS as executing the
 work item once.
 
 ## Prerequisites
 
-This example assumes that you have an existing GCP (Google Cloud Platform) project. The project must have billing
-enabled, as some of the services used in this example require it. Throughout the example, we will use
-`GOOGLE_CLOUD_PROJECT` as an environment variable containing the name of the project.
+This example assumes that you have an existing GCP (Google Cloud Platform)
+project. The project must have billing enabled, as some of the services used in
+this example require it. Throughout the example, we will use
+`GOOGLE_CLOUD_PROJECT` as an environment variable containing the name of the
+project.
 
 ### Make sure the necessary services are enabled
 
@@ -57,12 +65,12 @@ readonly GOOGLE_CLOUD_REGION
 
 ### Create the GKE cluster
 
-We use preemptible nodes (the `--preemptible` flag) because they have lower cost, and the application can safely
-restart. We also configure the cluster to grow as needed, the maximum number of nodes (in this case `64`), should be
-set based on your available quota or budget. Note that we enable [workload identity][workload-identity], the recommended
-way for GKE-based applications to consume services in Google Cloud.
-
-[workload-identity]: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
+We use preemptible nodes (the `--preemptible` flag) because they have lower
+cost, and the application can safely restart. We also configure the cluster to
+grow as needed, the maximum number of nodes (in this case `64`), should be set
+based on your available quota or budget. Note that we enable
+[workload identity][workload-identity], the recommended way for GKE-based
+applications to consume services in Google Cloud.
 
 ```sh
 gcloud container clusters create cpp-samples \
@@ -83,7 +91,8 @@ gcloud container clusters --region=${GOOGLE_CLOUD_REGION} --project=${GOOGLE_CLO
 
 ### Create a service account for the GKE workload
 
-The GKE workload will need a GCP service account to access GCP resources, pick a name and create the account:
+The GKE workload will need a GCP service account to access GCP resources, pick a
+name and create the account:
 
 ```sh
 readonly SA_ID="populate-bucket-worker-sa"
@@ -109,7 +118,6 @@ gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT}" \
     "--member=serviceAccount:${SA_NAME}" \
     "--role=roles/storage.objectAdmin"
 ```
-
 
 ### Create a k8s namespace for the example resources
 
@@ -155,8 +163,8 @@ gcloud builds submit \
 ### Create the Cloud Pub/Sub topic and subscription
 
 ```sh
-gcloud pubsub topics create "--project=${GOOGLE_CLOUD_PROJECT}" populate-bucket 
-gcloud pubsub subscriptions create "--project=${GOOGLE_CLOUD_PROJECT}" --topic populate-bucket populate-bucket 
+gcloud pubsub topics create "--project=${GOOGLE_CLOUD_PROJECT}" populate-bucket
+gcloud pubsub subscriptions create "--project=${GOOGLE_CLOUD_PROJECT}" --topic populate-bucket populate-bucket
 ```
 
 ### Run the deployment with workers
@@ -183,3 +191,5 @@ gsutil mb -p ${GOOGLE_CLOUD_PROJECT} gs://${BUCKET_NAME}
     --object-count=1000000 \
     --task-size=100
 ```
+
+[workload-identity]: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity

@@ -1,68 +1,46 @@
 # Getting Started with GKE and C++
 
-This guide builds upon the general [Getting Started with C++] guide.
-It deploys the GCS indexing application to [GKE] (Google Kubernetes Engine)
-instead of [Cloud Run], taking advantage of the long-running servers in
-GKE to improve throughput.
+This guide builds upon the general [Getting Started with C++] guide. It deploys
+the GCS indexing application to [GKE] (Google Kubernetes Engine) instead of
+[Cloud Run], taking advantage of the long-running servers in GKE to improve
+throughput.
 
-The steps in this guide are self-contained.  It is not necessary to go through
-the [Getting Started with C++] guide to go through these steps. It may be
-easier to understand the motivation and the main components if you do so.
-Note that some commands below may create resources (such as the [Cloud Spanner]
-instance and database) that are already created in the previous guide.
+The steps in this guide are self-contained. It is not necessary to go through
+the [Getting Started with C++] guide to go through these steps. It may be easier
+to understand the motivation and the main components if you do so. Note that
+some commands below may create resources (such as the [Cloud Spanner] instance
+and database) that are already created in the previous guide.
 
 ## Motivation
 
 A common technique to improve throughput in [Cloud Spanner] is to aggregate
-multiple changes into a single transaction, minimizing the synchronization
-and networking overheads. However, applications deployed to Cloud Run
-cannot assume they will remain running after they respond to a request.  This
-makes it difficult to aggregate work from multiple [Pub/Sub][Cloud Pub/Sub]
-messages.
+multiple changes into a single transaction, minimizing the synchronization and
+networking overheads. However, applications deployed to Cloud Run cannot assume
+they will remain running after they respond to a request. This makes it
+difficult to aggregate work from multiple [Pub/Sub][cloud pub/sub] messages.
 
 In this guide we will modify the application to:
 
-* Run in GKE, where applications are long-lived and can assume they remain
+- Run in GKE, where applications are long-lived and can assume they remain
   active after handling a message.
-* Connect to Cloud Pub/Sub using [pull subscriptions], which have lower
+- Connect to Cloud Pub/Sub using \[pull subscriptions\], which have lower
   overhead and implement a more fine-grained flow control mechanism.
-* Use background threads to aggregate the results from multiple Cloud Pub/Sub
+- Use background threads to aggregate the results from multiple Cloud Pub/Sub
   messages into a single Cloud Spanner transaction.
-
-[Getting Started with C++]: ../README.md
-[Cloud Build]: https://cloud.google.com/build
-[Cloud Monitoring]: https://cloud.google.com/monitoring
-[Cloud Run]: https://cloud.google.com/run
-[GKE]: https://cloud.google.com/kubernetes-engine
-[Cloud Storage]: https://cloud.google.com/storage
-[Cloud Cloud SDK]: https://cloud.google.com/sdk
-[Cloud Shell]: https://cloud.google.com/shell
-[GCS]: https://cloud.google.com/storage
-[Cloud Spanner]: https://cloud.google.com/spanner
-[Cloud Pub/Sub]: https://cloud.google.com/pubsub
-[Container Registry]: https://cloud.google.com/container-registry
-[Pricing Calculator]: https://cloud.google.com/products/calculator
-[gke-quickstart]: https://cloud.google.com/kubernetes-engine/docs/quickstart
-[gcp-quickstarts]: https://cloud.google.com/resource-manager/docs/creating-managing-projects
-[buildpacks]: https://buildpacks.io
-[docker]: https://docker.com/
-[docker-install]: https://store.docker.com/search?type=edition&offering=community
-[sudoless docker]: https://docs.docker.com/engine/install/linux-postinstall/
-[pack-install]: https://buildpacks.io/docs/install-pack/
 
 ## Overview
 
-At a high-level, our plan is to replace "Cloud Run" with "Kubernetes Engine" in the
-[Getting Started with C++] application:
+At a high-level, our plan is to replace "Cloud Run" with "Kubernetes Engine" in
+the [Getting Started with C++] application:
 
 ![Application Diagram](../assets/getting-started-gke.png)
 
 For completeness, the following instructions duplicate some of the steps in the
-previous guide. We will need to issue a number of commands to create the
-GKE cluster, the Cloud Pub/Sub topics and subscriptions, as well as the
-Cloud Spanner instance and database. With this application we will need to
-create a service account (sometimes called "robot" accounts) to run the
-application, and grant this service account the necessary permissions.
+previous guide. We will need to issue a number of commands to create the GKE
+cluster, the Cloud Pub/Sub topics and subscriptions, as well as the Cloud
+Spanner instance and database. With this application we will need to create a
+service account (sometimes called "robot" accounts) to run the application, and
+grant this service account the necessary permissions.
 
 ## Prerequisites
 
@@ -70,18 +48,18 @@ This example assumes that you have an existing GCP (Google Cloud Platform)
 project. The project must have billing enabled, as some of the services used in
 this example require it. If needed, consult:
 
-* the [GCP quickstarts][gcp-quickstarts] to setup a GCP project
-* the [GKE quickstart][cloud-gke-quickstart] to setup GKE in your project
+- the [GCP quickstarts][gcp-quickstarts] to setup a GCP project
+- the \[GKE quickstart\]\[cloud-gke-quickstart\] to setup GKE in your project
 
-Use your workstation, a GCE instance, or the [Cloud Shell] to get a
-command-line prompt. If needed, login to GCP using:
+Use your workstation, a GCE instance, or the [Cloud Shell] to get a command-line
+prompt. If needed, login to GCP using:
 
 ```sh
 gcloud auth login
 ```
 
-Throughout the example we will use `GOOGLE_CLOUD_PROJECT` as an
-environment variable containing the name of the project.
+Throughout the example we will use `GOOGLE_CLOUD_PROJECT` as an environment
+variable containing the name of the project.
 
 ```sh
 export GOOGLE_CLOUD_PROJECT=[PROJECT ID]
@@ -96,8 +74,8 @@ export GOOGLE_CLOUD_PROJECT=[PROJECT ID]
 
 ### Configure the Google Cloud CLI to use your project
 
-We will issue a number of commands using the [Google Cloud SDK], a command-line
-tool to interact with Google Cloud services.  Adding the
+We will issue a number of commands using the \[Google Cloud SDK\], a
+command-line tool to interact with Google Cloud services. Adding the
 `--project=$GOOGLE_CLOUD_PROJECT` to each invocation of this tool quickly
 becomes tedious, so we start by configuring the default project:
 
@@ -108,8 +86,8 @@ gcloud config set project $GOOGLE_CLOUD_PROJECT
 
 ### Make sure the necessary services are enabled
 
-Some services are not enabled by default when you create a Google Cloud
-Project, so we start by enabling all the services we will need.
+Some services are not enabled by default when you create a Google Cloud Project,
+so we start by enabling all the services we will need.
 
 ```sh
 gcloud services enable cloudbuild.googleapis.com
@@ -156,9 +134,9 @@ gcloud builds submit \
 
 ### Create a Cloud Spanner Instance to host your data
 
-As mentioned above, this guide uses [Cloud Spanner] to store the data. We
-create the smallest possible instance. If needed we will scale up the instance,
-but this is economical and enough for running small jobs.
+As mentioned above, this guide uses [Cloud Spanner] to store the data. We create
+the smallest possible instance. If needed we will scale up the instance, but
+this is economical and enough for running small jobs.
 
 > :warning: Creating the Cloud Spanner instance incurs immediate billing costs,
 > even if the instance is not used.
@@ -174,10 +152,10 @@ gcloud beta spanner instances create getting-started-cpp \
 ### Create the Cloud Spanner Database and Table for your data
 
 A Cloud Spanner instance is just the allocation of compute resources for your
-databases. Think of them as a virtual set of database servers dedicated to
-your databases. Initially these servers have no databases or tables associated
-with the resources. We need to create a database and table that will host the
-data for this demo:
+databases. Think of them as a virtual set of database servers dedicated to your
+databases. Initially these servers have no databases or tables associated with
+the resources. We need to create a database and table that will host the data
+for this demo:
 
 ```sh
 gcloud spanner databases create gcs-index \
@@ -199,7 +177,8 @@ gcloud pubsub topics create gke-gcs-indexing
 ### Create a Cloud Pub/Sub Subscription for Indexing Requests
 
 Subscribers receive messages from Cloud Pub/Sub using a **subscription**. These
-are named, persistent resources. We need to create one to configure the application.
+are named, persistent resources. We need to create one to configure the
+application.
 
 ```sh
 gcloud pubsub subscriptions create --topic=gke-gcs-indexing gke-gcs-indexing
@@ -209,13 +188,11 @@ gcloud pubsub subscriptions create --topic=gke-gcs-indexing gke-gcs-indexing
 ### Create the GKE cluster
 
 We use preemptible nodes (the `--preemptible` flag) because they have lower
-cost, and the application can safely restart. We also configure the cluster
-to grow as needed. The maximum number of nodes (in this case `64`) should be
-set based on your available quota or budget. Note that we enable
+cost, and the application can safely restart. We also configure the cluster to
+grow as needed. The maximum number of nodes (in this case `64`) should be set
+based on your available quota or budget. Note that we enable
 [workload identity][workload-identity], the recommended way for GKE-based
 applications to consume services in Google Cloud.
-
-[workload-identity]: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
 
 ```sh
 gcloud container clusters create cpp-samples \
@@ -244,11 +221,11 @@ gcloud container clusters --region="us-central1" get-credentials cpp-samples
 
 ### Create a GKE service account
 
-GKE recommends configuring a different [workload-identity] for each
-GKE workload, and using this identity to access GCP services. To follow
-these guidelines we start by creating a service account in the Kubernetes
-Cluster. Note that Kubernetes service accounts are distinct from GCP service
-accounts, but can be mapped to them (as we do below).
+GKE recommends configuring a different [workload-identity] for each GKE
+workload, and using this identity to access GCP services. To follow these
+guidelines we start by creating a service account in the Kubernetes Cluster.
+Note that Kubernetes service accounts are distinct from GCP service accounts,
+but can be mapped to them (as we do below).
 
 ```sh
 kubectl create serviceaccount worker
@@ -286,8 +263,8 @@ gcloud builds list --ongoing
 # Output: the list of running jobs
 ```
 
-If your build has completed the list will be empty. If you need to wait for
-this build to complete (it should take about 15 minutes) use:
+If your build has completed the list will be empty. If you need to wait for this
+build to complete (it should take about 15 minutes) use:
 
 ```sh
 gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
@@ -296,8 +273,8 @@ gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
 
 ### Deploy the Programs to GKE
 
-We can now create a job in GKE. GKE requires its configuration files to be
-plain YAML, without variables or any other expansion. We use a small script to
+We can now create a job in GKE. GKE requires its configuration files to be plain
+YAML, without variables or any other expansion. We use a small script to
 generate this file:
 
 ```sh
@@ -344,9 +321,8 @@ kubectl scale deployment/worker --replicas=128
 GKE has detailed tutorials on how to use Cloud Monitoring metrics, such as the
 length of the work queue, to [autoscale a deployment][gke-autoscale-on-metrics].
 
-[gke-autoscale-on-metrics]: https://cloud.google.com/kubernetes-engine/docs/tutorials/autoscaling-metrics#pubsub
-
-We also need to scale up the Cloud Spanner instance. We use a `gcloud` command for this:
+We also need to scale up the Cloud Spanner instance. We use a `gcloud` command
+for this:
 
 ```sh
 gcloud beta spanner instances update getting-started-cpp --processing-units=3000
@@ -381,8 +357,8 @@ gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
 
 ## Cleanup
 
-> :warning: Do not forget to cleanup your billable resources after going
-> through this "Getting Started" guide.
+> :warning: Do not forget to cleanup your billable resources after going through
+> this "Getting Started" guide.
 
 ### Remove the GKE cluster
 
@@ -436,8 +412,8 @@ done
 
 ### Create a service account for the GKE workload
 
-The GKE workload will need a GCP service account to access GCP resources. Pick
-a name and create the account:
+The GKE workload will need a GCP service account to access GCP resources. Pick a
+name and create the account:
 
 ```sh
 readonly SA_ID="gcs-index-worker-sa"
@@ -497,3 +473,14 @@ kubectl annotate serviceaccount worker \
   iam.gke.io/gcp-service-account=$SA_NAME
 # Output: serviceaccount/worker annotated
 ```
+
+[cloud pub/sub]: https://cloud.google.com/pubsub
+[cloud run]: https://cloud.google.com/run
+[cloud shell]: https://cloud.google.com/shell
+[cloud spanner]: https://cloud.google.com/spanner
+[gcp-quickstarts]: https://cloud.google.com/resource-manager/docs/creating-managing-projects
+[getting started with c++]: ../README.md
+[gke]: https://cloud.google.com/kubernetes-engine
+[gke-autoscale-on-metrics]: https://cloud.google.com/kubernetes-engine/docs/tutorials/autoscaling-metrics#pubsub
+[pricing calculator]: https://cloud.google.com/products/calculator
+[workload-identity]: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity

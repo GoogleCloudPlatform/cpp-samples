@@ -22,5 +22,5 @@ conda config --set channel_priority strict
 conda install -y -c conda-forge cmake ninja cxx-compiler google-cloud-cpp libgoogle-cloud
 # [END cpp_setup_conda_install]
 
-cmake -G Ninja -S /workspace/setup -B /var/tmp/build/setup-conda 
+cmake -G Ninja -S /workspace/setup -B /var/tmp/build/setup-conda
 cmake --build /var/tmp/build/setup-conda

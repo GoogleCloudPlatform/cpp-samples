@@ -2,60 +2,42 @@
 
 ## Motivation
 
-A typical use of C++ in Google Cloud is to perform parallel computations or
-data analysis. Once completed, the results of this analysis are stored in some
-kind of database.  In this guide we will build such an application, we will use
+A typical use of C++ in Google Cloud is to perform parallel computations or data
+analysis. Once completed, the results of this analysis are stored in some kind
+of database. In this guide we will build such an application, we will use
 "scanning" [GCS] as a simplified example of "analyzing" some data,
 [Cloud Spanner] as the database to store the results, and and deploy the
 application to [Cloud Run], a managed platform to deploy containerized
 applications.
 
-
-[Cloud Build]: https://cloud.google.com/build
-[Cloud Run]: https://cloud.google.com/run
-[Cloud Storage]: https://cloud.google.com/storage
-[Cloud Cloud SDK]: https://cloud.google.com/sdk
-[Cloud Shell]: https://cloud.google.com/shell
-[GCS]: https://cloud.google.com/storage
-[Cloud Spanner]: https://cloud.google.com/spanner
-[Container Registry]: https://cloud.google.com/container-registry
-[Pricing Calculator]: https://cloud.google.com/products/calculator
-[cloud-run-quickstarts]: https://cloud.google.com/run/docs/quickstarts
-[gcp-quickstarts]: https://cloud.google.com/resource-manager/docs/creating-managing-projects
-[buildpacks]: https://buildpacks.io
-[docker]: https://docker.com/
-[docker-install]: https://store.docker.com/search?type=edition&offering=community
-[sudoless docker]: https://docs.docker.com/engine/install/linux-postinstall/
-[pack-install]: https://buildpacks.io/docs/install-pack/
-
 ## Overview
 
 Google Cloud Storage (GCS) buckets can contain thousands, millions, and even
-billions of objects.  GCS can quickly find an object given its name, or list
+billions of objects. GCS can quickly find an object given its name, or list
 objects with names in a given range, but some applications need more advanced
 lookups. For example, one may be interested in finding all the objects within a
 certain size, or with a given object type.
 
 In this guide, we will create and deploy an application to scan all the objects
 in a bucket, and store the full metadata information of each object in a
-[Cloud Spanner] instance.  Once the information is in a Cloud Spanner table,
-one can use normal SQL statements to search for objects.
+[Cloud Spanner] instance. Once the information is in a Cloud Spanner table, one
+can use normal SQL statements to search for objects.
 
 The basic structure of this application is shown below. We will create a
-*deployment* that *scans* the object metadata in Cloud Storage. To schedule
-work for this deployment we will use Cloud Pub/Sub as a *job queue*.  Initially
-the user posts an indexing request to Cloud Pub/Sub, asking to index all the
-objects with a given "prefix" (often thought of a folder) in a GCS bucket. If a
-request fails or times out, Cloud Pub/Sub will automatically resend it to a new
+*deployment* that *scans* the object metadata in Cloud Storage. To schedule work
+for this deployment we will use Cloud Pub/Sub as a *job queue*. Initially the
+user posts an indexing request to Cloud Pub/Sub, asking to index all the objects
+with a given "prefix" (often thought of a folder) in a GCS bucket. If a request
+fails or times out, Cloud Pub/Sub will automatically resend it to a new
 instance.
 
 If the work can be broken down by breaking the folder into smaller subfolders
 the indexing job will do so. It will simply post the request to index the
-subfolder to itself (though it may be handled by a different instance as the
-job scales up).  As the number of these requests grows, Cloud Run will
-automatically scale up the indexing deployment. We do not need to worry about
-scaling up the job, or scaling it down at the end.  In fact, Cloud Run can
-"scale down to zero", so we do not even need to worry about shutting it down.
+subfolder to itself (though it may be handled by a different instance as the job
+scales up). As the number of these requests grows, Cloud Run will automatically
+scale up the indexing deployment. We do not need to worry about scaling up the
+job, or scaling it down at the end. In fact, Cloud Run can "scale down to zero",
+so we do not even need to worry about shutting it down.
 
 ![Application Diagram](assets/getting-started-cpp.png)
 
@@ -65,12 +47,12 @@ This example assumes that you have an existing GCP (Google Cloud Platform)
 project. The project must have billing enabled, as some of the services used in
 this example require it. If needed, consult:
 
-* the [GCP quickstarts][gcp-quickstarts] to setup a GCP project
-* the [cloud run quickstarts][cloud-run-quickstarts] to setup Cloud Run in your
+- the [GCP quickstarts][gcp-quickstarts] to setup a GCP project
+- the [cloud run quickstarts][cloud-run-quickstarts] to setup Cloud Run in your
   project
 
-Use your workstation, a GCE instance, or the [Cloud Shell] to get a
-command-line prompt. If needed, login to GCP using:
+Use your workstation, a GCE instance, or the [Cloud Shell] to get a command-line
+prompt. If needed, login to GCP using:
 
 ```sh
 gcloud auth login
@@ -86,15 +68,15 @@ export GOOGLE_CLOUD_PROJECT=[PROJECT ID]
 > :warning: this guide uses Cloud Spanner, this service is billed by the hour
 > **even if you stop using it**. The charges can reach the **hundreds** or
 > **thousands** of dollars per month if you configure a large Cloud Spanner
-> instance. Consult the [Pricing Calculator] for details.  Please remember to
+> instance. Consult the [Pricing Calculator] for details. Please remember to
 > delete any Cloud Spanner resources once you no longer need them.
 
 ### Configure the Google Cloud CLI to use your project
 
-We will issue a number of commands using the [Google Cloud SDK], a command-line
-tool to interact with Google Cloud services.  Specifying the project (via the
-`--project=$GOOGLE_CLOUD_PROJECT` flag) on each invocation of this tool quickly
-becomes tedious.  We start by configuring the default project:
+We will issue a number of commands using the \[Google Cloud SDK\], a
+command-line tool to interact with Google Cloud services. Specifying the project
+(via the `--project=$GOOGLE_CLOUD_PROJECT` flag) on each invocation of this tool
+quickly becomes tedious. We start by configuring the default project:
 
 ```sh
 gcloud config set project $GOOGLE_CLOUD_PROJECT
@@ -103,8 +85,8 @@ gcloud config set project $GOOGLE_CLOUD_PROJECT
 
 ### Make sure the necessary services are enabled
 
-Some services are not enabled by default when you create a Google Cloud
-Project. We enable all the services we will need in this guide using:
+Some services are not enabled by default when you create a Google Cloud Project.
+We enable all the services we will need in this guide using:
 
 ```sh
 gcloud services enable run.googleapis.com
@@ -138,7 +120,7 @@ cd cpp-samples/getting-started
 # Output: none
 ```
 
-Compile the code into a Docker image.  Since we are only planning to build this
+Compile the code into a Docker image. Since we are only planning to build this
 example once, we will use [Cloud Build]. Using [Cloud Build] is simpler, but it
 does not create a cache of the intermediate build artifacts. Read about
 [buildpacks] and the pack tool [install guide][pack-install] to run your builds
@@ -165,9 +147,9 @@ gcloud builds submit \
 
 ### Create a Cloud Spanner Instance to host your data
 
-As mentioned above, this guide uses [Cloud Spanner] to store the data. We
-create the smallest possible instance. If needed we will scale up the instance,
-but this is economical and enough for running small jobs.
+As mentioned above, this guide uses [Cloud Spanner] to store the data. We create
+the smallest possible instance. If needed we will scale up the instance, but
+this is economical and enough for running small jobs.
 
 > :warning: Creating the Cloud Spanner instance incurs immediate billing costs,
 > even if the instance is not used.
@@ -236,8 +218,8 @@ gcloud builds list --ongoing
 # Output: the list of running jobs
 ```
 
-If your build has completed the list will be empty. If you need to wait for
-this build to complete (it should take about 15 minutes) use:
+If your build has completed the list will be empty. If you need to wait for this
+build to complete (it should take about 15 minutes) use:
 
 ```sh
 gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
@@ -248,8 +230,8 @@ gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
 
 > :warning: To continue, you must wait until the [Cloud Build] build completed.
 
-Once the image is uploaded, we can create a Cloud Run deployment to run it.
-This starts up an instance of the job. Cloud Run will scale this up or down as
+Once the image is uploaded, we can create a Cloud Run deployment to run it. This
+starts up an instance of the job. Cloud Run will scale this up or down as
 needed:
 
 ```sh
@@ -360,13 +342,13 @@ google-chrome https://pantheon.corp.google.com/run/detail/us-central1/index-gcs-
 
 ## Next Steps
 
-* Automatically update the index as the [bucket changes](update/README.md).
-* Learn about how to deploy similar code to [GKE](gke/README.md)
+- Automatically update the index as the [bucket changes](update/README.md).
+- Learn about how to deploy similar code to [GKE](gke/README.md)
 
 ## Cleanup
 
-> :warning: Do not forget to cleanup your billable resources after going
-> through this "Getting Started" guide.
+> :warning: Do not forget to cleanup your billable resources after going through
+> this "Getting Started" guide.
 
 ### Remove the Cloud Spanner Instance
 
@@ -410,3 +392,15 @@ gcloud container images delete gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/
 # Output: Deleted [gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/index-gcs-prefix:latest]
 # Output: Deleted [gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/index-gcs-prefix@sha256:....]
 ```
+
+[buildpacks]: https://buildpacks.io
+[cloud build]: https://cloud.google.com/build
+[cloud run]: https://cloud.google.com/run
+[cloud shell]: https://cloud.google.com/shell
+[cloud spanner]: https://cloud.google.com/spanner
+[cloud-run-quickstarts]: https://cloud.google.com/run/docs/quickstarts
+[container registry]: https://cloud.google.com/container-registry
+[gcp-quickstarts]: https://cloud.google.com/resource-manager/docs/creating-managing-projects
+[gcs]: https://cloud.google.com/storage
+[pack-install]: https://buildpacks.io/docs/install-pack/
+[pricing calculator]: https://cloud.google.com/products/calculator

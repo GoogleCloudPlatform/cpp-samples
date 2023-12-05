@@ -17,5 +17,5 @@
 set -euo pipefail
 
 cmake -S /workspace/setup -B /var/tmp/build/setup-vcpkg \
-    -DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake
+	-DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake
 cmake --build /var/tmp/build/setup-vcpkg

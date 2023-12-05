@@ -17,28 +17,28 @@
 set -euo pipefail
 
 args=(
-    "--test_output=errors"
-    "--verbose_failures=true"
-    "--keep_going"
-    "--experimental_convenience_symlinks=ignore"
-    "--cache_test_results=auto"
+	"--test_output=errors"
+	"--verbose_failures=true"
+	"--keep_going"
+	"--experimental_convenience_symlinks=ignore"
+	"--cache_test_results=auto"
 )
 if [[ -n "${BAZEL_REMOTE_CACHE:-}" ]]; then
-    args+=("--remote_cache=${BAZEL_REMOTE_CACHE}")
-    args+=("--google_default_credentials")
-    # See https://docs.bazel.build/versions/main/remote-caching.html#known-issues
-    # and https://github.com/bazelbuild/bazel/issues/3360
-    args+=("--experimental_guard_against_concurrent_changes")
+	args+=("--remote_cache=${BAZEL_REMOTE_CACHE}")
+	args+=("--google_default_credentials")
+	# See https://docs.bazel.build/versions/main/remote-caching.html#known-issues
+	# and https://github.com/bazelbuild/bazel/issues/3360
+	args+=("--experimental_guard_against_concurrent_changes")
 fi
 
 # Make some attempts to download dependencies. This is a common source of
 # flakes, and worth doing for less spurious failures. If they all fail we just
 # let the `bazel build` invocation below try its luck.
 for i in 1 2 3; do
-  if env -C /workspace/setup bazel fetch ...; then
-    break
-  fi
-  sleep 60
+	if env -C /workspace/setup bazel fetch ...; then
+		break
+	fi
+	sleep 60
 done
 
 env -C /workspace/setup bazel build ...

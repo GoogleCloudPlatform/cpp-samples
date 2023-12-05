@@ -1,52 +1,32 @@
 # Getting Started with GCP and C++: background operations
 
-This guide builds upon the general [Getting Started with C++] guide.
-It automatically maintains the [GCS (Google Cloud Storage)][GCS] index
-described in said guide using an application deployed to [Cloud Run].
+This guide builds upon the general [Getting Started with C++] guide. It
+automatically maintains the [GCS (Google Cloud Storage)][gcs] index described in
+said guide using an application deployed to [Cloud Run].
 
-The steps in this guide are self-contained.  It is not necessary to go through
-the [Getting Started with C++] guide to go through these steps. It may be
-easier to understand the motivation and the main components if you do so.
-Note that some commands below may create resources (such as the [Cloud Spanner]
-instance and database) that are already created in the previous guide.
+The steps in this guide are self-contained. It is not necessary to go through
+the [Getting Started with C++] guide to go through these steps. It may be easier
+to understand the motivation and the main components if you do so. Note that
+some commands below may create resources (such as the [Cloud Spanner] instance
+and database) that are already created in the previous guide.
 
 ## Motivation
 
-In the [Getting Started with C++] guide we showed how to build an index for
-GCS buckets. We built this index using a work queue to scan the contents of
-these buckets. But what if the contents of the bucket change dynamically?
-What if other applications insert new objects? Or delete them? Or update the
-metadata for an existing objects? We would like to extend the example to
-update the index as such changes take place.
-
-[Getting Started with C++]: ../README.md
-[Cloud Build]: https://cloud.google.com/build
-[Cloud Run]: https://cloud.google.com/run
-[Cloud Storage]: https://cloud.google.com/storage
-[Cloud Cloud SDK]: https://cloud.google.com/sdk
-[Cloud Shell]: https://cloud.google.com/shell
-[GCS]: https://cloud.google.com/storage
-[Cloud Spanner]: https://cloud.google.com/spanner
-[Container Registry]: https://cloud.google.com/container-registry
-[Pricing Calculator]: https://cloud.google.com/products/calculator
-[cloud-run-quickstarts]: https://cloud.google.com/run/docs/quickstarts
-[gcp-quickstarts]: https://cloud.google.com/resource-manager/docs/creating-managing-projects
-[buildpacks]: https://buildpacks.io
-[docker]: https://docker.com/
-[docker-install]: https://store.docker.com/search?type=edition&offering=community
-[sudoless docker]: https://docs.docker.com/engine/install/linux-postinstall/
-[pack-install]: https://buildpacks.io/docs/install-pack/
+In the [Getting Started with C++] guide we showed how to build an index for GCS
+buckets. We built this index using a work queue to scan the contents of these
+buckets. But what if the contents of the bucket change dynamically? What if
+other applications insert new objects? Or delete them? Or update the metadata
+for an existing objects? We would like to extend the example to update the index
+as such changes take place.
 
 ## Overview
 
-The basic structure of this application is shown below. We will configure one
-or more GCS buckets to send [Pub/Sub notifications] as objects change. A new
+The basic structure of this application is shown below. We will configure one or
+more GCS buckets to send [Pub/Sub notifications] as objects change. A new
 application deployed to Cloud Run will receive these notifications, parse them
 and update the index accordingly.
 
 ![Application Diagram](../assets/getting-started-cpp-update.png)
-
-[Pub/Sub notifications]: https://cloud.google.com/storage/docs/pubsub-notifications
 
 ## Prerequisites
 
@@ -54,12 +34,12 @@ This example assumes that you have an existing GCP (Google Cloud Platform)
 project. The project must have billing enabled, as some of the services used in
 this example require it. If needed, consult:
 
-* the [GCP quickstarts][gcp-quickstarts] to setup a GCP project
-* the [cloud run quickstarts][cloud-run-quickstarts] to setup Cloud Run in your
+- the [GCP quickstarts][gcp-quickstarts] to setup a GCP project
+- the [cloud run quickstarts][cloud-run-quickstarts] to setup Cloud Run in your
   project
 
-Use your workstation, a GCE instance, or the [Cloud Shell] to get a
-command-line prompt. If needed, login to GCP using:
+Use your workstation, a GCE instance, or the [Cloud Shell] to get a command-line
+prompt. If needed, login to GCP using:
 
 ```sh
 gcloud auth login
@@ -80,8 +60,8 @@ export GOOGLE_CLOUD_PROJECT=[PROJECT ID]
 
 ### Configure the Google Cloud CLI to use your project
 
-We will issue a number of commands using the [Google Cloud SDK], a command-line
-tool to interact with Google Cloud services.  Adding the
+We will issue a number of commands using the \[Google Cloud SDK\], a
+command-line tool to interact with Google Cloud services. Adding the
 `--project=$GOOGLE_CLOUD_PROJECT` to each invocation of this tool quickly
 becomes tedious, so we start by configuring the default project:
 
@@ -92,8 +72,8 @@ gcloud config set project $GOOGLE_CLOUD_PROJECT
 
 ### Make sure the necessary services are enabled
 
-Some services are not enabled by default when you create a Google Cloud
-Project. We enable all the services we will need in this guide using:
+Some services are not enabled by default when you create a Google Cloud Project.
+We enable all the services we will need in this guide using:
 
 ```sh
 gcloud services enable cloudbuild.googleapis.com
@@ -129,7 +109,7 @@ cd cpp-samples/getting-started/update
 # Output: none
 ```
 
-Compile the code into a Docker image.  Since we are only planning to build this
+Compile the code into a Docker image. Since we are only planning to build this
 example once, we will use [Cloud Build]. Using [Cloud Build] is simpler, but it
 does not create a cache of the intermediate build artifacts. Read about
 [buildpacks] and the pack tool [install guide][pack-install] to run your builds
@@ -139,8 +119,8 @@ systems. To learn more about this, consult the buildpack documentation for
 [cache images](https://buildpacks.io/docs/app-developer-guide/using-cache-image/).
 
 You can continue with other steps while this build runs in the background.
-Optionally, use the links in the output to follow the build process in your
-web browser.
+Optionally, use the links in the output to follow the build process in your web
+browser.
 
 ```sh
 gcloud builds submit \
@@ -156,9 +136,9 @@ gcloud builds submit \
 
 ### Create a Cloud Spanner Instance to host your data
 
-As mentioned above, this guide uses [Cloud Spanner] to store the data. We
-create the smallest possible instance. If needed we will scale up the
-instance, but this is economical and enough for running small jobs.
+As mentioned above, this guide uses [Cloud Spanner] to store the data. We create
+the smallest possible instance. If needed we will scale up the instance, but
+this is economical and enough for running small jobs.
 
 > :warning: Creating the Cloud Spanner instance incurs immediate billing costs,
 > even if the instance is not used.
@@ -194,8 +174,8 @@ To use the application we need an existing bucket in your project:
 BUCKET_NAME=... # The name of an existing bucket in your project
 ```
 
-If you have no buckets in your project, use the [GCS guide] to select a name
-and then create the bucket:
+If you have no buckets in your project, use the [GCS guide] to select a name and
+then create the bucket:
 
 ```sh
 gsutil mb gs://$BUCKET_NAME
@@ -215,8 +195,6 @@ gsutil notifications create \
 Note that this will create the topic (if needed), and set the right IAM
 permissions enabling GCS to publish on the topic.
 
-[GCS Guide]: https://cloud.google.com/storage/docs/creating-buckets
-
 ### Wait for the build to complete
 
 Look at the status of your build using:
@@ -226,8 +204,8 @@ gcloud builds list --ongoing
 # Output: the list of running jobs
 ```
 
-If your build has completed the list will be empty. If you need to wait for
-this build to complete (it should take about 15 minutes) use:
+If your build has completed the list will be empty. If you need to wait for this
+build to complete (it should take about 15 minutes) use:
 
 ```sh
 gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
@@ -238,9 +216,9 @@ gcloud builds log --stream $(gcloud builds list --ongoing --format="value(id)")
 
 > :warning: To continue, you must wait until the [Cloud Build] build completed.
 
-Once the image is uploaded, we can create a Cloud Run deployment to run it.
-This starts up an instance of the job. Cloud Run will scale this up or down as
-this needed:
+Once the image is uploaded, we can create a Cloud Run deployment to run it. This
+starts up an instance of the job. Cloud Run will scale this up or down as this
+needed:
 
 ```sh
 gcloud run deploy update-gcs-index \
@@ -311,13 +289,13 @@ gcloud spanner databases execute-sql gcs-index --instance=getting-started-cpp \
 # Output: metadata for the 10 most recent objects named 'fox.txt'
 ```
 
-Use `gsutil` to create, update, and delete additional objects and run
-additional queries.
+Use `gsutil` to create, update, and delete additional objects and run additional
+queries.
 
 ## Cleanup
 
-> :warning: Do not forget to cleanup your billable resources after going
-> through this "Getting Started" guide.
+> :warning: Do not forget to cleanup your billable resources after going through
+> this "Getting Started" guide.
 
 ### Remove the Cloud Spanner Instance
 
@@ -369,3 +347,18 @@ gcloud container images delete gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/
 gsutil notifications delete gs://$BUCKET_NAME
 # Output: none
 ```
+
+[buildpacks]: https://buildpacks.io
+[cloud build]: https://cloud.google.com/build
+[cloud run]: https://cloud.google.com/run
+[cloud shell]: https://cloud.google.com/shell
+[cloud spanner]: https://cloud.google.com/spanner
+[cloud-run-quickstarts]: https://cloud.google.com/run/docs/quickstarts
+[container registry]: https://cloud.google.com/container-registry
+[gcp-quickstarts]: https://cloud.google.com/resource-manager/docs/creating-managing-projects
+[gcs]: https://cloud.google.com/storage
+[gcs guide]: https://cloud.google.com/storage/docs/creating-buckets
+[getting started with c++]: ../README.md
+[pack-install]: https://buildpacks.io/docs/install-pack/
+[pricing calculator]: https://cloud.google.com/products/calculator
+[pub/sub notifications]: https://cloud.google.com/storage/docs/pubsub-notifications

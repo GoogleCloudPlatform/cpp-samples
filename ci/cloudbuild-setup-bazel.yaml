@@ -37,7 +37,7 @@ steps:
     env: [
       'BAZEL_REMOTE_CACHE=https://storage.googleapis.com/${_CACHE_BUCKET}/cpp-samples/setup-bazel',
     ]
-    args: [ '/workspace/ci/builds/setup-bazel.sh' ]  
+    args: [ '/workspace/ci/builds/setup-bazel.sh' ]
 
   # Remove the images created by this build.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
