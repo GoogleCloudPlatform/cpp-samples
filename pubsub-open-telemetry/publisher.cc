@@ -26,16 +26,18 @@
 // Create a few namespace aliases to make the code easier to read.
 namespace gc = ::google::cloud;
 namespace otel = gc::otel;
+namespace trace_sdk = ::opentelemetry::sdk::trace;
+namespace trace = ::opentelemetry::trace;
 
-void ConfigureCloudTrace(ParseResult const& args) {
+void ConfigureCloudTraceTracer(ParseResult const& args) {
   auto exporter = otel::MakeTraceExporter(gc::Project(args.project_id));
-  opentelemetry::sdk::trace::BatchSpanProcessorOptions span_options;
+  trace_sdk::BatchSpanProcessorOptions span_options;
   span_options.max_queue_size = args.max_queue_size;
-  auto processor = opentelemetry::sdk::trace::BatchSpanProcessorFactory::Create(
+  auto processor = trace_sdk::BatchSpanProcessorFactory::Create(
       std::move(exporter), span_options);
-  auto provider = opentelemetry::sdk::trace::TracerProviderFactory::Create(
+  auto provider = trace_sdk::TracerProviderFactory::Create(
       std::move(processor));
-  opentelemetry::trace::Provider::SetTracerProvider(std::move(provider));
+  trace::Provider::SetTracerProvider(std::move(provider));
 }
 
 int main(int argc, char* argv[]) try {
@@ -46,11 +48,14 @@ int main(int argc, char* argv[]) try {
   std::cout << "Using project `" << args.project_id << "` and topic `"
             << args.topic_id << "`\n";
 
-  ConfigureCloudTrace(args);
+  ConfigureCloudTraceTracer(args);
 
   auto publisher = CreatePublisher(args);
 
   Publish(publisher, args);
+
+  std::cout << "Cleaning up...\n";
+  Cleanup();
 
   return 0;
 } catch (google::cloud::Status const& status) {

@@ -13,10 +13,15 @@
 // limitations under the License.
 
 #include "publisher_helper.h"
+#include "opentelemetry/sdk/trace/tracer_provider.h"
+#include "opentelemetry/trace/provider.h"
 #include <iostream>
 #include <string>
 
 namespace gc = ::google::cloud;
+namespace pubsub = gc::pubsub;
+namespace trace_sdk = ::opentelemetry::sdk::trace;
+namespace trace = ::opentelemetry::trace;
 
 namespace {
 
@@ -59,4 +64,14 @@ void Publish(pubsub::Publisher& publisher, ParseResult const& args) {
       std::cout << "Error in publish: " << ex.what() << "\n";
     }
   std::cout << "Message(s) published\n";
+}
+
+void Cleanup(){
+  auto provider = trace::Provider::GetTracerProvider();
+  if (provider) {
+    static_cast<trace_sdk::TracerProvider *>(provider.get())->ForceFlush();
+  }
+
+  std::shared_ptr<trace::TracerProvider> none;
+  trace::Provider::SetTracerProvider(none);
 }

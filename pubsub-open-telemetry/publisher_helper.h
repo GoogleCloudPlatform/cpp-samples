@@ -18,10 +18,13 @@
 #include "google/cloud/pubsub/publisher.h"
 #include "parse_args.h"
 
-namespace pubsub = ::google::cloud::pubsub;
+// Create a publisher using the configuration set in `args`.
+::google::cloud::pubsub::Publisher CreatePublisher(ParseResult const& args);
 
-pubsub::Publisher CreatePublisher(ParseResult const& args);
+// Publish message(s) using the `publisher` set in `args`.
+void Publish(::google::cloud::pubsub::Publisher& publisher, ParseResult const& args);
 
-void Publish(pubsub::Publisher& publisher, ParseResult const& args);
+// Wait for the traces to be exported before exiting the program.
+void Cleanup();
 
 #endif  // CPP_SAMPLES_PUBSUB_OPEN_TELEMETRY_PUBLISHER_H

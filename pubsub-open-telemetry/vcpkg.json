@@ -11,6 +11,9 @@
         "opentelemetry"
       ]
     },
+    {
+      "name": "opentelemetry-cpp"
+    },
     "boost-program-options"
   ]
 }
