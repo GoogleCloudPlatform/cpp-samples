@@ -16,6 +16,7 @@ workspace(name = "pubsub-open-telemetery")
 
 # Google Cloud Cpp
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 http_archive(
     name = "google_cloud_cpp",
     sha256 = "63f009092afd900cb812050bcecf607e37d762ac911e0bcbf4af9a432da91890",
@@ -24,25 +25,33 @@ http_archive(
 )
 
 load("@google_cloud_cpp//bazel:google_cloud_cpp_deps.bzl", "google_cloud_cpp_deps")
+
 google_cloud_cpp_deps()
+
 load("@com_google_googleapis//:repository_rules.bzl", "switched_rules_by_language")
+
 switched_rules_by_language(
     name = "com_google_googleapis_imports",
     cc = True,
     grpc = True,
 )
+
 load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
+
 grpc_deps()
+
 load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")
+
 grpc_extra_deps()
 
 # Boost
 http_archive(
     name = "com_github_nelhage_rules_boost",
-    url = "https://github.com/nelhage/rules_boost/archive/8a2609acaa1f1317a8b9d9b5d566e8e98c3bf343.tar.gz",
+    sha256 = "bb0d686145a1580fbbd029ef575f534cb770328e14d85880cc6db11f9586e1c4",
     strip_prefix = "rules_boost-8a2609acaa1f1317a8b9d9b5d566e8e98c3bf343",
-    sha256 = "bb0d686145a1580fbbd029ef575f534cb770328e14d85880cc6db11f9586e1c4"
+    url = "https://github.com/nelhage/rules_boost/archive/8a2609acaa1f1317a8b9d9b5d566e8e98c3bf343.tar.gz",
 )
 
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
+
 boost_deps()

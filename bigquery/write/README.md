@@ -1,15 +1,16 @@
 # Using BigQuery Storage Write
 
-This example shows how to upload some data to BigQuery using the BigQuery Storage API.
-For simplicity, the example uses a hard-coded dataset, table, and schema. It uses
-the default "write stream" and always uploads the same data.
+This example shows how to upload some data to BigQuery using the BigQuery
+Storage API. For simplicity, the example uses a hard-coded dataset, table, and
+schema. It uses the default "write stream" and always uploads the same data.
 
 If you are not familiar with the BigQuery Storage Write API, we recommend you
 first read the [API overview] before starting this guide.
 
 ## Compiling the Example
 
-This project uses `vcpkg` to install its dependencies. Clone `vcpkg` in your `$HOME`:
+This project uses `vcpkg` to install its dependencies. Clone `vcpkg` in your
+`$HOME`:
 
 ```shell
 git clone -C $HOME https://github.com/microsoft/vcpkg.git
@@ -21,8 +22,8 @@ Install the typical development tools, on Ubuntu you would use:
 apt update && apt install -y build-essential cmake git ninja-build pkg-config g++ curl tar zip unzip
 ```
 
-In this directory compile the dependencies and the code, this can take as long as an hour, depending on the performance
-of your workstation:
+In this directory compile the dependencies and the code, this can take as long
+as an hour, depending on the performance of your workstation:
 
 ```shell
 cd cpp-samples/bigquery/write
@@ -35,10 +36,10 @@ The program will be in `.build/single_threaded_write`.
 
 ## Pre-requisites
 
-You are going to need a Google Cloud project to host the BigQuery dataset and table used in this example.
-You will need to install and configure the BigQuery CLI tool. Follow the
-[Google Cloud CLI install][install-sdk] instructions, and then the [quickstart][BigQuery CLI tool] for
-the BigQuery CLI tool.
+You are going to need a Google Cloud project to host the BigQuery dataset and
+table used in this example. You will need to install and configure the BigQuery
+CLI tool. Follow the [Google Cloud CLI install][install-sdk] instructions, and
+then the [quickstart][bigquery cli tool] for the BigQuery CLI tool.
 
 Verify the CLI is working using a simple command to list the active project:
 
@@ -63,7 +64,8 @@ bq update cpp_samples.singers schema.json
 
 ## Run the sample
 
-Run the example, replace the `[PROJECT ID]` placeholder with the id of your project:
+Run the example, replace the `[PROJECT ID]` placeholder with the id of your
+project:
 
 ```shell
 .build/single_threaded_write [PROJECT ID]
@@ -84,6 +86,6 @@ bq rm -f cpp_samples.singers
 bq rm -f cpp_samples
 ```
 
-[API overview]: https://cloud.google.com/bigquery/docs/write-api
-[BigQuery CLI tool]: https://cloud.google.com/bigquery/docs/bq-command-line-tool
+[api overview]: https://cloud.google.com/bigquery/docs/write-api
+[bigquery cli tool]: https://cloud.google.com/bigquery/docs/bq-command-line-tool
 [install-sdk]: https://cloud.google.com/sdk/docs/install-sdk
