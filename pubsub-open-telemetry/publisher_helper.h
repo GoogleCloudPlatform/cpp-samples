@@ -22,7 +22,8 @@
 ::google::cloud::pubsub::Publisher CreatePublisher(ParseResult const& args);
 
 // Publish message(s) using the `publisher` set in `args`.
-void Publish(::google::cloud::pubsub::Publisher& publisher, ParseResult const& args);
+void Publish(::google::cloud::pubsub::Publisher& publisher,
+             ParseResult const& args);
 
 // Wait for the traces to be exported before exiting the program.
 void Cleanup();

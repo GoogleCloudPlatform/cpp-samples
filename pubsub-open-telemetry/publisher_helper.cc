@@ -66,10 +66,10 @@ void Publish(pubsub::Publisher& publisher, ParseResult const& args) {
   std::cout << "Message(s) published\n";
 }
 
-void Cleanup(){
+void Cleanup() {
   auto provider = trace::Provider::GetTracerProvider();
   if (provider) {
-    static_cast<trace_sdk::TracerProvider *>(provider.get())->ForceFlush();
+    static_cast<trace_sdk::TracerProvider*>(provider.get())->ForceFlush();
   }
 
   std::shared_ptr<trace::TracerProvider> none;

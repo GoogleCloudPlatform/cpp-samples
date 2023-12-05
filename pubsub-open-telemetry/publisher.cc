@@ -35,8 +35,8 @@ void ConfigureCloudTraceTracer(ParseResult const& args) {
   span_options.max_queue_size = args.max_queue_size;
   auto processor = trace_sdk::BatchSpanProcessorFactory::Create(
       std::move(exporter), span_options);
-  auto provider = trace_sdk::TracerProviderFactory::Create(
-      std::move(processor));
+  auto provider =
+      trace_sdk::TracerProviderFactory::Create(std::move(processor));
   trace::Provider::SetTracerProvider(std::move(provider));
 }
 

@@ -1,8 +1,10 @@
 # Publisher
 
-The publisher application lets the user configure a tracing enabled Pub/Sub Publisher client to see how different configuration settings change the produced telemetry data. 
+The publisher application lets the user configure a tracing enabled Pub/Sub
+Publisher client to see how different configuration settings change the produced
+telemetry data.
 
-## Example traces 
+## Example traces
 
 ### Cloud Trace
 
@@ -23,6 +25,7 @@ For setup instructions, refer to the [README.md](README.md).
 ### Using CMake and Vcpkg
 
 #### Run basic publisher examples
+
 ```shell
 .build/publisher [project-name] [topic-id]
 .build/publisher [project-name] [topic-id] -n 1000
@@ -31,6 +34,7 @@ For setup instructions, refer to the [README.md](README.md).
 ```
 
 #### Flow control example
+
 ```shell
 .build/publisher [project-name] [topic-id] -n 5 --max-pending-messages 2 --publisher-action reject
 .build/publisher [project-name] [topic-id] -n 5 --max-pending-messages 2 --publisher-action block
@@ -39,6 +43,7 @@ For setup instructions, refer to the [README.md](README.md).
 ```
 
 #### Batching example
+
 ```shell
 .build/publisher [project-name] [topic-id] -n 5 --max-batch-messages 2 --max-hold-time 100
 .build/publisher [project-name] [topic-id] -n 5 --message-size 10 --max-batch-bytes 60  --max-hold-time 1000
@@ -46,7 +51,7 @@ For setup instructions, refer to the [README.md](README.md).
 
 #### To see all options
 
-```shell 
+```shell
 .build/publisher --help
 Usage: .build/publisher <project-id> <topic-id>
 A simple publisher application with Open Telemetery enabled:
@@ -59,7 +64,7 @@ A simple publisher application with Open Telemetery enabled:
   --message-size arg (=1)         the desired message payload size
   --max-pending-messages arg      pubsub::MaxPendingMessagesOption value
   --max-pending-bytes arg         pubsub::MaxPendingBytesOption value
-  --publisher-action arg          pubsub::FullPublisherAction value 
+  --publisher-action arg          pubsub::FullPublisherAction value
                                   (block|ignore|reject)
   --max-hold-time arg             pubsub::MaxHoldTimeOption value in us
   --max-batch-bytes arg           pubsub::MaxBatchBytesOption value
@@ -69,6 +74,7 @@ A simple publisher application with Open Telemetery enabled:
 ### Using Bazel
 
 #### Run basic publisher examples
+
 ```shell
 bazel run //:publisher [project-name] [topic-id]
 bazel run //:publisher -- [project-name] [topic-id] -n 1000

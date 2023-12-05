@@ -34,7 +34,8 @@ target_link_libraries(
 
 add_library(publisher_helper publisher_helper.cc publisher_helper.h)
 target_compile_features(publisher_helper PUBLIC cxx_std_14)
-target_link_libraries(publisher_helper PUBLIC parse_args opentelemetry-cpp::api opentelemetry-cpp::sdk)
+target_link_libraries(publisher_helper PUBLIC parse_args opentelemetry-cpp::api
+                                              opentelemetry-cpp::sdk)
 
 add_executable(publisher publisher.cc)
 target_compile_features(publisher PRIVATE cxx_std_14)
