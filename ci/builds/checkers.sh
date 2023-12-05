@@ -115,13 +115,13 @@ time {
     xargs -r -P "$(nproc)" -n 50 -0 clang-format -i
 }
 
-# Creating a virtual environment and installing the correct programs locally
+# Create a virtual environment and install the correct programs locally.
 printf "%-50s" "Installing Python packages:" >&2
-VENV_NAME="env"
-# List of packages to install
+VENV_NAME="cpp-samples-checkers"
+# List of packages to install.
 PACKAGES=(
-  mdformat
-  cmake-format
+  mdformat==0.7.17
+  cmake-format==0.6.13
 )
 time {
   # Check if the virtual environment already exists.
@@ -130,12 +130,8 @@ time {
   fi
   source "$VENV_NAME/bin/activate"
 
-  # Install packages, skipping existing ones
-  for package in "${PACKAGES[@]}"; do
-    if [[ ! $(pip list | grep "^$package") ]]; then
-      pip install "$package"
-    fi
-  done
+  # Install packages.
+  pip install -q "${PACKAGES[@]}"
 }
 
 # Apply cmake_format to all the CMake list files.

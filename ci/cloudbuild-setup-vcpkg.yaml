@@ -41,7 +41,7 @@ steps:
     ]
 
   - name: 'gcr.io/${PROJECT_ID}/cpp-samples/ci/devtools:${BUILD_ID}'
-    args: [ '/workspace/ci/builds/setup-vcpkg.sh' ]  
+    args: [ '/workspace/ci/builds/setup-vcpkg.sh' ]
 
   # Remove the images created by this build.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
