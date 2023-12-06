@@ -59,3 +59,6 @@ build:tsan --copt=-fsanitize=thread
 build:tsan --linkopt=-fsanitize=thread
 # report_atomic_races=0: https://github.com/google/sanitizers/issues/953
 build:tsan --action_env=TSAN_OPTIONS=halt_on_error=1:second_deadlock_stack=1:report_atomic_races=0
+
+# --config otel2: Open Telemetery ABI version 2
+build:otel2 --cxxopt=-DOPENTELEMETRY_ABI_VERSION_NO=2
