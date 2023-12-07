@@ -48,14 +48,14 @@ int main(int argc, char* argv[]) try {
   std::cout << "Using project `" << args.project_id << "` and topic `"
             << args.topic_id << "`\n";
 
+  // Automatically call `Cleanup()` before returning from `main()`.
+  std::shared_ptr<void> cleanup(nullptr, [](void*) { Cleanup(); });
+
   ConfigureCloudTraceTracer(args);
 
   auto publisher = CreatePublisher(args);
 
   Publish(publisher, args);
-
-  std::cout << "Cleaning up...\n";
-  Cleanup();
 
   return 0;
 } catch (google::cloud::Status const& status) {
