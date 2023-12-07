@@ -82,11 +82,13 @@ If you do not already, have one create a local Zipkin instance.
 #### (optional) Create a local Zipkin instance.
 
 To run Zipkin on the host `http://localhost:9411`
+
 ```shell
 docker run -d -p 9411:9411 openzipkin/zipkin
 ```
 
 To kill the instance
+
 ```shell
 docker container ls
 docker rm -f openzipkin/zipkin
@@ -104,6 +106,7 @@ docker rm -f openzipkin/zipkin
 ## Build and run
 
 ### Using CMake and Vcpkg
+
 #### Run the publisher with Zipkin
 
 ```sh
@@ -113,6 +116,7 @@ cmake --build .build
 ```
 
 #### Run basic publisher examples
+
 ```shell
 .build/publisher_zipkin [project-name] [topic-id]
 .build/publisher_zipkin [project-name] [topic-id] -n 1000

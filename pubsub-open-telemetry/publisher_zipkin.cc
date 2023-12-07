@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "google/cloud/pubsub/publisher.h"
 #include "google/cloud/opentelemetry/trace_exporter.h"
+#include "google/cloud/pubsub/publisher.h"
+#include "opentelemetry/exporters/zipkin/zipkin_exporter_factory.h"
+#include "opentelemetry/exporters/zipkin/zipkin_exporter_options.h"
 #include "parse_args.h"
 #include "publisher_helper.h"
 #include <opentelemetry/sdk/trace/batch_span_processor_factory.h>
@@ -21,8 +23,6 @@
 #include <opentelemetry/sdk/trace/processor.h>
 #include <opentelemetry/sdk/trace/tracer_provider_factory.h>
 #include <opentelemetry/trace/provider.h>
-#include "opentelemetry/exporters/zipkin/zipkin_exporter_factory.h"
-#include "opentelemetry/exporters/zipkin/zipkin_exporter_options.h"
 #include <iostream>
 
 // Create a few namespace aliases to make the code easier to read.
@@ -32,18 +32,18 @@ namespace trace_sdk = ::opentelemetry::sdk::trace;
 namespace trace = ::opentelemetry::trace;
 namespace zipkin = opentelemetry::exporter::zipkin;
 
-void ConfigureZipkinTracer(ParseResult const& args) {     
+void ConfigureZipkinTracer(ParseResult const& args) {
   auto exporter = zipkin::ZipkinExporterFactory::Create();
 
   trace_sdk::BatchSpanProcessorOptions span_options;
   span_options.max_queue_size = args.max_queue_size;
   auto processor = trace_sdk::BatchSpanProcessorFactory::Create(
       std::move(exporter), span_options);
-  auto provider = trace_sdk::TracerProviderFactory::Create(
-      std::move(processor));
+  auto provider =
+      trace_sdk::TracerProviderFactory::Create(std::move(processor));
 
-  trace::Provider::SetTracerProvider(std::move(provider));     
-} 
+  trace::Provider::SetTracerProvider(std::move(provider));
+}
 
 int main(int argc, char* argv[]) try {
   auto args = ParseArguments(argc, argv);
