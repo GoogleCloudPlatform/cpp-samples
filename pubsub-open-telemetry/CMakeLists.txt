@@ -24,18 +24,22 @@ project(pubsub-open-telemetry CXX)
 find_package(google_cloud_cpp_pubsub CONFIG REQUIRED)
 find_package(google_cloud_cpp_opentelemetry CONFIG REQUIRED)
 find_package(Boost 1.66 REQUIRED COMPONENTS program_options)
+find_package(opentelemetry-cpp CONFIG REQUIRED)
 
-add_library(parse_args STATIC parse_args.cc parse_args.h)
+add_library(parse_args parse_args.cc parse_args.h)
 target_compile_features(parse_args PUBLIC cxx_std_14)
 target_link_libraries(
     parse_args PUBLIC Boost::program_options google-cloud-cpp::pubsub
                       google-cloud-cpp::opentelemetry)
 
+add_library(publisher_helper publisher_helper.cc publisher_helper.h)
+target_compile_features(publisher_helper PUBLIC cxx_std_14)
+target_link_libraries(publisher_helper PUBLIC parse_args opentelemetry-cpp::api
+                                              opentelemetry-cpp::sdk)
+
 add_executable(publisher publisher.cc)
 target_compile_features(publisher PRIVATE cxx_std_14)
-target_link_libraries(
-    publisher PRIVATE google-cloud-cpp::pubsub google-cloud-cpp::opentelemetry
-                      parse_args)
+target_link_libraries(publisher PRIVATE publisher_helper parse_args)
 
 add_executable(quickstart quickstart.cc)
 target_compile_features(quickstart PRIVATE cxx_std_14)

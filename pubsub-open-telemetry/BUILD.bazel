@@ -27,11 +27,23 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "publisher_helper",
+    srcs = ["publisher_helper.cc"],
+    hdrs = ["publisher_helper.h"],
+    deps = [
+        ":parse_args",
+        "@google_cloud_cpp//:opentelemetry",
+        "@google_cloud_cpp//:pubsub",
+    ],
+)
+
 cc_binary(
     name = "publisher",
     srcs = ["publisher.cc"],
     deps = [
         ":parse_args",
+        ":publisher_helper",
         "@google_cloud_cpp//:opentelemetry",
         "@google_cloud_cpp//:pubsub",
     ],
