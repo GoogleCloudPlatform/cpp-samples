@@ -108,7 +108,7 @@ substantially faster.
 ```sh
 cd cpp-samples/pubsub-open-telemetry
 cmake -S . -B .build -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake -G Ninja
-cmake --build .build
+cmake --build .build --target quickstart
 ```
 
 ### 4. Run the examples
