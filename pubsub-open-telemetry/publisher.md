@@ -4,23 +4,23 @@ The publisher application lets the user configure a tracing enabled Pub/Sub
 Publisher client to see how different configuration settings change the produced
 telemetry data.
 
-## Example traces
+For setup instructions, refer to the [README.md](README.md).
 
-### Cloud Trace
+## Cloud Trace
+
+### Example traces
 
 To find the traces, navigate to the Cloud Trace UI.
 
 #### Publish trace
 
-![Screenshot of the publish span in the Cloud Trace UI running publisher.](assets/publish_span.png)
+![Screenshot of the publish span in the Cloud Trace UI.](assets/publish_span.png)
 
 #### Create trace
 
-![Screenshot of the create span in the Cloud Trace UI running publisher.](assets/create_span.png)
+![Screenshot of the create span in the Cloud Trace UI.](assets/create_span.png)
 
 ## Build and run
-
-For setup instructions, refer to the [README.md](README.md).
 
 ### Using CMake and Vcpkg
 
@@ -71,13 +71,51 @@ A simple publisher application with Open Telemetery enabled:
   --max-batch-messages arg        pubsub::MaxBatchMessagesOption value
 ```
 
-### Using Bazel
+## Zipkin
+
+Zipkin exporter is only supported by CMake at the moment.
+
+### Setup
+
+If you do not already, have one create a local Zipkin instance.
+
+#### (optional) Create a local Zipkin instance.
+
+To run Zipkin on the host `http://localhost:9411`
+```shell
+docker run -d -p 9411:9411 openzipkin/zipkin
+```
+
+To kill the instance
+```shell
+docker container ls
+docker rm -f openzipkin/zipkin
+```
+
+<!-- TODO(alevenberg): when the library in vcpkg is updated, add the screenshots
+#### Publish trace
+
+![Screenshot of the publish span in the Zipkin UI.](assets/zipkin_publish_span.png)
+
+#### Create trace
+
+![Screenshot of the create span in the Zipkin UI.](assets/zipkin_create_span.png) -->
+
+## Build and run
+
+### Using CMake and Vcpkg
+#### Run the publisher with Zipkin
+
+```sh
+cd cpp-samples/pubsub-open-telemetry
+cmake -DWITH_ZIPKIN=ON -S . -B .build -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake -G Ninja
+cmake --build .build
+```
 
 #### Run basic publisher examples
-
 ```shell
-bazel run //:publisher [project-name] [topic-id]
-bazel run //:publisher -- [project-name] [topic-id] -n 1000
-bazel run //:publisher -- [project-name] [topic-id] --message_size 0
-bazel run //:publisher -- [project-name] [topic-id] --tracing-rate 0.01 -n 10
+.build/publisher_zipkin [project-name] [topic-id]
+.build/publisher_zipkin [project-name] [topic-id] -n 1000
+.build/publisher_zipkin [project-name] [topic-id] --message-size 0
+.build/publisher_zipkin [project-name] [topic-id] --tracing-rate 0.01 -n 10
 ```
