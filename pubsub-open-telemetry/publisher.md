@@ -29,7 +29,6 @@ To find the traces, navigate to the Cloud Trace UI.
 ```shell
 .build/publisher [project-name] [topic-id]
 .build/publisher [project-name] [topic-id] -n 1000
-.build/publisher [project-name] [topic-id] --message-size 0
 .build/publisher [project-name] [topic-id] --tracing-rate 0.01 -n 10
 ```
 
@@ -120,6 +119,5 @@ cmake --build .build
 ```shell
 .build/publisher_zipkin [project-name] [topic-id]
 .build/publisher_zipkin [project-name] [topic-id] -n 1000
-.build/publisher_zipkin [project-name] [topic-id] --message-size 0
 .build/publisher_zipkin [project-name] [topic-id] --tracing-rate 0.01 -n 10
 ```
