@@ -93,7 +93,7 @@ docker container ls
 docker rm -f openzipkin/zipkin
 ```
 
-<!-- TODO(alevenberg): when the library in vcpkg is updated, add the screenshots
+<!-- TODO(issues/285): when the library in vcpkg is updated, add the screenshots
 #### Publish trace
 
 ![Screenshot of the publish span in the Zipkin UI.](assets/zipkin_publish_span.png)
