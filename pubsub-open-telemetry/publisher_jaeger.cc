@@ -13,10 +13,9 @@
 // limitations under the License.
 
 #include "google/cloud/pubsub/publisher.h"
-#include "opentelemetry/exporters/zipkin/zipkin_exporter_factory.h"
-#include "opentelemetry/exporters/zipkin/zipkin_exporter_options.h"
 #include "parse_args.h"
 #include "publisher_helper.h"
+#include <opentelemetry/exporters/otlp/otlp_grpc_exporter_factory.h>
 #include <opentelemetry/sdk/trace/batch_span_processor_factory.h>
 #include <opentelemetry/sdk/trace/batch_span_processor_options.h>
 #include <opentelemetry/sdk/trace/processor.h>
@@ -26,22 +25,24 @@
 
 // Create a few namespace aliases to make the code easier to read.
 namespace gc = ::google::cloud;
-namespace trace_sdk = ::opentelemetry::sdk::trace;
-namespace trace = ::opentelemetry::trace;
-namespace zipkin = opentelemetry::exporter::zipkin;
+namespace trace_sdk = opentelemetry::sdk::trace;
+namespace otlp = opentelemetry::exporter::otlp;
 
-void ConfigureZipkinTracer(ParseResult const& args) {
-  auto exporter = zipkin::ZipkinExporterFactory::Create();
+namespace {
 
+void ConfigureOtlpGrpcExporterTracer(ParseResult const& args) {
+  otlp::OtlpGrpcExporterOptions opts;
+  auto exporter = otlp::OtlpGrpcExporterFactory::Create(opts);
   trace_sdk::BatchSpanProcessorOptions span_options;
   span_options.max_queue_size = args.max_queue_size;
   auto processor = trace_sdk::BatchSpanProcessorFactory::Create(
       std::move(exporter), span_options);
   auto provider =
       trace_sdk::TracerProviderFactory::Create(std::move(processor));
-
-  trace::Provider::SetTracerProvider(std::move(provider));
+  opentelemetry::trace::Provider::SetTracerProvider(std::move(provider));
 }
+
+}  // namespace
 
 int main(int argc, char* argv[]) try {
   auto args = ParseArguments(argc, argv);
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) try {
   // Automatically call `Cleanup()` before returning from `main()`.
   std::shared_ptr<void> cleanup(nullptr, [](void*) { Cleanup(); });
 
-  ConfigureZipkinTracer(args);
+  ConfigureOtlpGrpcExporterTracer(args);
 
   auto publisher = CreatePublisher(args);
 

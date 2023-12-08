@@ -14,7 +14,8 @@
     {
       "name": "opentelemetry-cpp",
       "features": [
-        "zipkin"
+        "zipkin",
+        "otlp-grpc"
       ]
     },
     "boost-program-options"
