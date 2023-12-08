@@ -12,7 +12,10 @@
       ]
     },
     {
-      "name": "opentelemetry-cpp"
+      "name": "opentelemetry-cpp",
+      "features": [
+        "zipkin"
+      ]
     },
     "boost-program-options"
   ]
