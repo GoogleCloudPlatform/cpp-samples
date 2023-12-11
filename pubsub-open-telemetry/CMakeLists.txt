@@ -42,8 +42,7 @@ target_compile_features(publisher_jaeger PRIVATE cxx_std_14)
 target_link_libraries(
     publisher_jaeger
     PRIVATE publisher_helper parse_args opentelemetry-cpp::otlp_grpc_client
-            opentelemetry-cpp::otlp_grpc_exporter
-            opentelemetry-cpp::otlp_recordable)
+            opentelemetry-cpp::otlp_grpc_exporter)
 
 add_executable(publisher publisher.cc)
 target_compile_features(publisher PRIVATE cxx_std_14)
