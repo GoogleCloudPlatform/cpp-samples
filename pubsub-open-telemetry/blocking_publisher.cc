@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "google/cloud/opentelemetry/trace_exporter.h"
 #include "google/cloud/pubsub/blocking_publisher.h"
+#include "google/cloud/opentelemetry/trace_exporter.h"
 #include "google/cloud/pubsub/message.h"
 #include "google/cloud/pubsub/topic.h"
-#include "parse_args.h"
 #include "opentelemetry/sdk/trace/batch_span_processor_factory.h"
 #include "opentelemetry/sdk/trace/batch_span_processor_options.h"
 #include "opentelemetry/sdk/trace/processor.h"
+#include "opentelemetry/sdk/trace/tracer_provider.h"
 #include "opentelemetry/sdk/trace/tracer_provider_factory.h"
 #include "opentelemetry/trace/provider.h"
-#include "opentelemetry/sdk/trace/tracer_provider.h"
+#include "parse_args.h"
 #include <iostream>
 
 // Create a few namespace aliases to make the code easier to read.
@@ -55,7 +55,7 @@ void Cleanup() {
   trace::Provider::SetTracerProvider(none);
 }
 
-} // namespace
+}  // namespace
 
 int main(int argc, char* argv[]) try {
   auto args = ParseArguments(argc, argv);
