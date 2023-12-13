@@ -46,10 +46,10 @@ void ConfigureCloudTraceTracer(ParseResult const& args) {
 }
 
 void Cleanup() {
-  auto provider = trace::Provider::GetTracerProvider();
-  if (provider) {
-    static_cast<trace_sdk::TracerProvider*>(provider.get())->ForceFlush();
-  }
+  auto* provider = dynamic_cast<trace_sdk::TracerProvider*>(
+      trace::Provider::GetTracerProvider().get());
+  if (provider == nullptr) return;
+  provider->ForceFlush();
 
   std::shared_ptr<trace::TracerProvider> none;
   trace::Provider::SetTracerProvider(none);
@@ -78,6 +78,8 @@ int main(int argc, char* argv[]) try {
       pubsub::MessageBuilder().SetData("Hello!").Build());
   if (id) {
     std::cout << "Sent message with id: " << *id << "\n";
+  } else {
+    throw id.status();
   }
   return 0;
 } catch (google::cloud::Status const& status) {
