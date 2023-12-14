@@ -116,7 +116,7 @@ cmake --build .build --target quickstart
 #### Run the quickstart
 
 ```shell
-.build/quickstart [project-name] [topic-id]
+.build/quickstart ${GOOGLE_CLOUD_PROJECT} ${GOOGLE_CLOUD_TOPIC}
 ```
 
 ## Build and run using Bazel
@@ -139,13 +139,14 @@ bazel build //:quickstart
 #### Run the quickstart
 
 ```shell
-bazel run //:quickstart [project-name] [topic-id]
+bazel run //:quickstart -- ${GOOGLE_CLOUD_PROJECT} ${GOOGLE_CLOUD_TOPIC}
 ```
 
 #### Run with a local version of google-cloud-cpp
 
 ```shell
-bazel run //:quickstart --override_repository=google_cloud_cpp=$HOME/your-path-to-the-repo/google-cloud-cpp -- [project-name] [topic-id]
+bazel run --override_repository=google_cloud_cpp=$HOME/your-path-to-the-repo/google-cloud-cpp \
+    //:quickstart -- ${GOOGLE_CLOUD_PROJECT} ${GOOGLE_CLOUD_TOPIC}
 ```
 
 ## Cleanup
