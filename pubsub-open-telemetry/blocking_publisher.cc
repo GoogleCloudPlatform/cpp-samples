@@ -76,11 +76,10 @@ int main(int argc, char* argv[]) try {
   auto id = blocking_publisher.Publish(
       pubsub::Topic(args.project_id, args.topic_id),
       pubsub::MessageBuilder().SetData("Hello!").Build());
-  if (id) {
-    std::cout << "Sent message with id: " << *id << "\n";
-  } else {
-    throw id.status();
-  }
+
+  if (!id) throw std::move(id).status();
+  std::cout << "Sent message with id: " << *id << "\n";
+
   return 0;
 } catch (google::cloud::Status const& status) {
   std::cerr << "google::cloud::Status thrown: " << status << "\n";
