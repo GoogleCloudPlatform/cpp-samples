@@ -21,11 +21,6 @@
 #include <utility>
 #include <vector>
 
-// Create a few namespace aliases to make the code easier to read.
-namespace gc = ::google::cloud;
-namespace pubsub = gc::pubsub;
-namespace otel = gc::otel;
-
 int main(int argc, char* argv[]) try {
   if (argc != 3) {
     std::cerr << "Usage: " << argv[0] << " <project-id> <topic-id>\n";
@@ -33,12 +28,17 @@ int main(int argc, char* argv[]) try {
   }
   std::string const project_id = argv[1];
   std::string const topic_id = argv[2];
-  auto project = gc::Project(project_id);
 
   //! [START pubsub_publish_otel_tracing]
+  // Create a few namespace aliases to make the code easier to read.
+  namespace gc = ::google::cloud;
+  namespace otel = gc::otel;
+  namespace pubsub = gc::pubsub;
+
   // This example uses a simple wrapper to export (upload) OTel tracing data
   // to Google Cloud Trace. More complex applications may use different
   // authentication, or configure their own OTel exporter.
+  auto project = gc::Project(project_id);
   auto configuration = otel::ConfigureBasicTracing(project);
 
   auto publisher = pubsub::Publisher(pubsub::MakePublisherConnection(
