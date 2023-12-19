@@ -24,7 +24,24 @@ project(pubsub-avro CXX)
 find_package(google_cloud_cpp_pubsub CONFIG REQUIRED)
 find_package(unofficial-avro-cpp CONFIG REQUIRED)
 
+# Generate the avro C++ files using the avro compiler.
+find_program(AVROGENCPP NAMES avrogencpp)
+macro (run_avro_compiler file namespace)
+    add_custom_command(
+        OUTPUT ${file}.hh
+        COMMAND ${AVROGENCPP} --input ${CMAKE_CURRENT_SOURCE_DIR}/${file}.avro
+                --output ${file}.hh --namespace ${namespace}
+        DEPENDS ${AVROGENCPP} ${CMAKE_CURRENT_SOURCE_DIR}/${file}.avro
+        COMMENT "Executing Avro compiler")
+    set_source_files_properties(${file}.hh PROPERTIES GENERATED TRUE)
+endmacro (run_avro_compiler)
+
+run_avro_compiler(schema1 v1)
+run_avro_compiler(schema2 v2)
+
 add_executable(quickstart quickstart.cc schema1.hh schema2.hh)
 target_compile_features(quickstart PRIVATE cxx_std_14)
+target_include_directories(quickstart PRIVATE SYSTEM
+                                              "${CMAKE_CURRENT_BINARY_DIR}")
 target_link_libraries(quickstart PRIVATE google-cloud-cpp::pubsub
                                          unofficial::avro-cpp::avrocpp)

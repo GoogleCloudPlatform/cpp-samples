@@ -54,6 +54,8 @@ gcloud services enable pubsub.googleapis.com
 
 ## Build using CMake and Vcpkg
 
+To build and run the sample, [setup a C++ development environment].
+
 ### 1. Install vcpkg
 
 This project uses [`vcpkg`](https://github.com/microsoft/vcpkg) for dependency
@@ -87,26 +89,12 @@ cmake -S . -B .build -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcp
 cmake --build .build
 ```
 
-### (optional) 4. Generate C++ representation of the avro schema using the avro compiler
-
-vcpkg installs the avro compiler. This repository contains two generated `.hh`
-files for the corresponding `.avro` schemas. To generate those headers, use the
-avro compiler:
-
-```
-.build/vcpkg_installed/x64-linux/tools/avro-cpp/avrogencpp -i schema1.avro -o schema1.hh -n v1
-.build/vcpkg_installed/x64-linux/tools/avro-cpp/avrogencpp -i schema2.avro -o schema2.hh -n v2
-```
-
-If you want to try using this example with own schema, you can replace the test
-file with your own and modify the code as needed.
-
 ## Setup the Pub/Sub messages
 
 Export the following environment variables to run the setup scripts:
 
 ```shell
-export GOOGLE_CLOUD_PROJECT=<project-id>
+export GOOGLE_CLOUD_PROJECT=[PROJECT ID] # Use your project ID here
 export GOOGLE_CLOUD_TOPIC=avro-topic
 export GOOGLE_CLOUD_SUBSCRIPTION=avro-sub
 export GOOGLE_CLOUD_SCHEMA_NAME=state
@@ -115,7 +103,6 @@ export GOOGLE_CLOUD_SCHEMA_FILE2=schema2.avro
 ```
 
 ```shell
-chmod +x ./setup.sh
 ./setup.sh
 ```
 
@@ -125,7 +112,7 @@ This will resolve the schemas when recieving the message and return data in the
 format of schema2, even if it was sent in the format of schema1.
 
 ```sh
-.build/quickstart alevenb-test avro-sub schema2.avro
+.build/quickstart ${GOOGLE_CLOUD_PROJECT} avro-sub schema2.avro
 ```
 
 If you want to send more message to test, you can use the following commands to
@@ -133,8 +120,8 @@ send a message in schema1
 
 ```sh
 gcloud pubsub topics publish ${GOOGLE_CLOUD_TOPIC} \
---project ${GOOGLE_CLOUD_PROJECT} \
---message '{"name": "New York", "post_abbr": "NY"}'
+  --project ${GOOGLE_CLOUD_PROJECT} \
+  --message '{"name": "New York", "post_abbr": "NY"}'
 ```
 
 Or in schema2
@@ -150,7 +137,6 @@ gcloud pubsub topics publish ${GOOGLE_CLOUD_TOPIC} \
 To delete the created resources (topic, subscription, schema), run:
 
 ```shell
-chmod +x ./cleanup.sh
 ./cleanup.sh
 ```
 
@@ -182,3 +168,4 @@ set GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=%cd%\roots.pem
 [c++ cloud pub/sub]: https://cloud.google.com/cpp/docs/reference/pubsub/latest
 [cloud pub/sub]: https://cloud.google.com/pubsub/docs
 [grpc-roots-pem-bug]: https://github.com/grpc/grpc/issues/16571
+[setup a c++ development environment]: cloud.google.com/cpp/docs/setup
