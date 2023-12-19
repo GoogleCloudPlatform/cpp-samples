@@ -29,9 +29,10 @@ find_program(AVROGENCPP NAMES avrogencpp)
 macro (run_avro_compiler file namespace)
     add_custom_command(
         OUTPUT ${file}.h
-        COMMAND ${AVROGENCPP} 
-        ARGS --input "${CMAKE_CURRENT_SOURCE_DIR}/${file}.avro"
-                --output ${file}.h --namespace ${namespace}
+        COMMAND
+            ${AVROGENCPP} ARGS --input
+            "${CMAKE_CURRENT_SOURCE_DIR}/${file}.avro" --output ${file}.h
+            --namespace ${namespace}
         DEPENDS ${AVROGENCPP} "${CMAKE_CURRENT_SOURCE_DIR}/${file}.avro"
         COMMENT "Executing Avro compiler")
     set_source_files_properties(${file}.h PROPERTIES GENERATED TRUE)
