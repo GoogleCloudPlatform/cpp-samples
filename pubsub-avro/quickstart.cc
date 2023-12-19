@@ -21,8 +21,8 @@
 #include "google/cloud/pubsub/schema_client.h"
 #include "google/cloud/pubsub/subscriber.h"
 #include "google/cloud/pubsub/subscription.h"
-#include "schema1.hh"
-#include "schema2.hh"
+#include "schema1.h"
+#include "schema2.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -103,6 +103,7 @@ int main(int argc, char* argv[]) try {
         }
         std::move(h).ack();
       });
+  // [END pubsub_subscribe_avro_records_with_revisions]
 
   std::cout << "Waiting for messages on " + subscription_id + "...\n";
 
@@ -112,7 +113,6 @@ int main(int argc, char* argv[]) try {
     std::cout << "timeout reached, ending session\n";
     session.cancel();
   }
-  // [END pubsub_subscribe_avro_records_with_revisions]
 
   return 0;
 } catch (google::cloud::Status const& status) {
