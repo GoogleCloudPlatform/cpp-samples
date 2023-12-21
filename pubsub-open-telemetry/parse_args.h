@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC.
+// Copyright 2023 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ struct ParseResult {
   // Optional with defaults set.
   int message_count;
   int message_size;
-  int max_queue_size;
+  int max_queue_size; 
 
   gc::Options otel_options;
   gc::Options publisher_options;

@@ -67,3 +67,13 @@ cc_binary(
         "@google_cloud_cpp//:pubsub",
     ],
 )
+
+
+cc_binary(
+    name = "repro",
+    srcs = ["repro.cc"],
+    deps = [
+            ":parse_args",    "@google_cloud_cpp//:opentelemetry",
+        "@google_cloud_cpp//:pubsub",
+    ],
+)

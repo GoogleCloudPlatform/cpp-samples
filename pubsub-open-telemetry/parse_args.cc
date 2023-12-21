@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC.
+// Copyright 2023 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,8 +44,8 @@ ParseResult ParseArguments(int argc, char* argv[]) {
       ("tracing-rate", po::value<double>()->default_value(1.0),
        "otel::BasicTracingRateOption value")
       // Processor options
-      ("max-queue-size", po::value<int>()->default_value(2048),
-       "set the max queue size for open telemetery")
+      ("max-queue-size", po::value<int>()->default_value(0),
+       "If set to 0, uses the default tracing configuration.")
       // Message options
       ("message-count,n", po::value<int>()->default_value(1),
        "the number of messages to publish")
@@ -122,6 +122,7 @@ ParseResult ParseArguments(int argc, char* argv[]) {
       gc::Options{}.set<gc::otel::BasicTracingRateOption>(tracing_rate);
   result.publisher_options =
       gc::Options{}.set<gc::OpenTelemetryTracingOption>(true);
+  std::cout << static_cast<bool>(result.publisher_options.get<gc::OpenTelemetryTracingOption>()) << "\n";
   if (vm.count("max-pending-messages")) {
     auto const max_pending_messages =
         vm["max-pending-messages"].as<std::size_t>();
