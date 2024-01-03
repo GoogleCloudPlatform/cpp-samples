@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) try {
                   });
     ids.push_back(std::move(id));
   }
-  // Block until the messages  are actually sent.
+  // Block until the messages are actually sent.
   for (auto& id : ids) id.get();
   //! [END pubsub_publish_otel_tracing]
 
