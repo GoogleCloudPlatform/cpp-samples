@@ -63,3 +63,9 @@ add_executable(quickstart quickstart.cc)
 target_compile_features(quickstart PRIVATE cxx_std_14)
 target_link_libraries(quickstart PRIVATE google-cloud-cpp::pubsub
                                          google-cloud-cpp::opentelemetry)
+
+add_executable(unary_pull_subscriber unary_pull_subscriber.cc)
+target_compile_features(unary_pull_subscriber PRIVATE cxx_std_14)
+target_link_libraries(
+    unary_pull_subscriber PRIVATE google-cloud-cpp::pubsub
+                                  google-cloud-cpp::opentelemetry)
