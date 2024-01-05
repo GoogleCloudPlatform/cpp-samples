@@ -43,17 +43,9 @@ int main(int argc, char* argv[]) try {
   auto publisher = pubsub::Publisher(pubsub::MakePublisherConnection(
       pubsub::Topic(project_id, topic_id),
       gc::Options{}.set<gc::OpenTelemetryTracingOption>(true)));
-  auto id = publisher.Publish(pubsub::MessageBuilder().SetData("Hi!").Build())
-                .then([](gc::future<gc::StatusOr<std::string>> f) {
-                  auto id = f.get();
-                  if (!id) {
-                    std::cout << "Error in publish: " << id.status() << "\n";
-                    return;
-                  }
-                  std::cout << "Sent message with id: (" << *id << ")\n";
-                });
-  // Block until the message is actually sent.
-  id.get();
+  // Block until the message is actually sent and throw on error.
+  auto id = publisher.Publish(pubsub::MessageBuilder().SetData("Hi!").Build()).get().value();
+  std::cout << "Sent message with id: (" << id << ")\n";
 
   // Receive a message using unary pull with tracing enabled.
   auto subscriber = pubsub::Subscriber(pubsub::MakeSubscriberConnection(
