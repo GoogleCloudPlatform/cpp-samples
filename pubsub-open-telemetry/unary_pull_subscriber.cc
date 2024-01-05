@@ -44,7 +44,9 @@ int main(int argc, char* argv[]) try {
       pubsub::Topic(project_id, topic_id),
       gc::Options{}.set<gc::OpenTelemetryTracingOption>(true)));
   // Block until the message is actually sent and throw on error.
-  auto id = publisher.Publish(pubsub::MessageBuilder().SetData("Hi!").Build()).get().value();
+  auto id = publisher.Publish(pubsub::MessageBuilder().SetData("Hi!").Build())
+                .get()
+                .value();
   std::cout << "Sent message with id: (" << id << ")\n";
 
   // Receive a message using unary pull with tracing enabled.

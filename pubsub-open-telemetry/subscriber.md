@@ -1,8 +1,12 @@
 # Subscriber
 
-To try receiving a message using unary pull, run the `unary_pull_subscriber` application. It publishes a message to a topic and then pulls the same message from a subscription, and then exports the spans to cloud trace.
+To try receiving a message using unary pull, run the `unary_pull_subscriber`
+application. It publishes a message to a topic and then pulls the same message
+from a subscription, and then exports the spans to cloud trace.
 
-**Note**: OTel ABI 2.0 adds the ability to add links after span creation. If an application is compiled with OTel ABI 2.0, it will produce different telemetery data. We currently do not support OTel ABI 2.0 with CMake.
+**Note**: OTel ABI 2.0 adds the ability to add links after span creation. If an
+application is compiled with OTel ABI 2.0, it will produce different telemetery
+data. We currently do not support OTel ABI 2.0 with CMake.
 
 For setup instructions, refer to the [README.md](README.md).
 
@@ -44,9 +48,11 @@ To find the traces, navigate to the Cloud Trace UI.
 
 ### Create the Cloud Pub/Sub subscription attached to a topic
 
-If you don't already have them, create a topic and a subscription with pull delivery.
+If you don't already have them, create a topic and a subscription with pull
+delivery.
 
 Export the following environment variables:
+
 ```sh
 export=GOOGLE_CLOUD_PROJECT=[PROJECT-ID]
 export=GOOGLE_CLOUD_SUBSCRIPTION=[SUBSCRIPTION-ID]
@@ -54,14 +60,16 @@ export=GOOGLE_CLOUD_TOPIC=[TOPIC-ID]
 ```
 
 Use the CLI to create the resources:
+
 ```sh
 gcloud pubsub topics create "--project=${GOOGLE_CLOUD_PROJECT}" ${GOOGLE_CLOUD_TOPIC}
-gcloud pubsub subscriptions create "--project=${GOOGLE_CLOUD_PROJECT}" "--topic=${GOOGLE_CLOUD_TOPIC}" ${GOOGLE_CLOUD_SUBSCRIPTION} 
+gcloud pubsub subscriptions create "--project=${GOOGLE_CLOUD_PROJECT}" "--topic=${GOOGLE_CLOUD_TOPIC}" ${GOOGLE_CLOUD_SUBSCRIPTION}
 ```
 
-### Publish a message 
+### Publish a message
 
-Make sure you publish a message with tracing enabled. If not, the traces will not be linked.
+Make sure you publish a message with tracing enabled. If not, the traces will
+not be linked.
 
 ## Build and run
 
@@ -73,7 +81,7 @@ cmake -S . -B .build -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcp
 cmake --build .build --target unary_pull_subscriber
 ```
 
-#### Run the subscriber with the unary pull 
+#### Run the subscriber with the unary pull
 
 ```shell
 .build/unary_pull_subscriber ${GOOGLE_CLOUD_PROJECT} ${GOOGLE_CLOUD_TOPIC} ${GOOGLE_CLOUD_SUBSCRIPTION}
