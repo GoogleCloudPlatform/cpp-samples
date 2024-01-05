@@ -52,8 +52,7 @@ int main(int argc, char* argv[]) try {
       pubsub::Subscription(project_id, subscription_id),
       gc::Options{}.set<gc::OpenTelemetryTracingOption>(true)));
 
-  auto response = subscriber.Pull();
-  if (!response) throw std::move(response).status();
+  auto response = subscriber.Pull().value();
   std::cout << "Received message " << response->message << "\n";
   std::move(response->handler).ack();
 
