@@ -15,11 +15,9 @@ To find the traces, navigate to the Cloud Trace UI.
 #### Publish trace
 
 ![Screenshot of the publish span in the Cloud Trace UI.](assets/publish_span.png)
-![Screenshot of the publish span in the Cloud Trace UI.](assets/publish_span.png)
 
 #### Create trace
 
-![Screenshot of the create span in the Cloud Trace UI.](assets/create_span.png)
 ![Screenshot of the create span in the Cloud Trace UI.](assets/create_span.png)
 
 ## Build and run
@@ -35,32 +33,32 @@ cmake --build .build --target publisher
 #### Run basic publisher examples
 
 ```shell
-.build/publisher [project-name] [topic-id]
-.build/publisher [project-name] [topic-id] -n 1000
-.build/publisher [project-name] [topic-id] --tracing-rate 0.01 -n 10
+.build/publisher [PROJECT-ID] [TOPIC-ID]
+.build/publisher [PROJECT-ID] [TOPIC-ID] -n 1000
+.build/publisher [PROJECT-ID] [TOPIC-ID] --tracing-rate 0.01 -n 10
 ```
 
 #### Flow control example
 
 ```shell
-.build/publisher [project-name] [topic-id] -n 5 --max-pending-messages 2 --publisher-action reject
-.build/publisher [project-name] [topic-id] -n 5 --max-pending-messages 2 --publisher-action block
-.build/publisher [project-name] [topic-id] -n 5 --max-pending-messages 2 --publisher-action ignore
-.build/publisher [project-name] [topic-id] -n 5 --message-size 10 --max-batch-bytes  60 --publisher-action block
+.build/publisher [PROJECT-ID] [TOPIC-ID] -n 5 --max-pending-messages 2 --publisher-action reject
+.build/publisher [PROJECT-ID] [TOPIC-ID] -n 5 --max-pending-messages 2 --publisher-action block
+.build/publisher [PROJECT-ID] [TOPIC-ID] -n 5 --max-pending-messages 2 --publisher-action ignore
+.build/publisher [PROJECT-ID] [TOPIC-ID] -n 5 --message-size 10 --max-batch-bytes  60 --publisher-action block
 ```
 
 #### Batching example
 
 ```shell
-.build/publisher [project-name] [topic-id] -n 5 --max-batch-messages 2 --max-hold-time 100
-.build/publisher [project-name] [topic-id] -n 5 --message-size 10 --max-batch-bytes 60  --max-hold-time 1000
+.build/publisher [PROJECT-ID] [TOPIC-ID] -n 5 --max-batch-messages 2 --max-hold-time 100
+.build/publisher [PROJECT-ID] [TOPIC-ID] -n 5 --message-size 10 --max-batch-bytes 60  --max-hold-time 1000
 ```
 
 #### To see all options
 
 ```shell
 .build/publisher --help
-Usage: .build/publisher <project-id> <topic-id>
+Usage: .build/publisher [PROJECT-ID] [TOPIC-ID]
 A simple publisher application with Open Telemetery enabled:
   -h [ --help ]                   produce help message
   --project-id arg                the name of the Google Cloud project
@@ -128,9 +126,9 @@ cmake --build .build --target publisher_zipkin
 #### Run basic publisher examples
 
 ```shell
-.build/publisher_zipkin [project-name] [topic-id]
-.build/publisher_zipkin [project-name] [topic-id] -n 1000
-.build/publisher_zipkin [project-name] [topic-id] --tracing-rate 0.01 -n 10
+.build/publisher_zipkin [PROJECT-ID] [TOPIC-ID]
+.build/publisher_zipkin [PROJECT-ID] [TOPIC-ID] -n 1000
+.build/publisher_zipkin [PROJECT-ID] [TOPIC-ID] --tracing-rate 0.01 -n 10
 ```
 
 ## Jaeger
@@ -195,7 +193,7 @@ cmake --build .build --target publisher_jaeger
 #### Run basic publisher examples
 
 ```shell
-.build/publisher_jaeger [project-name] [topic-id]
-.build/publisher_jaeger [project-name] [topic-id] -n 1000
-.build/publisher_jaeger [project-name] [topic-id] --tracing-rate 0.01 -n 10
+.build/publisher_jaeger [PROJECT-ID] [TOPIC-ID]
+.build/publisher_jaeger [PROJECT-ID] [TOPIC-ID] -n 1000
+.build/publisher_jaeger [PROJECT-ID] [TOPIC-ID] --tracing-rate 0.01 -n 10
 ```
