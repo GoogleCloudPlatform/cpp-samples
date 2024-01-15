@@ -39,7 +39,7 @@ RUN apk update && \
 # Use `vcpkg`, a package manager for C++, to install
 WORKDIR /usr/local/vcpkg
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
-RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2023.12.12.tar.gz" | \
+RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2024.01.12.tar.gz" | \
     tar --strip-components=1 -zxf - \
     && ./bootstrap-vcpkg.sh -disableMetrics
 
