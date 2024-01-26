@@ -28,7 +28,7 @@ To find the traces, navigate to the Cloud Trace UI.
 
 ![Screenshot of the Cloud Trace UI after running this quickstart.](assets/quickstart.png)
 
-For an overview of the Cloud Trace UI, see: [View traces overview].
+For an overview of the Cloud Trace UI, see: [Find and explore traces].
 
 ## Prerequisites
 
@@ -180,4 +180,4 @@ set GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=%cd%\roots.pem
 ```
 
 [grpc-roots-pem-bug]: https://github.com/grpc/grpc/issues/16571
-[view traces overview]: https://cloud.google.com/trace/docs/trace-overview
+[find and explore traces]: https://cloud.google.com/trace/docs/finding-traces
