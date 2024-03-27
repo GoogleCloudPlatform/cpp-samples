@@ -58,8 +58,7 @@ int main(int argc, char* argv[]) try {
           .value();
   auto const end = std::chrono::steady_clock::now();
 
-  std::cout << "DONE"
-            << "\n";
+  std::cout << "DONE" << "\n";
   std::cout << "The upload was successful, the object size is approximately "
             << format_size(metadata.size()) << "\n";
 
