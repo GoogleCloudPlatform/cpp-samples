@@ -179,5 +179,5 @@ trust store for SSL certificates, you can download and configure this using:
 set GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=%cd%\roots.pem
 ```
 
-[find and explore traces]: https://cloud.google.com/trace/docs/finding-traces
 [grpc-roots-pem-bug]: https://github.com/grpc/grpc/issues/16571
+[find and explore traces]: https://cloud.google.com/trace/docs/finding-traces
