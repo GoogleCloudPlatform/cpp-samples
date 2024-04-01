@@ -1,0 +1,42 @@
+{
+    "taskGroups": [
+        {
+            "taskSpec": {
+                "runnables": [
+                    {
+                        "container": {
+                            "imageUri": "gcr.io/google-containers/busybox",
+                            "entrypoint": "/bin/sh",
+                            "commands": [
+                                "-c",
+                                "echo Hello world! This is task ${BATCH_TASK_INDEX}. This job has a total of ${BATCH_TASK_COUNT} tasks."
+                            ]
+                        }
+                    }
+                ],
+                "computeResource": {
+                    "cpuMilli": 2000,
+                    "memoryMib": 16
+                },
+                "maxRetryCount": 2,
+                "maxRunDuration": "3600s"
+            },
+            "taskCount": 4,
+            "parallelism": 2
+        }
+    ],
+    "allocationPolicy": {
+        "instances": [
+            {
+                "policy": { "machineType": "e2-standard-4" }
+            }
+        ]
+    },
+    "labels": {
+        "department": "finance",
+        "env": "testing"
+    },
+    "logsPolicy": {
+        "destination": "CLOUD_LOGGING"
+    }
+}
