@@ -34,27 +34,27 @@ int main(int argc, char* argv[]) try {
 
   // Parse the json and convert into protobuf format.
   std::ifstream file(job_file, std::ios::in);
-  if (!file.is_open())
+  if (!file.is_open()) {
     std::cout << "Failed to open JSON file: " << job_file << '\n';
-  else {
-    nlohmann::json json_data = nlohmann::json::parse(file);
-    google::cloud::batch::v1::Job job;
-    google::protobuf::util::JsonParseOptions options;
-    google::protobuf::util::Status status =
-        google::protobuf::util::JsonStringToMessage(json_data.dump(), &job,
-                                                    options);
-    if (!status.ok()) throw status;
-
-    // Create the cloud batch client.
-    auto client =
-        batch::BatchServiceClient(batch::MakeBatchServiceConnection());
-
-    // Create a job.
-    auto response = client.CreateJob(location.FullName(), job, job_id);
-
-    if (!response) throw std::move(response).status();
-    std::cout << "Job : " << response->DebugString() << "\n";
+    return 0;
   }
+  
+  nlohmann::json json_data = nlohmann::json::parse(file);
+  google::cloud::batch::v1::Job job;
+  google::protobuf::util::JsonParseOptions options;
+  google::protobuf::util::Status status =
+      google::protobuf::util::JsonStringToMessage(json_data.dump(), &job,
+                                                  options);
+  if (!status.ok()) throw status;
+
+  // Create the cloud batch client.
+  auto client = batch::BatchServiceClient(batch::MakeBatchServiceConnection());
+
+  // Create a job.
+  auto response = client.CreateJob(location.FullName(), job, job_id);
+
+  if (!response) throw std::move(response).status();
+  std::cout << "Job : " << response->DebugString() << "\n";
   return 0;
 } catch (google::cloud::Status const& status) {
   std::cerr << "google::cloud::Status thrown: " << status << "\n";
