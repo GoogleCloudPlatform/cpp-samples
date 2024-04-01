@@ -21,6 +21,7 @@ include(ExternalProject)
 
 set(samples
     # cmake-format: sort
+    batch/simple
     bigquery/write
     cloud-run-hello-world
     gcs-fast-transfers
