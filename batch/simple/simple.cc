@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) try {
     }
     throw std::move(response).status();
   }
-  
+
   // On success, print the job.
   std::cout << "Job : " << response->DebugString() << "\n";
   return 0;
