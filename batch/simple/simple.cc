@@ -39,11 +39,11 @@ int main(int argc, char* argv[]) try {
     return 0;
   }
   
-  nlohmann::json json_data = nlohmann::json::parse(file);
+  auto contents = std::string{std::istreambuf_iterator<char>(file), {}};
   google::cloud::batch::v1::Job job;
   google::protobuf::util::JsonParseOptions options;
   google::protobuf::util::Status status =
-      google::protobuf::util::JsonStringToMessage(json_data.dump(), &job,
+      google::protobuf::util::JsonStringToMessage(contents, &job,
                                                   options);
   if (!status.ok()) throw status;
 
