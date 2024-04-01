@@ -22,8 +22,6 @@ set(PACKAGE_BUGREPORT
 project(cpp-samples-batch CXX)
 
 find_package(google_cloud_cpp_batch REQUIRED)
-find_package(nlohmann_json CONFIG REQUIRED)
 
 add_executable(simple simple.cc)
-target_link_libraries("simple" PRIVATE google-cloud-cpp::batch
-                                       nlohmann_json::nlohmann_json)
+target_link_libraries("simple" PRIVATE google-cloud-cpp::batch)

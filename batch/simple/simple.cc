@@ -14,7 +14,6 @@
 
 #include <google/cloud/batch/v1/batch_client.h>
 #include <google/cloud/location.h>
-#include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
 
@@ -38,13 +37,11 @@ int main(int argc, char* argv[]) try {
     std::cout << "Failed to open JSON file: " << job_file << '\n';
     return 0;
   }
-  
   auto contents = std::string{std::istreambuf_iterator<char>(file), {}};
   google::cloud::batch::v1::Job job;
   google::protobuf::util::JsonParseOptions options;
   google::protobuf::util::Status status =
-      google::protobuf::util::JsonStringToMessage(contents, &job,
-                                                  options);
+      google::protobuf::util::JsonStringToMessage(contents, &job, options);
   if (!status.ok()) throw status;
 
   // Create the cloud batch client.
@@ -53,7 +50,16 @@ int main(int argc, char* argv[]) try {
   // Create a job.
   auto response = client.CreateJob(location.FullName(), job, job_id);
 
-  if (!response) throw std::move(response).status();
+  if (!response) {
+    if (response.status().code() ==
+        google::cloud::StatusCode::kResourceExhausted) {
+      std::cout << "There already exists a job for the parent `"
+                << location.FullName() << "` and job_id: `" << job_id
+                << "`. Please try again with a new job id.\n";
+      return 0;
+    }
+    throw std::move(response).status();
+  }
   std::cout << "Job : " << response->DebugString() << "\n";
   return 0;
 } catch (google::cloud::Status const& status) {
@@ -61,9 +67,5 @@ int main(int argc, char* argv[]) try {
   return 1;
 } catch (google::protobuf::util::Status const& status) {
   std::cerr << "google::protobuf::util::Status thrown: " << status << "\n";
-  return 1;
-} catch (nlohmann::json::parse_error ex) {
-  std::cerr << "nlohmann::json parse error thrown, parse error at byte "
-            << ex.byte << std::endl;
   return 1;
 }
