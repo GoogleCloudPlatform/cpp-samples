@@ -102,14 +102,13 @@ docker container ls
 docker stop <container-id>
 ```
 
-<!-- TODO(issues/285): when the library in vcpkg is updated, add the screenshots
 #### Publish trace
 
 ![Screenshot of the publish span in the Zipkin UI.](assets/zipkin_publish_span.png)
 
 #### Create trace
 
-![Screenshot of the create span in the Zipkin UI.](assets/zipkin_create_span.png) -->
+![Screenshot of the create span in the Zipkin UI.](assets/zipkin_create_span.png)
 
 ## Build and run
 
