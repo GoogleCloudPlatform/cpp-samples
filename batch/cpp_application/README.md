@@ -95,7 +95,14 @@ docker push ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/application-i
 
 ## 3. Create the job
 
-## Compiling the Example
+You can do either of the following:
+
+1. Use the C++ client libraries to create and poll for the job until completion
+1. Use the gcloud CLI to create the job
+
+### Using the C++ Client libraries
+
+#### Compiling the Example
 
 This project uses `vcpkg` to install its dependencies. Clone `vcpkg` in your
 `$HOME`:
@@ -120,7 +127,7 @@ cmake -S . -B .build -DCMAKE_BUILD_TYPE=Release \
 cmake --build .build
 ```
 
-## Run the sample
+#### Run the sample
 
 Run the example, replace the `[PROJECT ID]` placeholder with the id of your
 project:
@@ -130,5 +137,33 @@ project:
 ```
 
 This submits the batch job and then polls until the job is complete.
+
+### Using the gcloud CLI
+
+1. Replace the `imageURI` field in application.json
+
+```
+  "runnables": [
+      {
+          "container": {
+              "imageUri": "${LOCATION_ID}-docker.pkg.dev/${PROJECT_ID}/{REPOSITORY}/application-image:latest",
+          }
+      }
+  ],
+```
+
+2. Submit the job
+
+```
+gcloud batch jobs submit cpp-application-cli-run \
+    --config=application.json \
+    --location=us-central1
+```
+
+3. Check on the job status
+
+```
+gcloud batch jobs describe cpp-application-cli-run  --location=us-central1
+```
 
 [api overview]: https://cloud.google.com/batch/docs
