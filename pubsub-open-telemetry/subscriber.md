@@ -14,35 +14,25 @@ For setup instructions, refer to the [README.md](README.md).
 
 To find the traces, navigate to the Cloud Trace UI.
 
-<!--- TODO(#299): Add screenshots
 #### With OTel ABI 1.0
 
 #### Receive trace
 
-![Screenshot of the receive span in the Cloud Trace UI.](assets/receive_span.png)
+![Screenshot of the receive span in the Cloud Trace UI.](assets/unary_receive_span.png)
 
-#### Settle trace
+#### Ack trace
 
-![Screenshot of the settle span in the Cloud Trace UI.](assets/settle_span.png)
-
-#### Extend trace
-
-![Screenshot of the extend span in the Cloud Trace UI.](assets/extend_span.png)
+![Screenshot of the ack span in the Cloud Trace UI.](assets/unary_ack_span.png)
 
 #### With OTel ABI 2.0
 
 #### Receive trace
 
-![Screenshot of the receive span in the Cloud Trace UI.](assets/otel2/receive_span.png)
+![Screenshot of the receive span in the Cloud Trace UI.](assets/otel2/unary_receive_span.png)
 
-#### Settle trace
+#### Ack trace
 
-![Screenshot of the settle span in the Cloud Trace UI.](assets/otel2/settle_span.png)
-
-#### Extend trace
-
-![Screenshot of the extend span in the Cloud Trace UI.](assets/otel2/extend_span.png)
--->
+![Screenshot of the ack span in the Cloud Trace UI.](assets/otel2/unary_ack_span.png)
 
 ### Setup
 
