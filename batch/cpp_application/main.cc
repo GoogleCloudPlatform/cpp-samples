@@ -32,11 +32,11 @@ int main(int argc, char* argv[]) try {
 
   namespace batch = ::google::cloud::batch_v1;
 
-  std::string const project_id = argv[1];
+  auto const project_id = std::string(argv[1]);
   auto const location = google::cloud::Location(argv[1], argv[2]);
-  std::string const job_id = argv[3];
-  std::string const job_file = argv[4];
-  std::string const repository_name = argv[5];
+  auto const job_id = std::string(argv[3]);
+  auto const job_file = std::string(argv[4]);
+  auto const repository_name = std::string(argv[5]);
 
   // Parse the json and convert into protobuf format.
   std::ifstream file(job_file, std::ios::in);
