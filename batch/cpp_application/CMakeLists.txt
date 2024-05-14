@@ -15,6 +15,7 @@
 # ~~~
 
 cmake_minimum_required(VERSION 3.20)
+set(CMAKE_CXX_STANDARD 20)
 
 # Define the project name and where to report bugs.
 set(PACKAGE_BUGREPORT
@@ -23,5 +24,5 @@ project(cpp-samples-batch CXX)
 
 find_package(google_cloud_cpp_batch REQUIRED)
 
-add_executable(main main.cc)
-target_link_libraries("main" PRIVATE google-cloud-cpp::batch)
+add_executable(driver driver.cc)
+target_link_libraries(driver PRIVATE google-cloud-cpp::batch)

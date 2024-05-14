@@ -48,7 +48,6 @@ gcloud artifacts repositories create ${REPOSITORY} \
     --repository-format=docker \
     --location=${LOCATION} \
     --description="Store the example C++ application" \
-    --immutable-tags \
     --async
 ```
 
@@ -76,12 +75,23 @@ docker build --tag=application-image:latest .
 ### 3. Tag and push the image to the artifact repository
 
 ```
+cd batch/cpp_application/application
+gcloud builds submit --region=${LOCATION} --tag ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/application-image:latest
+```
+
+<details>
+  <summary>Using docker</summary>
+  To do the same using docker instead of the gcloud CLI:
+
+```
 # Tag the image
 docker tag application-image:latest ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/application-image:latest
 
 # Push the image
 docker push ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/application-image:latest
 ```
+
+</details>
 
 ## 3. Create the job
 
@@ -116,7 +126,7 @@ Run the example, replace the `[PROJECT ID]` placeholder with the id of your
 project:
 
 ```shell
-.build/main [PROJECT ID] us-central1 cpp-application-run application.json application-repo
+.build/driver [PROJECT ID] us-central1 cpp-application-run application.json application-repo
 ```
 
 This submits the batch job and then polls until the job is complete.

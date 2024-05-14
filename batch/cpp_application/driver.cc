@@ -16,6 +16,7 @@
 #include <google/cloud/location.h>
 #include <chrono>
 #include <ctime>
+#include <format>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -58,9 +59,10 @@ int main(int argc, char* argv[]) try {
                        ->mutable_runnables()
                        ->at(0)
                        .mutable_container();
-  std::string image_uri = location.location_id() + "-docker.pkg.dev/" +
-                          location.project_id() + "/" + repository_name +
-                          "/application-image:latest";
+
+  std::string image_uri =
+      std::format("{}-docker.pkg.dev/{}/{}/application-image:latest",
+                  location.location_id(), project_id, repository_name);
   container->set_image_uri(image_uri);
 
   // Create the cloud batch client.
@@ -89,10 +91,15 @@ int main(int argc, char* argv[]) try {
   const auto kMaxPollingInterval = std::chrono::minutes(4);
   const auto kMaxPollingTime = std::chrono::minutes(10);
 
+  // Log the timestamp `t` and a string `s`.
+  auto log = [](auto t, std::string s) {
+    auto in_time_t = std::chrono::system_clock::to_time_t(t);
+    std::cout << std::put_time(std::localtime(&in_time_t), "[%Y-%m-%d %X]")
+              << " " << s << "\n";
+  };
+
   auto current_time = std::chrono::system_clock::now();
-  auto in_time_t = std::chrono::system_clock::to_time_t(current_time);
-  std::cout << std::put_time(std::localtime(&in_time_t), "[%Y-%m-%d %X]")
-            << " Begin polling for job status\n";
+  log(current_time, "Begin polling for job status");
 
   const auto start_time = current_time;
   auto delay = kMinPollingInterval;
@@ -105,35 +112,25 @@ int main(int argc, char* argv[]) try {
     }
 
     switch (polling_response.value().status().state()) {
-      // 4 = google::cloud::batch::v1::JobStatus::State::SUCCEEDED
-      case 4:
+      case google::cloud::batch::v1::JobStatus_State_SUCCEEDED:
         std::cout << "Job succeeded!\n";
         return 0;
-        // 5 = google::cloud::batch::v1::JobStatus::State::FAILED
-      case 5:
+      case google::cloud::batch::v1::JobStatus_State_FAILED:
         std::cout << "Job failed!\n";
         return 0;
-        // 8 = google::cloud::batch::v1::JobStatus::State::CANCELLED
-      case 8:
-        std::cout << "Job cancelled!\n";
-        return 0;
     }
-    in_time_t = std::chrono::system_clock::to_time_t(current_time);
-    std::cout << std::put_time(std::localtime(&in_time_t), "[%Y-%m-%d %X]")
-              << " Job status: "
-              << google::cloud::batch::v1::JobStatus_State_Name(
-                     polling_response.value().status().state())
-              << "\n"
-              << "Current delay: " << delay.count() << " minute(s)\n";
+
+    log(current_time, "Job status: " +
+                          google::cloud::batch::v1::JobStatus_State_Name(
+                              polling_response.value().status().state()) +
+                          "\nCurrent delay: " + std::to_string(delay.count()) +
+                          " minute(s)");
     std::this_thread::sleep_for(
         std::chrono::duration_cast<std::chrono::milliseconds>(delay));
     delay = (std::min)(delay * 2, kMaxPollingInterval);
     current_time = std::chrono::system_clock::now();
   }
-  in_time_t =
-      std::chrono::system_clock::to_time_t(start_time + kMaxPollingTime);
-  std::cout << std::put_time(std::localtime(&in_time_t), "[%Y-%m-%d %X]")
-            << " Max polling time passed\n";
+  log(current_time, "Max polling time passed");
 
   return 0;
 } catch (google::cloud::Status const& status) {
