@@ -55,8 +55,8 @@ int main(int argc, char* argv[]) try {
       gc::Options{}.set<gc::OpenTelemetryTracingOption>(true)));
 
   auto response = subscriber.Pull().value();
-  std::cout << "Received message " << response->message << "\n";
-  std::move(response->handler).ack();
+  std::cout << "Received message " << response.message << "\n";
+  std::move(response.handler).ack();
 
   return 0;
 } catch (google::cloud::Status const& status) {
