@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) try {
                 .value();
   std::cout << "Sent message with id: (" << id << ")\n";
 
-  // Receive a message using unary pull with tracing enabled.
+  // Receive a message using streaming pull with tracing enabled.
   auto subscriber = pubsub::Subscriber(pubsub::MakeSubscriberConnection(
       pubsub::Subscription(project_id, subscription_id),
       gc::Options{}.set<gc::OpenTelemetryTracingOption>(true)));
