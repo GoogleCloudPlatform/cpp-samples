@@ -1,0 +1,36 @@
+{
+    "taskGroups": [
+        {
+            "taskSpec": {
+                "runnables": [
+                    {
+                        "container": {
+                            "imageUri": ""
+                        }
+                    }
+                ],
+                "computeResource": {
+                    "cpuMilli": 2000,
+                    "memoryMib": 16
+                },
+                "maxRetryCount": 2,
+                "maxRunDuration": "3600s"
+            },
+            "taskCount": 3,
+            "parallelism": 3
+        }
+    ],
+    "allocationPolicy": {
+        "instances": [
+            {
+                "policy": { "machineType": "e2-standard-4" }
+            }
+        ]
+    },
+    "labels": {
+        "env": "testing"
+    },
+    "logsPolicy": {
+        "destination": "CLOUD_LOGGING"
+    }
+}

@@ -22,6 +22,7 @@ include(ExternalProject)
 set(samples
     # cmake-format: sort
     batch/cpp_application
+    batch/parallel/application
     batch/simple
     bigquery/write
     cloud-run-hello-world
