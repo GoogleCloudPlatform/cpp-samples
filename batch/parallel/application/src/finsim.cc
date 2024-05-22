@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
   if (!input_file.is_open()) {
     std::cout << "Couldn't open file\n";
     return 1;
-  }    
+  }
   for (std::string line; std::getline(input_file, line);) {
     lines.push_back(std::move(line));
   }
@@ -95,7 +95,8 @@ int main(int argc, char* argv[]) {
   input_config.variance = std::stof(lines.at(4));
   input_config.deviation = std::stof(lines.at(5));
 
-  input_config.total_threads = static_cast<std::int64_t>(std::thread::hardware_concurrency());
+  input_config.total_threads =
+      static_cast<std::int64_t>(std::thread::hardware_concurrency());
 
   print_input_config(input_config);
 

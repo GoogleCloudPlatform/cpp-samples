@@ -13,8 +13,8 @@
 // limitations under the License.
 
 #include <google/cloud/bigquery/bigquery_write_client.h>
-#include <iostream>
 #include <schema.pb.h>
+#include <iostream>
 
 namespace bq = ::google::cloud::bigquery;
 using bq::storage::v1::AppendRowsRequest;
