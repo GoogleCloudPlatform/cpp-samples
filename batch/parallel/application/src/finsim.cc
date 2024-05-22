@@ -1,7 +1,21 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include <omp.h>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <omp.h>
 #include <random>
 #include <string>
 #include <thread>
@@ -58,17 +72,14 @@ int main(int argc, char* argv[]) {
 
   std::string input_filename = std::string(argv[1]);
 
-  std::ifstream input_file;
-  input_file.open(input_filename);
+  std::ifstream input_file(input_filename);
   std::vector<std::string> lines;
-  if (input_file.is_open()) {
-    std::string line;
-    while (std::getline(input_file, line)) {
-      lines.push_back(line);
-    }
-  } else {
+  if (!input_file.is_open()) {
     std::cout << "Couldn't open file\n";
     return 1;
+  }    
+  for (std::string line; std::getline(input_file, line);) {
+    lines.push_back(std::move(line));
   }
 
   if (lines.size() != 6) {
@@ -77,16 +88,14 @@ int main(int argc, char* argv[]) {
   }
 
   InputConfig input_config;
-  input_config.simulations = stoi(lines.at(0));
-  input_config.iterations = stoi(lines.at(1));
+  input_config.simulations = std::stoi(lines.at(0));
+  input_config.iterations = std::stoi(lines.at(1));
   input_config.ticker = lines.at(2);
-  input_config.price = stof(lines.at(3));
-  input_config.variance = stof(lines.at(4));
-  input_config.deviation = stof(lines.at(5));
+  input_config.price = std::stof(lines.at(3));
+  input_config.variance = std::stof(lines.at(4));
+  input_config.deviation = std::stof(lines.at(5));
 
-  auto total_threads =
-      static_cast<std::int64_t>(std::thread::hardware_concurrency());
-  input_config.total_threads = total_threads;
+  input_config.total_threads = static_cast<std::int64_t>(std::thread::hardware_concurrency());
 
   print_input_config(input_config);
 

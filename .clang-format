@@ -31,7 +31,16 @@ IncludeCategories:
     Priority: 2000
   - Regex: '^<google/'
     Priority: 3000
-  - Regex: '^<[^>]*/'
+  - Regex: '^<absl/'
     Priority: 4000
-  - Regex: '^<[^/>]*>'
+  - Regex: '^<.*\.h>'
     Priority: 5000
+  - Regex: '^<.*\.hpp>'
+    Priority: 5000
+  # Put the regex for "system" headers first, they need to go to the bottom.
+  - Regex: '^<sys/[A-Za-z0-9_]*\.h>$'
+    Priority: 10000
+  - Regex: '^<[A-Za-z0-9_]*\.h>$'
+    Priority: 10000
+  - Regex: '^<[^/\.]*>'
+    Priority: 6000
