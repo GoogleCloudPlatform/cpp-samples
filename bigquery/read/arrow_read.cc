@@ -107,7 +107,7 @@ void ProcessRecordBatch(std::shared_ptr<arrow::Schema> schema,
         // need to be handled.
         default:
           std::cout << std::left << std::setw(15) << "UNDEFINED ";
-                    << " ";
+          << " ";
       }
     }
     std::cout << "\n";
