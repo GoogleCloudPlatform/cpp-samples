@@ -13,7 +13,7 @@ grpcio-status==1.62.2
 idna==3.7
 packaging==24.0
 proto-plus==1.23.0
-protobuf==4.25.3
+protobuf==5.27.0
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
 python-dateutil==2.9.0.post0
