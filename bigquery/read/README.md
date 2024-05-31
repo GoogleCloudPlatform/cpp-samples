@@ -36,7 +36,7 @@ it does not already exist) and a query job.
 python3 -m venv env
 source env/bin/activate
 pip3 install -r requirements.txt
-python3 create_query_job.py --project_id alevenb-test --dataset_name usa_names --table_name top10_names
+python3 create_query_job.py --project_id [PROJECT-ID] --dataset_name usa_names --table_name top10_names
 ```
 
 ## Compiling the Example
@@ -75,6 +75,28 @@ project:
 
 ```shell
 .build/arrow_read [PROJECT ID] usa_names top10_names
+```
+
+## Output
+
+Your output should look like the following:
+
+```
+Schema is:
+ name: string
+total: int64
+       name            total
+Row 0: James           4942431
+Row 1: John            4834422
+Row 2: Robert          4718787
+Row 3: Michael         4297230
+Row 4: William         3822209
+Row 5: Mary            3737679
+Row 6: David           3549801
+Row 7: Richard         2531924
+Row 8: Joseph          2472917
+Row 9: Charles         2244693
+Read 1 record batch(es) and 10 total row(s) from table: projects/[PROJECT-ID]/datasets/usa_names/tables/top10_names
 ```
 
 ## Cleanup
