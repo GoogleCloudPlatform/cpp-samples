@@ -47,9 +47,9 @@ grpc_extra_deps()
 # Boost
 http_archive(
     name = "com_github_nelhage_rules_boost",
-    sha256 = "178680b0a5093e17a747bfe8860adc7d5c32a9105983c1075478210973d1b083",
-    strip_prefix = "rules_boost-d8f4f9f88b12461b19354dea4df5f9ee78262067",
-    url = "https://github.com/nelhage/rules_boost/archive/d8f4f9f88b12461b19354dea4df5f9ee78262067.tar.gz",
+    sha256 = "313e8a82b2423ed99011b0addb8ddbaf243b9b4ef2ab7c635050732eb4cd4015",
+    strip_prefix = "rules_boost-8018021402a99302d03e77a7781cd767a8fb00a9",
+    url = "https://github.com/nelhage/rules_boost/archive/8018021402a99302d03e77a7781cd767a8fb00a9.tar.gz",
 )
 
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
