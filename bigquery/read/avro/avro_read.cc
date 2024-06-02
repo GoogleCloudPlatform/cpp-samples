@@ -83,8 +83,9 @@ void ProcessRowsInAvroFormat(
             // cases for other datatypes here. The schema will tell you what
             // datatypes need to be handled.
           default:
-            std::cout << std::left << std::setw(15) << "UNDEFINED " << " ";
+            std::cout << std::left << std::setw(15) << "UNDEFINED";
         }
+        std::cout << "\t";
       }
     }
     std::cout << "\n";

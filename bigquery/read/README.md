@@ -9,7 +9,8 @@ session for the table via the BigQuery Storage library and read the rows from
 the table.
 
 This example shows how to create a query job using the BigQuery v2 Python API,
-and then read the data from the table using the BigQuery Storage C++ API. There are two examples for reading the data: one using Avro and one using Arrow.
+and then read the data from the table using the BigQuery Storage C++ API. There
+are two examples for reading the data: one using Avro and one using Arrow.
 
 If you are not familiar with the BigQuery v2 API or the BigQuery Storage Read
 API, we recommend you first read the [API overview] before starting this guide.
@@ -58,6 +59,7 @@ In this directory compile the dependencies and the code, this can take as long
 as an hour, depending on the performance of your workstation:
 
 ### Arrow read
+
 ```shell
 cd cpp-samples/bigquery/read/arrow
 cmake -S . -B .build -DCMAKE_BUILD_TYPE=Release \
@@ -90,7 +92,6 @@ cd cpp-samples/bigquery/read/arrow
 .build/arrow_read [PROJECT ID] usa_names top10_names
 ```
 
-
 ```
 Schema is:
  name: string
@@ -121,16 +122,17 @@ cd cpp-samples/bigquery/read/avro
 ```
 
 The output should look like:
+
 ```
-Row 0 (2): James          4942431        
-Row 1 (2): John           4834422        
-Row 2 (2): Robert         4718787        
-Row 3 (2): Michael        4297230        
-Row 4 (2): William        3822209        
-Row 5 (2): Mary           3737679        
-Row 6 (2): David          3549801        
-Row 7 (2): Richard        2531924        
-Row 8 (2): Joseph         2472917        
+Row 0 (2): James          4942431
+Row 1 (2): John           4834422
+Row 2 (2): Robert         4718787
+Row 3 (2): Michael        4297230
+Row 4 (2): William        3822209
+Row 5 (2): Mary           3737679
+Row 6 (2): David          3549801
+Row 7 (2): Richard        2531924
+Row 8 (2): Joseph         2472917
 Row 9 (2): Charles        2244693
 Read 1 response(s) and 10 total row(s) from table: projects/[PROJECT-ID]/datasets/usa_names/tables/top10_names
 ```
