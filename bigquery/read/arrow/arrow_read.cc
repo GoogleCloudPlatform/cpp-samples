@@ -106,7 +106,7 @@ void ProcessRecordBatch(std::shared_ptr<arrow::Schema> schema,
         // for other datatypes here. The schema will tell you what datatypes
         // need to be handled.
         default:
-          std::cout << std::left << std::setw(15) << "UNDEFINED ";
+          std::cout << std::left << std::setw(15) << "UNDEFINED "
           << " ";
       }
     }
@@ -165,7 +165,7 @@ int main(int argc, char* argv[]) try {
       }
 
       ProcessRecordBatch(schema, record_batch, num_rows);
-      num_rows += row->row_count();
+      num_rows += read_rows_response->row_count();
       ++record_batch_count;
     }
   }
