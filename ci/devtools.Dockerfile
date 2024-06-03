@@ -15,8 +15,26 @@
 FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+# bigquery/read/arrow: bison is for thrift, which is a dependency for arrow
+# bigquery/read/arrow: flex is for thrift, which is a dependency for arrow
 RUN apt update \
-    && apt install -y build-essential git gcc g++ clang llvm cmake ninja-build pkg-config python3 tar zip unzip curl
+    && apt install -y \
+        bison \
+        build-essential \
+        git \
+        gcc \
+        g++ \
+        clang \
+        cmake \
+        curl \
+        flex \
+        llvm \ 
+        ninja-build \
+        pkg-config \
+        python3 \
+        tar \
+        zip \
+        unzip 
 
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | \
     tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \

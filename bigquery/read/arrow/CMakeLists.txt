@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD 20)
 # Define the project name and where to report bugs.
 set(PACKAGE_BUGREPORT
     "https://github.com/GoogleCloudPlatform/cpp-samples/issues")
-project(cpp-samples-bigquery-read CXX)
+project(cpp-samples-bigquery-read-arrow CXX)
 
 find_package(google_cloud_cpp_bigquery REQUIRED)
 find_package(Arrow REQUIRED)

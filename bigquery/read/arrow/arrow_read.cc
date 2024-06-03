@@ -107,7 +107,6 @@ void ProcessRecordBatch(std::shared_ptr<arrow::Schema> schema,
         // need to be handled.
         default:
           std::cout << std::left << std::setw(15) << "UNDEFINED ";
-          << " ";
       }
     }
     std::cout << "\n";
@@ -165,7 +164,7 @@ int main(int argc, char* argv[]) try {
       }
 
       ProcessRecordBatch(schema, record_batch, num_rows);
-      num_rows += row->row_count();
+      num_rows += read_rows_response->row_count();
       ++record_batch_count;
     }
   }
