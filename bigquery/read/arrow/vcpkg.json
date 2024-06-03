@@ -2,7 +2,7 @@
   "name": "gcp-cpp-samples-bigquery-read-arrow",
   "version-string": "unversioned",
   "homepage": "https://github.com/GoogleCloudPlatform/cpp-samples/",
-  "description": "An example using the BigQuery Storage Read API and arrow",
+  "description": "An example using the BigQuery Storage Read API and Arrow",
   "dependencies": [
     {
       "name": "google-cloud-cpp",
