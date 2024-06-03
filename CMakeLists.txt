@@ -34,6 +34,7 @@ set(samples
     iot/mqtt-ciotc
     populate-bucket
     pubsub-avro
+    pubsub-open-telemetry
     setup
     speech/api)
 
