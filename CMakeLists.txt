@@ -24,9 +24,9 @@ set(samples
     batch/cpp_application
     batch/parallel/application
     batch/simple
-    bigquery/write
     bigquery/read/arrow
     bigquery/read/avro
+    bigquery/write
     cloud-run-hello-world
     gcs-fast-transfers
     getting-started
