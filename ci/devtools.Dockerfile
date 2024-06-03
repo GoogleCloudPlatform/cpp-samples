@@ -15,9 +15,11 @@
 FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+# bigquery/read/arrow: bison is for thrift, which is a dependency for arrow
 # bigquery/read/arrow: flex is for thrift, which is a dependency for arrow
 RUN apt update \
     && apt install -y \
+        bison \
         build-essential \
         git \
         gcc \
