@@ -103,6 +103,8 @@ int main(int argc, char* argv[]) {
   std::vector<double> results(input_config.simulations);
   simulate(input_config);
 
+  omp_set_num_threads(input_config.total_threads);
+
 #pragma omp parallel for
   for (int i = 0; i < input_config.simulations; i++) {
     results[i] = simulate(input_config);
