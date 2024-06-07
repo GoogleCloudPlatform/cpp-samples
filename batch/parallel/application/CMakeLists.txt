@@ -21,4 +21,7 @@ set(PACKAGE_BUGREPORT
     "https://github.com/GoogleCloudPlatform/cpp-samples/issues")
 project(cpp-samples-batch CXX)
 
+find_package(OpenMP REQUIRED)
+
 add_executable(finsim src/finsim.cc)
+target_link_libraries(finsim PRIVATE OpenMP::OpenMP_CXX)
