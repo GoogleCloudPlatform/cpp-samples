@@ -23,7 +23,7 @@ substitutions:
 
 steps:
   # Create a container will all the development tools
-  - name: 'gcr.io/kaniko-project/executor:v1.23.0'
+  - name: 'gcr.io/kaniko-project/executor:v1.23.1'
     args: [
         "--context=dir:///workspace/",
         "--dockerfile=ci/devtools.Dockerfile",
