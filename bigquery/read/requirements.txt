@@ -20,4 +20,4 @@ python-dateutil==2.9.0.post0
 requests==2.32.3
 rsa==4.9
 six==1.16.0
-urllib3==2.2.1
+urllib3==2.2.2
