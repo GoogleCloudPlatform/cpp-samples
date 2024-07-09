@@ -32,17 +32,19 @@ auto constexpr kUsage = R"""(Usage:
 
 // Write the audio packet every ptime ms, simulating audio content arriving
 // from a microphone in ptime ms intervals
-void MicrophoneThreadMain(RecognizeStream& stream,
-                          std::string const& file_path, const int bitrate, const int ptime, const int sample_size) {
+void MicrophoneThreadMain(RecognizeStream& stream, std::string const& file_path,
+                          const int bitrate, const int ptime,
+                          const int sample_size) {
   speech::v1::StreamingRecognizeRequest request;
   std::ifstream file_stream(file_path, std::ios::binary);
   // By default, read 64k bytes every 1 second
   auto bytes_n = 64 * 1024;
   auto wait_ms = 1000;
-  // If ptime is configured read packet every ptime ms (may only be set for "raw" and "ulaw")
+  // If ptime is configured read packet every ptime ms (may only be set for
+  // "raw" and "ulaw")
   if (ptime) {
-      wait_ms = ptime;
-      bytes_n = (bitrate / 1000) * sample_size * ptime;
+    wait_ms = ptime;
+    bytes_n = (bitrate / 1000) * sample_size * ptime;
   }
   std::vector<char> chunk(bytes_n);
   while (true) {
@@ -61,7 +63,7 @@ void MicrophoneThreadMain(RecognizeStream& stream,
       break;
     }
     // Wait a second before writing the next chunk.
-    std::this_thread::sleep_for(std::chrono::milliseconds (wait_ms));
+    std::this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
   }
 }
 
@@ -91,8 +93,8 @@ int main(int argc, char** argv) try {
   }
 
   // Simulate a microphone thread using the file as input.
-  auto microphone =
-      std::thread(MicrophoneThreadMain, std::ref(*stream), file_path, bitrate, ptime, sample_size);
+  auto microphone = std::thread(MicrophoneThreadMain, std::ref(*stream),
+                                file_path, bitrate, ptime, sample_size);
   // Read responses.
   auto read = [&stream] { return stream->Read().get(); };
   for (auto response = read(); response.has_value(); response = read()) {
