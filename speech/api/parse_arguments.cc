@@ -92,8 +92,8 @@ ParseResult ParseArguments(int argc, char* argv[]) {
     result.sample_size = 2;
   } else if (ext == ".ulaw") {
     result.config.set_encoding(RecognitionConfig::MULAW);
-    result.bitrate = 8000;
-    result.ptime = 20;
+    result.bitrate = bitrate;
+    result.ptime = ptime;
     result.sample_size = 1;
   } else if (ext == ".flac") {
     result.config.set_encoding(RecognitionConfig::FLAC);
