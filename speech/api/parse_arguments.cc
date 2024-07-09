@@ -31,8 +31,8 @@ ParseResult ParseArguments(int argc, char* argv[]) {
       ("bitrate", po::value<int>()->default_value(16000),
        "the sample rate in Hz")
       //
-      ("ptime", po::value<int>()->default_value(20),
-       "packetization time in milliseconds")
+      ("ptime", po::value<int>()->default_value(0),
+       "(optional) packetization time in milliseconds")
       //
       ("language-code", po::value<std::string>()->default_value("en"),
        "the language code for the audio")
@@ -71,8 +71,9 @@ ParseResult ParseArguments(int argc, char* argv[]) {
   result.path = path;
   result.config.set_language_code(language_code);
   result.config.set_sample_rate_hertz(bitrate);
-  result.bitrate = bitrate;
-  result.ptime = ptime;
+  result.bitrate = 0;
+  result.ptime = 0;
+  result.sample_size = 0;
 
   // Use the audio file extension to configure the encoding.
   auto const ext = [&] {
@@ -86,8 +87,14 @@ ParseResult ParseArguments(int argc, char* argv[]) {
 
   if (ext.empty() || ext == ".raw") {
     result.config.set_encoding(RecognitionConfig::LINEAR16);
+    result.bitrate = bitrate;
+    result.ptime = ptime;
+    result.sample_size = 2;
   } else if (ext == ".ulaw") {
     result.config.set_encoding(RecognitionConfig::MULAW);
+    result.bitrate = 8000;
+    result.ptime = 20;
+    result.sample_size = 1;
   } else if (ext == ".flac") {
     result.config.set_encoding(RecognitionConfig::FLAC);
   } else if (ext == ".amr") {

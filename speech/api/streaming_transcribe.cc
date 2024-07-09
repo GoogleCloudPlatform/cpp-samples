@@ -27,17 +27,24 @@ using RecognizeStream = ::google::cloud::AsyncStreamingReadWriteRpc<
     speech::v1::StreamingRecognizeResponse>;
 
 auto constexpr kUsage = R"""(Usage:
-  streaming_transcribe [--bitrate N] audio.(raw|ulaw|flac|amr|awb)
+  streaming_transcribe [--bitrate N] [--ptime N] audio.(raw|ulaw|flac|amr|awb)
 )""";
 
 // Write the audio packet every ptime ms, simulating audio content arriving
 // from a microphone in ptime ms intervals
 void MicrophoneThreadMain(RecognizeStream& stream,
-                          std::string const& file_path, const int bitrate, const int ptime) {
+                          std::string const& file_path, const int bitrate, const int ptime, const int sample_size) {
   speech::v1::StreamingRecognizeRequest request;
   std::ifstream file_stream(file_path, std::ios::binary);
-  auto constexpr kChunkSize = 64 * 1024;
-  std::vector<char> chunk(kChunkSize);
+  // By default, read 64k bytes every 1 second
+  auto bytes_n = 64 * 1024;
+  auto wait_ms = 1000;
+  // If ptime is configured read packet every ptime ms (may only be set for "raw" and "ulaw")
+  if (ptime) {
+      wait_ms = ptime;
+      bytes_n = (bitrate / 1000) * sample_size * ptime;
+  }
+  std::vector<char> chunk(bytes_n);
   while (true) {
     // Read another chunk from the file.
     file_stream.read(chunk.data(), chunk.size());
@@ -45,7 +52,7 @@ void MicrophoneThreadMain(RecognizeStream& stream,
     // And write the chunk to the stream.
     if (bytes_read > 0) {
       request.set_audio_content(chunk.data(), bytes_read);
-      std::cout << "Sending " << bytes_read / 1024 << "k bytes." << std::endl;
+      std::cout << "Sending " << bytes_read << " bytes." << std::endl;
       if (!stream.Write(request, grpc::WriteOptions()).get()) break;
     }
     if (!file_stream) {
@@ -54,7 +61,7 @@ void MicrophoneThreadMain(RecognizeStream& stream,
       break;
     }
     // Wait a second before writing the next chunk.
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds (wait_ms));
   }
 }
 
@@ -67,6 +74,7 @@ int main(int argc, char** argv) try {
   auto const file_path = args.path;
   auto const bitrate = args.bitrate;
   auto const ptime = args.ptime;
+  auto const sample_size = args.sample_size;
 
   speech::v1::StreamingRecognizeRequest request;
   auto& streaming_config = *request.mutable_streaming_config();
@@ -84,7 +92,7 @@ int main(int argc, char** argv) try {
 
   // Simulate a microphone thread using the file as input.
   auto microphone =
-      std::thread(MicrophoneThreadMain, std::ref(*stream), file_path, bitrate, ptime);
+      std::thread(MicrophoneThreadMain, std::ref(*stream), file_path, bitrate, ptime, sample_size);
   // Read responses.
   auto read = [&stream] { return stream->Read().get(); };
   for (auto response = read(); response.has_value(); response = read()) {

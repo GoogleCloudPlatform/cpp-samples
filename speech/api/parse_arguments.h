@@ -25,6 +25,7 @@ struct ParseResult {
   std::string path;
   int bitrate;
   int ptime;
+  int sample_size;
 };
 
 ParseResult ParseArguments(int argc, char* argv[]);
