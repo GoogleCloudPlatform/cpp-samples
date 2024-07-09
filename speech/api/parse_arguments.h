@@ -23,6 +23,8 @@
 struct ParseResult {
   google::cloud::speech::v1::RecognitionConfig config;
   std::string path;
+  int bitrate;
+  int ptime;
 };
 
 ParseResult ParseArguments(int argc, char* argv[]);

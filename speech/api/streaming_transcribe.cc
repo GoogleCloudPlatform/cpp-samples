@@ -30,10 +30,10 @@ auto constexpr kUsage = R"""(Usage:
   streaming_transcribe [--bitrate N] audio.(raw|ulaw|flac|amr|awb)
 )""";
 
-// Write the audio in 64k chunks at a time, simulating audio content arriving
-// from a microphone.
+// Write the audio packet every ptime ms, simulating audio content arriving
+// from a microphone in ptime ms intervals
 void MicrophoneThreadMain(RecognizeStream& stream,
-                          std::string const& file_path) {
+                          std::string const& file_path, const int bitrate, const int ptime) {
   speech::v1::StreamingRecognizeRequest request;
   std::ifstream file_stream(file_path, std::ios::binary);
   auto constexpr kChunkSize = 64 * 1024;
@@ -65,6 +65,8 @@ int main(int argc, char** argv) try {
   // Parse command line arguments.
   auto args = ParseArguments(argc, argv);
   auto const file_path = args.path;
+  auto const bitrate = args.bitrate;
+  auto const ptime = args.ptime;
 
   speech::v1::StreamingRecognizeRequest request;
   auto& streaming_config = *request.mutable_streaming_config();
@@ -82,7 +84,7 @@ int main(int argc, char** argv) try {
 
   // Simulate a microphone thread using the file as input.
   auto microphone =
-      std::thread(MicrophoneThreadMain, std::ref(*stream), file_path);
+      std::thread(MicrophoneThreadMain, std::ref(*stream), file_path, bitrate, ptime);
   // Read responses.
   auto read = [&stream] { return stream->Read().get(); };
   for (auto response = read(); response.has_value(); response = read()) {

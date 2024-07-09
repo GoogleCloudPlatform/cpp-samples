@@ -31,6 +31,9 @@ ParseResult ParseArguments(int argc, char* argv[]) {
       ("bitrate", po::value<int>()->default_value(16000),
        "the sample rate in Hz")
       //
+      ("ptime", po::value<int>()->default_value(20),
+       "packetization time in milliseconds")
+      //
       ("language-code", po::value<std::string>()->default_value("en"),
        "the language code for the audio")
       //
@@ -47,6 +50,7 @@ ParseResult ParseArguments(int argc, char* argv[]) {
 
   auto const path = vm["path"].as<std::string>();
   auto const bitrate = vm["bitrate"].as<int>();
+  auto const ptime = vm["ptime"].as<int>();
   auto const language_code = vm["language-code"].as<std::string>();
   // Validate the command-line options.
   if (path.empty()) {
@@ -57,11 +61,18 @@ ParseResult ParseArguments(int argc, char* argv[]) {
         "--bitrate option must be a positive number, value=" +
         std::to_string(bitrate));
   }
+  if (ptime < 0) {
+    throw std::runtime_error(
+        "--ptime option must be a positive number, value=" +
+        std::to_string(ptime));
+  }
 
   ParseResult result;
   result.path = path;
   result.config.set_language_code(language_code);
   result.config.set_sample_rate_hertz(bitrate);
+  result.bitrate = bitrate;
+  result.ptime = ptime;
 
   // Use the audio file extension to configure the encoding.
   auto const ext = [&] {
