@@ -14,7 +14,7 @@
 
 timeout: 3600s
 options:
-  machineType: 'N1_HIGHCPU_32'
+  machineType: 'N2_STANDARD_32'
   diskSizeGb: '512'
   env:
     - 'VCPKG_BINARY_SOURCES=x-gcs,${_VCPKG_BUCKET_PREFIX},readwrite'
