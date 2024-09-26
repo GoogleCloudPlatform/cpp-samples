@@ -9,7 +9,7 @@ on:
 jobs:
   formatting:
     name: formatting
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: install cmake-format
         run: pip install cmakelang==0.6.13
