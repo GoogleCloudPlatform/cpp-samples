@@ -1,13 +1,11 @@
 {
   "extends": [
-    "config:base",
+    "config:recommended",
     "schedule:weekdays"
   ],
-  "python": {
-    "enabled": false
-  },
-  "regexManagers": [
+  "customManagers": [
     {
+      "customType": "regex",
       "fileMatch": [
         ".*Dockerfile$"
       ],
@@ -20,8 +18,18 @@
   ],
   "packageRules": [
     {
-      "matchPackageNames": ["com_github_nelhage_rules_boost"],
-      "schedule": ["before 4am on the first day of the month"]
+      "matchCategories": [
+        "python"
+      ],
+      "enabled": false
+    },
+    {
+      "matchPackageNames": [
+        "com_github_nelhage_rules_boost"
+      ],
+      "schedule": [
+        "before 4am on the first day of the month"
+      ]
     }
   ]
 }
