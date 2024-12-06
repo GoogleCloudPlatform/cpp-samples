@@ -14,7 +14,7 @@
 
 # We chose Alpine to build the image because it has good support for creating
 # statically-linked, small programs.
-FROM alpine:3.20 AS build
+FROM alpine:3.21 AS build
 
 # Install the typical development tools for C++, and
 # the base OS headers and libraries.
