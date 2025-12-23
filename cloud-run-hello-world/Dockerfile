@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,7 @@ FROM alpine:3.21 AS build
 # Install the typical development tools for C++, and
 # the base OS headers and libraries.
 RUN apk update && \
-    apk add \
+    apk add --no-cache \
         build-base \
         cmake \
         curl \
@@ -39,7 +39,7 @@ RUN apk update && \
 # Use `vcpkg`, a package manager for C++, to install
 WORKDIR /usr/local/vcpkg
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
-RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2024.04.26.tar.gz" | \
+RUN curl -sSL "https://github.com/Microsoft/vcpkg/archive/2025.11.20.tar.gz" | \
     tar --strip-components=1 -zxf - \
     && ./bootstrap-vcpkg.sh -disableMetrics
 
@@ -54,8 +54,7 @@ RUN cmake -S/v/source -B/v/binary -GNinja \
     -DCMAKE_BUILD_TYPE=Release
 
 # Compile the binary and strip it to reduce its size.
-RUN cmake --build /v/binary
-RUN strip /v/binary/cloud_run_hello
+RUN cmake --build /v/binary && strip /v/binary/cloud_run_hello
 
 # Create the final deployment image, using `scratch` (the empty Docker image)
 # as the starting point. Effectively we create an image that only contains
