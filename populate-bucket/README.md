@@ -178,7 +178,7 @@ kubectl --namespace ${NAMESPACE} autoscale deployment worker  --max 200 --min 1 
 
 ```bash
 BUCKET_NAME=${GOOGLE_CLOUD_PROJECT}-bucket-1000000
-gsutil mb -p ${GOOGLE_CLOUD_PROJECT} gs://${BUCKET_NAME}
+gcloud storage buckets create gs://${BUCKET_NAME} --project=${GOOGLE_CLOUD_PROJECT}
 ```
 
 ### Run the program locally to schedule the work

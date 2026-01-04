@@ -178,16 +178,15 @@ If you have no buckets in your project, use the [GCS guide] to select a name and
 then create the bucket:
 
 ```sh
-gsutil mb gs://$BUCKET_NAME
+gcloud storage buckets create gs://$BUCKET_NAME
 ```
 
 The `gsutil` tool provides a single command to configure buckets to send
 notifications to Cloud Pub/Sub:
 
 ```sh
-gsutil notifications create \
-    -t projects/$GOOGLE_CLOUD_PROJECT/topics/gcs-updates -f json \
-    gs://$BUCKET_NAME/
+gcloud storage buckets notifications create gs://$BUCKET_NAME/ \
+    --topic=projects/$GOOGLE_CLOUD_PROJECT/topics/gcs-updates --payload-format=json
 # Output: Created Cloud Pub/Sub topic projects/.../topics/gcs-updates
 #    Created notification config projects/_/buckets/$BUCKET_NAME/notificationConfigs/...
 ```
@@ -274,7 +273,7 @@ gcloud beta eventarc triggers create gcs-updates-trigger \
 ### Use `gsutil` to create a new GCS Object
 
 ```sh
-echo "The quick brown fox jumps over the lazy dog" | gsutil -q cp - gs://$BUCKET_NAME/fox.txt
+echo "The quick brown fox jumps over the lazy dog" | gcloud storage cp - gs://$BUCKET_NAME/fox.txt
 # Output: none
 ```
 
@@ -344,6 +343,7 @@ gcloud container images delete gcr.io/$GOOGLE_CLOUD_PROJECT/getting-started-cpp/
 ### Remove all the notification in the Bucket
 
 ```sh
+# gsutil command 'notifications delete' with a bucket URL cannot be translated automatically. gcloud storage requires a specific notification ID or the --all flag.
 gsutil notifications delete gs://$BUCKET_NAME
 # Output: none
 ```
