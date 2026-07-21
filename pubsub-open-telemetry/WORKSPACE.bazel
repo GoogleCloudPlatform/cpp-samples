@@ -55,9 +55,9 @@ opentelemetry_cpp_deps()
 # Boost
 http_archive(
     name = "com_github_nelhage_rules_boost",
-    sha256 = "085aadb6cd1323740810efcde29e99838286f44e0ab060af6e2a645380316cd6",
-    strip_prefix = "rules_boost-504e4dbc8c480fac5da33035490bc2ccc59db749",
-    url = "https://github.com/nelhage/rules_boost/archive/504e4dbc8c480fac5da33035490bc2ccc59db749.tar.gz",
+    sha256 = "4f3e5a8091c4d2d369176e23a744a6bb1ee6f5b42beb1af192a6311cc3402ace",
+    strip_prefix = "rules_boost-d4d306ef48b7dbddf0389e48b90f6eb74ec18a71",
+    url = "https://github.com/nelhage/rules_boost/archive/d4d306ef48b7dbddf0389e48b90f6eb74ec18a71.tar.gz",
 )
 
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
